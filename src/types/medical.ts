@@ -1,3 +1,13 @@
+
+export interface DoctorParticipation {
+  code: string;
+  name: string;
+  role: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+}
+
 export interface Procedure {
   id: string;
   codigo: string;
@@ -9,6 +19,7 @@ export interface Procedure {
   pago: boolean;
   guia: string;
   beneficiario: string;
+  doctors: DoctorParticipation[];
 }
 
 export interface PaymentStatement {

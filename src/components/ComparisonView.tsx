@@ -8,7 +8,7 @@ import { SummaryCards } from './comparison/SummaryCards';
 import { ComparisonHeader } from './comparison/ComparisonHeader';
 import { DemonstrativeInfo } from './comparison/DemonstrativeInfo';
 import { ProceduresTable } from './comparison/ProceduresTable';
-import { useDemonstrativoSelection } from '@/hooks/useDemonstrativoSelection';
+import { useDemonstrativoSelection, calculateCBHPMByRole } from '@/hooks/useDemonstrativoSelection';
 
 const ComparisonView = () => {
   const [isDetailView, setIsDetailView] = useState(false);

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { PaymentStatement, Procedure, DoctorParticipation } from '@/types/medical';
 
-const calculateCBHPMByRole = (baseCBHPM: number, role: string): number => {
+export const calculateCBHPMByRole = (baseCBHPM: number, role: string): number => {
   switch (role) {
     case "Cirurgião":
       return baseCBHPM;
