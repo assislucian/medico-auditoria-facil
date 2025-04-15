@@ -1,5 +1,5 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
@@ -18,6 +18,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface SideNavProps {
   className?: string;
@@ -25,6 +27,19 @@ interface SideNavProps {
 
 export function SideNav({ className }: SideNavProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+  
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Logout realizado com sucesso");
+      navigate("/login");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      toast.error("Erro ao fazer logout");
+    }
+  };
   
   const navItems = [
     {
@@ -213,7 +228,12 @@ export function SideNav({ className }: SideNavProps) {
       <div className="mt-auto px-3 py-2">
         <div className="flex items-center justify-between p-2">
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={handleSignOut}
+          >
             <LogOut className="h-5 w-5" />
             <span className="sr-only">Sair</span>
           </Button>

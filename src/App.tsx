@@ -20,6 +20,7 @@ import Pricing from "./pages/Pricing";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
+import Support from "./pages/Support";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 
@@ -71,6 +72,7 @@ const App = () => {
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                   <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+                  <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
                   
                   {/* Catch-all route */}
                   <Route path="*" element={<NotFound />} />
