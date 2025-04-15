@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +12,11 @@ export const ProfileSettings = () => {
   const [formData, setFormData] = useState({
     name: "Dr. Ana Silva",
     email: "dr.anasilva@exemplo.med.br",
+    telefone: "(11) 98765-4321",
     crm: "123456/SP",
-    especialidade: "Ortopedia"
+    especialidade: "Ortopedia",
+    hospital: "Hospital São Paulo",
+    bio: "Especialista em cirurgia ortopédica"
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +65,16 @@ export const ProfileSettings = () => {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="telefone">Telefone</Label>
+              <Input 
+                id="telefone" 
+                name="telefone"
+                value={formData.telefone} 
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="crm">CRM</Label>
               <Input 
                 id="crm" 
@@ -76,6 +90,26 @@ export const ProfileSettings = () => {
                 id="especialidade" 
                 name="especialidade"
                 value={formData.especialidade} 
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hospital">Hospital</Label>
+              <Input 
+                id="hospital" 
+                name="hospital"
+                value={formData.hospital} 
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="bio">Biografia</Label>
+              <Input 
+                id="bio" 
+                name="bio"
+                value={formData.bio} 
                 onChange={handleChange}
                 required
               />
