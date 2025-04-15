@@ -1,13 +1,32 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { useProfile } from "@/hooks/use-profile";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
+
+interface NotificationPreferences {
+  email: {
+    newReports: boolean;
+    systemUpdates: boolean;
+    tips: boolean;
+    newsletter: boolean;
+  };
+  sms: {
+    criticalAlerts: boolean;
+    paymentRecovery: boolean;
+    invoiceReminders: boolean;
+  };
+}
 
 export const NotificationsSettings = () => {
-  const { loading, updateNotificationPreferences } = useProfile();
-  const [notifications, setNotifications] = useState({
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationPreferences>({
     email: {
       newReports: true,
       systemUpdates: true,
@@ -21,6 +40,34 @@ export const NotificationsSettings = () => {
     }
   });
 
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      if (!user?.id) return;
+      
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('notification_preferences')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+        
+        if (data?.notification_preferences) {
+          setNotifications(data.notification_preferences as NotificationPreferences);
+        }
+      } catch (error) {
+        console.error('Error fetching notification preferences:', error);
+        toast.error('Erro ao carregar preferências de notificação');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPreferences();
+  }, [user?.id]);
+
   const handleToggleChange = (category: 'email' | 'sms', name: string, checked: boolean) => {
     setNotifications(prev => ({
       ...prev,
@@ -32,8 +79,36 @@ export const NotificationsSettings = () => {
   };
 
   const handleSubmit = async () => {
-    await updateNotificationPreferences(notifications);
+    if (!user?.id) return;
+    
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          notification_preferences: notifications,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      
+      toast.success('Preferências de notificação atualizadas');
+    } catch (error) {
+      console.error('Error saving notification preferences:', error);
+      toast.error('Erro ao salvar preferências de notificação');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <Card>
@@ -57,6 +132,7 @@ export const NotificationsSettings = () => {
               <Switch 
                 checked={notifications.email.newReports} 
                 onCheckedChange={(checked) => handleToggleChange('email', 'newReports', checked)}
+                disabled={saving}
               />
             </div>
             
@@ -70,6 +146,21 @@ export const NotificationsSettings = () => {
               <Switch 
                 checked={notifications.email.systemUpdates} 
                 onCheckedChange={(checked) => handleToggleChange('email', 'systemUpdates', checked)}
+                disabled={saving}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Dicas e Novidades</p>
+                <p className="text-sm text-muted-foreground">
+                  Receba dicas e melhores práticas
+                </p>
+              </div>
+              <Switch 
+                checked={notifications.email.tips} 
+                onCheckedChange={(checked) => handleToggleChange('email', 'tips', checked)}
+                disabled={saving}
               />
             </div>
           </div>
@@ -88,6 +179,7 @@ export const NotificationsSettings = () => {
               <Switch 
                 checked={notifications.sms.criticalAlerts} 
                 onCheckedChange={(checked) => handleToggleChange('sms', 'criticalAlerts', checked)}
+                disabled={saving}
               />
             </div>
             
@@ -101,14 +193,36 @@ export const NotificationsSettings = () => {
               <Switch 
                 checked={notifications.sms.paymentRecovery} 
                 onCheckedChange={(checked) => handleToggleChange('sms', 'paymentRecovery', checked)}
+                disabled={saving}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Lembretes de Fatura</p>
+                <p className="text-sm text-muted-foreground">
+                  Receba lembretes sobre faturas pendentes
+                </p>
+              </div>
+              <Switch 
+                checked={notifications.sms.invoiceReminders} 
+                onCheckedChange={(checked) => handleToggleChange('sms', 'invoiceReminders', checked)}
+                disabled={saving}
               />
             </div>
           </div>
         </div>
         
         <div className="mt-6 flex justify-end">
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? "Salvando..." : "Salvar Preferências"}
+          <Button onClick={handleSubmit} disabled={saving}>
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              'Salvar Preferências'
+            )}
           </Button>
         </div>
       </CardContent>
