@@ -3,13 +3,13 @@ import { Helmet } from 'react-helmet-async';
 import Navbar from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
 import Dashboard from "@/components/Dashboard";
-import { useMediaQuery } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 
 const DashboardPage = () => {
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
 
   return (
     <>

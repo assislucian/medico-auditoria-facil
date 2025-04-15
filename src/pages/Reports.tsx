@@ -1,16 +1,14 @@
-
 import { Helmet } from 'react-helmet-async';
 import Navbar from "@/components/Navbar";
 import { StatusCard } from "@/components/StatusCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { Download, TrendingUp, Wallet, FileText, AlertCircle, Calendar, PieChart, BarChart2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartPieChart, Pie, Cell, Legend } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Mock data for charts
 const monthlyData = [
   { name: 'Jan', recebido: 12400, glosado: 1800 },
   { name: 'Fev', recebido: 14200, glosado: 2100 },
@@ -139,12 +137,8 @@ const ReportsPage = () => {
                             tickFormatter={(value) => `R$${value/1000}k`} 
                             style={{ fontSize: '12px' }}
                           />
-                          <Tooltip content={(props) => (
-                            <ChartTooltipContent
-                              {...props}
-                              formatter={(value) => `R$ ${value.toLocaleString()},00`}
-                            />
-                          )} 
+                          <Tooltip 
+                            formatter={(value) => [`R$ ${value.toLocaleString()},00`, undefined]}
                           />
                           <Bar dataKey="recebido" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
                           <Bar dataKey="glosado" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
