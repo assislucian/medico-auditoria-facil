@@ -1,74 +1,116 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CheckCircle, HelpCircle, Info, Download } from 'lucide-react';
+import { AlertCircle, CheckCircle, HelpCircle, Info, Download, FileText } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
-// Mock data for demonstration
-const comparisonData = [
+const demonstrativos = [
   {
-    id: "proc1",
-    codigo: "31303039",
-    procedimento: "Videohisteroscopia cirúrgica com ressectoscópio",
-    papel: "Cirurgião",
-    valorCBHPM: 1521.32,
-    valorPago: 1250.00,
-    diferenca: -271.32,
-    pago: true
+    id: "dem1",
+    numero: "DEM-2025-001",
+    competencia: "Janeiro/2025",
+    hospital: "Hospital Albert Einstein",
+    data: "2025-01-15",
+    procedimentos: [
+      {
+        id: "proc1",
+        codigo: "31303039",
+        procedimento: "Videohisteroscopia cirúrgica com ressectoscópio",
+        papel: "Cirurgião",
+        valorCBHPM: 1521.32,
+        valorPago: 1250.00,
+        diferenca: -271.32,
+        pago: true,
+        guia: "GUIA-001"
+      },
+      {
+        id: "proc2",
+        codigo: "31303039",
+        procedimento: "Videohisteroscopia cirúrgica com ressectoscópio",
+        papel: "1º Auxiliar",
+        valorCBHPM: 304.26,
+        valorPago: 304.26,
+        diferenca: 0,
+        pago: true,
+        guia: "GUIA-001"
+      },
+      {
+        id: "proc3",
+        codigo: "40202615",
+        procedimento: "Exame anatomopatológico intraoperatório",
+        papel: "Cirurgião",
+        valorCBHPM: 652.80,
+        valorPago: 0,
+        diferenca: -652.80,
+        pago: false,
+        guia: "GUIA-002"
+      }
+    ]
   },
   {
-    id: "proc2",
-    codigo: "31303039",
-    procedimento: "Videohisteroscopia cirúrgica com ressectoscópio",
-    papel: "1º Auxiliar",
-    valorCBHPM: 304.26,
-    valorPago: 304.26,
-    diferenca: 0,
-    pago: true
-  },
-  {
-    id: "proc3",
-    codigo: "40202615",
-    procedimento: "Exame anatomopatológico intraoperatório",
-    papel: "Cirurgião",
-    valorCBHPM: 652.80,
-    valorPago: 0,
-    diferenca: -652.80,
-    pago: false
-  },
-  {
-    id: "proc4",
-    codigo: "40304361",
-    procedimento: "Coloração especial por coloração",
-    papel: "Cirurgião",
-    valorCBHPM: 88.50,
-    valorPago: 70.00,
-    diferenca: -18.50,
-    pago: true
-  },
-  {
-    id: "proc5",
-    codigo: "40304361",
-    procedimento: "Coloração especial por coloração",
-    papel: "1º Auxiliar",
-    valorCBHPM: 17.70,
-    valorPago: 17.70,
-    diferenca: 0,
-    pago: true
+    id: "dem2",
+    numero: "DEM-2025-002",
+    competencia: "Janeiro/2025",
+    hospital: "Hospital Sírio-Libanês",
+    data: "2025-01-20",
+    procedimentos: [
+      {
+        id: "proc4",
+        codigo: "40304361",
+        procedimento: "Coloração especial por coloração",
+        papel: "Cirurgião",
+        valorCBHPM: 88.50,
+        valorPago: 70.00,
+        diferenca: -18.50,
+        pago: true,
+        guia: "GUIA-003"
+      },
+      {
+        id: "proc5",
+        codigo: "40304361",
+        procedimento: "Coloração especial por coloração",
+        papel: "1º Auxiliar",
+        valorCBHPM: 17.70,
+        valorPago: 17.70,
+        diferenca: 0,
+        pago: true,
+        guia: "GUIA-003"
+      }
+    ]
   }
 ];
 
 const ComparisonView = () => {
+  const [selectedDemonstrativo, setSelectedDemonstrativo] = useState<string>(demonstrativos[0].id);
   const [isDetailView, setIsDetailView] = useState(false);
 
-  const totalCBHPM = comparisonData.reduce((acc, curr) => acc + curr.valorCBHPM, 0);
-  const totalPago = comparisonData.reduce((acc, curr) => acc + curr.valorPago, 0);
+  const currentDemonstrativo = demonstrativos.find(d => d.id === selectedDemonstrativo);
+  const procedimentos = currentDemonstrativo?.procedimentos || [];
+
+  const totalCBHPM = procedimentos.reduce((acc, curr) => acc + curr.valorCBHPM, 0);
+  const totalPago = procedimentos.reduce((acc, curr) => acc + curr.valorPago, 0);
   const totalDiferenca = totalCBHPM - totalPago;
-  const procedimentosNaoPagos = comparisonData.filter(item => !item.pago).length;
-  
+  const procedimentosNaoPagos = procedimentos.filter(item => !item.pago).length;
+
+  const exportReport = () => {
+    const reportData = {
+      demonstrativo: currentDemonstrativo,
+      totais: {
+        valorCBHPM: totalCBHPM,
+        valorPago: totalPago,
+        diferenca: totalDiferenca,
+        procedimentosNaoPagos
+      }
+    };
+
+    console.log('Exportando relatório:', reportData);
+    toast.success('Relatório gerado com sucesso!');
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -80,6 +122,21 @@ const ComparisonView = () => {
             </CardDescription>
           </div>
           <div className="space-x-2">
+            <Select value={selectedDemonstrativo} onValueChange={setSelectedDemonstrativo}>
+              <SelectTrigger className="w-[280px]">
+                <SelectValue placeholder="Selecione o demonstrativo" />
+              </SelectTrigger>
+              <SelectContent>
+                {demonstrativos.map((dem) => (
+                  <SelectItem key={dem.id} value={dem.id}>
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      <span>{dem.numero} - {dem.hospital}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button 
               variant={isDetailView ? "outline" : "default"} 
               size="sm" 
@@ -94,15 +151,34 @@ const ComparisonView = () => {
             >
               Detalhes
             </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-1" />
-              Exportar
-            </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        {/* Resumo de informações importantes */}
+        {currentDemonstrativo && (
+          <div className="mb-6">
+            <h3 className="font-medium text-lg mb-2">Informações do Demonstrativo</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Número:</span>
+                <p className="font-medium">{currentDemonstrativo.numero}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Competência:</span>
+                <p className="font-medium">{currentDemonstrativo.competencia}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Hospital:</span>
+                <p className="font-medium">{currentDemonstrativo.hospital}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Data:</span>
+                <p className="font-medium">{new Date(currentDemonstrativo.data).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card className="bg-secondary/50">
             <CardContent className="p-4">
@@ -157,11 +233,12 @@ const ComparisonView = () => {
             </CardContent>
           </Card>
         </div>
-        
+
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Código</TableHead>
+              <TableHead>Guia</TableHead>
               <TableHead className="w-[300px]">Procedimento</TableHead>
               <TableHead>Papel</TableHead>
               <TableHead className="text-right">Valor CBHPM</TableHead>
@@ -172,9 +249,10 @@ const ComparisonView = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {comparisonData.map((item) => (
+            {procedimentos.map((item) => (
               <TableRow key={item.id} className={!item.pago ? 'bg-red-500/5' : item.diferenca < 0 ? 'bg-amber-500/5' : ''}>
                 <TableCell className="font-medium">{item.codigo}</TableCell>
+                <TableCell>{item.guia}</TableCell>
                 <TableCell>
                   <div className="flex items-center">
                     {item.procedimento}
@@ -246,7 +324,10 @@ const ComparisonView = () => {
           <p className="text-sm text-muted-foreground">
             Análise baseada na Tabela CBHPM 2015
           </p>
-          <Button>Exportar Relatório</Button>
+          <Button onClick={exportReport}>
+            <Download className="mr-2 h-4 w-4" />
+            Exportar Relatório para Contestação
+          </Button>
         </div>
       </CardFooter>
     </Card>
