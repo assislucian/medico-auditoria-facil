@@ -1,15 +1,13 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/use-profile";
 
 export const ProfileSettings = () => {
-  const { toast } = useToast();
-  const [saving, setSaving] = useState(false);
+  const { loading, updateProfile } = useProfile();
   const [formData, setFormData] = useState({
     name: "Dr. Ana Silva",
     email: "dr.anasilva@exemplo.med.br",
@@ -27,16 +25,7 @@ export const ProfileSettings = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Configurações salvas",
-      description: "Suas alterações foram salvas com sucesso."
-    });
-    
-    setSaving(false);
+    await updateProfile(formData);
   };
 
   return (
@@ -57,6 +46,7 @@ export const ProfileSettings = () => {
                 name="name" 
                 value={formData.name} 
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -67,6 +57,7 @@ export const ProfileSettings = () => {
                 type="email"
                 value={formData.email} 
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -76,6 +67,7 @@ export const ProfileSettings = () => {
                 name="crm"
                 value={formData.crm} 
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -85,6 +77,7 @@ export const ProfileSettings = () => {
                 name="especialidade"
                 value={formData.especialidade} 
                 onChange={handleChange}
+                required
               />
             </div>
           </div>
@@ -94,8 +87,8 @@ export const ProfileSettings = () => {
               <span className="text-sm text-muted-foreground">Tema:</span>
               <ThemeToggle />
             </div>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Salvando..." : "Salvar Alterações"}
+            <Button type="submit" disabled={loading}>
+              {loading ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </div>
         </CardContent>

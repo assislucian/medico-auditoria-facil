@@ -3,33 +3,36 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/use-profile";
 
 export const NotificationsSettings = () => {
-  const { toast } = useToast();
-  const [saving, setSaving] = useState(false);
+  const { loading, updateNotificationPreferences } = useProfile();
   const [notifications, setNotifications] = useState({
-    notificacoesEmail: true,
-    notificacoesSMS: false
+    email: {
+      newReports: true,
+      systemUpdates: true,
+      tips: false,
+      newsletter: false
+    },
+    sms: {
+      criticalAlerts: true,
+      paymentRecovery: false,
+      invoiceReminders: false
+    }
   });
 
-  const handleToggleChange = (name: string, checked: boolean) => {
+  const handleToggleChange = (category: 'email' | 'sms', name: string, checked: boolean) => {
     setNotifications(prev => ({
       ...prev,
-      [name]: checked
+      [category]: {
+        ...prev[category],
+        [name]: checked
+      }
     }));
   };
 
   const handleSubmit = async () => {
-    setSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Configurações salvas",
-      description: "Suas alterações foram salvas com sucesso."
-    });
-    
-    setSaving(false);
+    await updateNotificationPreferences(notifications);
   };
 
   return (
@@ -41,35 +44,71 @@ export const NotificationsSettings = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium">Notificações por Email</p>
-            <p className="text-sm text-muted-foreground">
-              Receba alertas sobre novos relatórios por email
-            </p>
+        <div className="space-y-4">
+          <h3 className="font-medium">Notificações por Email</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Novos Relatórios</p>
+                <p className="text-sm text-muted-foreground">
+                  Receba alertas sobre novos relatórios por email
+                </p>
+              </div>
+              <Switch 
+                checked={notifications.email.newReports} 
+                onCheckedChange={(checked) => handleToggleChange('email', 'newReports', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Atualizações do Sistema</p>
+                <p className="text-sm text-muted-foreground">
+                  Seja notificado sobre atualizações importantes
+                </p>
+              </div>
+              <Switch 
+                checked={notifications.email.systemUpdates} 
+                onCheckedChange={(checked) => handleToggleChange('email', 'systemUpdates', checked)}
+              />
+            </div>
           </div>
-          <Switch 
-            checked={notifications.notificacoesEmail} 
-            onCheckedChange={(checked) => handleToggleChange('notificacoesEmail', checked)}
-          />
         </div>
         
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium">Notificações por SMS</p>
-            <p className="text-sm text-muted-foreground">
-              Receba alertas sobre novos relatórios por SMS
-            </p>
+        <div className="space-y-4">
+          <h3 className="font-medium">Notificações por SMS</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Alertas Críticos</p>
+                <p className="text-sm text-muted-foreground">
+                  Receba alertas importantes por SMS
+                </p>
+              </div>
+              <Switch 
+                checked={notifications.sms.criticalAlerts} 
+                onCheckedChange={(checked) => handleToggleChange('sms', 'criticalAlerts', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Recuperação de Valores</p>
+                <p className="text-sm text-muted-foreground">
+                  Notificações sobre valores recuperados
+                </p>
+              </div>
+              <Switch 
+                checked={notifications.sms.paymentRecovery} 
+                onCheckedChange={(checked) => handleToggleChange('sms', 'paymentRecovery', checked)}
+              />
+            </div>
           </div>
-          <Switch 
-            checked={notifications.notificacoesSMS} 
-            onCheckedChange={(checked) => handleToggleChange('notificacoesSMS', checked)}
-          />
         </div>
         
         <div className="mt-6 flex justify-end">
-          <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar Alterações"}
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? "Salvando..." : "Salvar Preferências"}
           </Button>
         </div>
       </CardContent>
