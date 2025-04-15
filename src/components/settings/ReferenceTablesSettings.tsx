@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
@@ -10,6 +9,7 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { medicalReferenceTables, medicalRoles } from '@/data/referenceTables';
 
 interface ReferenceTable {
   id: string;
@@ -23,8 +23,12 @@ export const ReferenceTablesSettings = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [tables, setTables] = useState<ReferenceTable[]>([]);
-  const [roles, setRoles] = useState<ReferenceTable[]>([]);
+  const [tables, setTables] = useState<ReferenceTable[]>(
+    medicalReferenceTables.map(t => ({ ...t, checked: t.checked || false }))
+  );
+  const [roles, setRoles] = useState<ReferenceTable[]>(
+    medicalRoles.map(r => ({ ...r, checked: false }))
+  );
   const [filterCategory, setFilterCategory] = useState<string>('all');
   
   useEffect(() => {
@@ -43,8 +47,18 @@ export const ReferenceTablesSettings = () => {
         
         if (data?.reference_tables_preferences) {
           const prefs = data.reference_tables_preferences;
-          if (prefs.tables) setTables(prefs.tables);
-          if (prefs.roles) setRoles(prefs.roles);
+          if (prefs.tables) {
+            setTables(prev => prev.map(table => ({
+              ...table,
+              checked: prefs.tables.find((t: ReferenceTable) => t.id === table.id)?.checked || false
+            })));
+          }
+          if (prefs.roles) {
+            setRoles(prev => prev.map(role => ({
+              ...role,
+              checked: prefs.roles.find((r: ReferenceTable) => r.id === role.id)?.checked || false
+            })));
+          }
         }
       } catch (error) {
         console.error('Error fetching preferences:', error);

@@ -2,9 +2,8 @@
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Navbar from "@/components/Navbar";  // Changed from { Navbar }
+import Navbar from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
-import { ProfileSettings } from '@/components/settings/ProfileSettings';
 import { NotificationsSettings } from '@/components/settings/NotificationsSettings';
 import { ReferenceTablesSettings } from '@/components/settings/ReferenceTablesSettings';
 
@@ -21,16 +20,11 @@ const Settings = () => {
           <div className="container py-8">
             <h1 className="text-3xl font-bold mb-6">Configurações</h1>
             
-            <Tabs defaultValue="perfil" className="space-y-6">
-              <TabsList className="grid w-full md:w-auto md:inline-flex grid-cols-3 md:grid-cols-none h-auto">
-                <TabsTrigger value="perfil">Perfil</TabsTrigger>
+            <Tabs defaultValue="notificacoes" className="space-y-6">
+              <TabsList className="grid w-full md:w-auto md:inline-flex grid-cols-2 md:grid-cols-none h-auto">
                 <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
                 <TabsTrigger value="tabelas">Tabelas de Referência</TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="perfil">
-                <ProfileSettings />
-              </TabsContent>
               
               <TabsContent value="notificacoes">
                 <NotificationsSettings />

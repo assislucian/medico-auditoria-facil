@@ -204,6 +204,8 @@ export type Database = {
           email: string
           id: string
           name: string
+          notification_preferences: Json | null
+          reference_tables_preferences: Json | null
           specialty: string | null
           updated_at: string
         }
@@ -213,6 +215,8 @@ export type Database = {
           email: string
           id: string
           name: string
+          notification_preferences?: Json | null
+          reference_tables_preferences?: Json | null
           specialty?: string | null
           updated_at?: string
         }
@@ -222,6 +226,8 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          notification_preferences?: Json | null
+          reference_tables_preferences?: Json | null
           specialty?: string | null
           updated_at?: string
         }

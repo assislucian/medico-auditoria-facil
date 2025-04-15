@@ -22,23 +22,25 @@ interface NotificationPreferences {
   };
 }
 
+const defaultPreferences: NotificationPreferences = {
+  email: {
+    newReports: true,
+    systemUpdates: true,
+    tips: false,
+    newsletter: false
+  },
+  sms: {
+    criticalAlerts: true,
+    paymentRecovery: false,
+    invoiceReminders: false
+  }
+};
+
 export const NotificationsSettings = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationPreferences>({
-    email: {
-      newReports: true,
-      systemUpdates: true,
-      tips: false,
-      newsletter: false
-    },
-    sms: {
-      criticalAlerts: true,
-      paymentRecovery: false,
-      invoiceReminders: false
-    }
-  });
+  const [notifications, setNotifications] = useState<NotificationPreferences>(defaultPreferences);
 
   useEffect(() => {
     const fetchPreferences = async () => {
