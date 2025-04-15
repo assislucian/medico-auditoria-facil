@@ -2,7 +2,7 @@
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Navbar } from "@/components/Navbar";
+import Navbar from "@/components/Navbar";  // Changed from { Navbar }
 import { SideNav } from "@/components/SideNav";
 import { ProfileSettings } from '@/components/settings/ProfileSettings';
 import { NotificationsSettings } from '@/components/settings/NotificationsSettings';
