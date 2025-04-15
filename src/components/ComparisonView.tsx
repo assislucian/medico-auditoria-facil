@@ -7,78 +7,41 @@ import { AlertCircle, CheckCircle, HelpCircle, Info, Download, FileText } from '
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { PaymentStatement } from '@/types/medical';
+import { SummaryCards } from './comparison/SummaryCards';
 
-const demonstrativos = [
+const demonstrativos: PaymentStatement[] = [
   {
     id: "dem1",
-    numero: "DEM-2025-001",
-    competencia: "Janeiro/2025",
-    hospital: "Hospital Albert Einstein",
-    data: "2025-01-15",
+    numero: "DEM-2024-001",
+    competencia: "Agosto/2024",
+    hospital: "Liga Norteriog Cancer Policlinic",
+    data: "2024-08-19",
+    beneficiario: "00620040000604690",
     procedimentos: [
       {
         id: "proc1",
-        codigo: "31303039",
-        procedimento: "Videohisteroscopia cirúrgica com ressectoscópio",
+        codigo: "30602246",
+        procedimento: "Reconstrução Mamária Com Retalhos Cutâneos Regionais",
         papel: "Cirurgião",
         valorCBHPM: 1521.32,
-        valorPago: 1250.00,
-        diferenca: -271.32,
+        valorPago: 457.64,
+        diferenca: -1063.68,
         pago: true,
-        guia: "GUIA-001"
+        guia: "10467538",
+        beneficiario: "00620040000604690"
       },
       {
         id: "proc2",
-        codigo: "31303039",
-        procedimento: "Videohisteroscopia cirúrgica com ressectoscópio",
+        codigo: "30602246",
+        procedimento: "Reconstrução Mamária Com Retalhos Cutâneos Regionais",
         papel: "1º Auxiliar",
-        valorCBHPM: 304.26,
-        valorPago: 304.26,
+        valorCBHPM: 228.82,
+        valorPago: 228.82,
         diferenca: 0,
         pago: true,
-        guia: "GUIA-001"
-      },
-      {
-        id: "proc3",
-        codigo: "40202615",
-        procedimento: "Exame anatomopatológico intraoperatório",
-        papel: "Cirurgião",
-        valorCBHPM: 652.80,
-        valorPago: 0,
-        diferenca: -652.80,
-        pago: false,
-        guia: "GUIA-002"
-      }
-    ]
-  },
-  {
-    id: "dem2",
-    numero: "DEM-2025-002",
-    competencia: "Janeiro/2025",
-    hospital: "Hospital Sírio-Libanês",
-    data: "2025-01-20",
-    procedimentos: [
-      {
-        id: "proc4",
-        codigo: "40304361",
-        procedimento: "Coloração especial por coloração",
-        papel: "Cirurgião",
-        valorCBHPM: 88.50,
-        valorPago: 70.00,
-        diferenca: -18.50,
-        pago: true,
-        guia: "GUIA-003"
-      },
-      {
-        id: "proc5",
-        codigo: "40304361",
-        procedimento: "Coloração especial por coloração",
-        papel: "1º Auxiliar",
-        valorCBHPM: 17.70,
-        valorPago: 17.70,
-        diferenca: 0,
-        pago: true,
-        guia: "GUIA-003"
+        guia: "10467538",
+        beneficiario: "00620040000604690"
       }
     ]
   }
@@ -97,8 +60,26 @@ const ComparisonView = () => {
   const procedimentosNaoPagos = procedimentos.filter(item => !item.pago).length;
 
   const exportReport = () => {
+    if (!currentDemonstrativo) return;
+
     const reportData = {
-      demonstrativo: currentDemonstrativo,
+      demonstrativo: {
+        numero: currentDemonstrativo.numero,
+        competencia: currentDemonstrativo.competencia,
+        hospital: currentDemonstrativo.hospital,
+        data: currentDemonstrativo.data,
+        beneficiario: currentDemonstrativo.beneficiario
+      },
+      procedimentos: currentDemonstrativo.procedimentos.map(proc => ({
+        guia: proc.guia,
+        codigo: proc.codigo,
+        procedimento: proc.procedimento,
+        papel: proc.papel,
+        valorCBHPM: proc.valorCBHPM,
+        valorPago: proc.valorPago,
+        diferenca: proc.diferenca,
+        status: proc.pago ? (proc.diferenca < 0 ? 'Pago Parcialmente' : 'Pago Corretamente') : 'Não Pago'
+      })),
       totais: {
         valorCBHPM: totalCBHPM,
         valorPago: totalPago,
@@ -107,8 +88,12 @@ const ComparisonView = () => {
       }
     };
 
-    console.log('Exportando relatório:', reportData);
-    toast.success('Relatório gerado com sucesso!');
+    // Aqui você implementaria a lógica real de exportação
+    console.log('Dados do relatório para contestação:', reportData);
+    
+    // Exemplo de nome do arquivo
+    const fileName = `contestacao_${currentDemonstrativo.numero}_${currentDemonstrativo.beneficiario}.pdf`;
+    toast.success(`Relatório de contestação "${fileName}" gerado com sucesso!`);
   };
 
   return (
@@ -179,60 +164,12 @@ const ComparisonView = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-secondary/50">
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground mb-1">Valor CBHPM</p>
-              <p className="text-2xl font-bold">R$ {totalCBHPM.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-secondary/50">
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground mb-1">Valor Pago</p>
-              <p className="text-2xl font-bold">R$ {totalPago.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card className={`${totalDiferenca < 0 ? 'bg-red-500/10 border-red-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-center mb-1">
-                <p className="text-sm text-muted-foreground">Diferença</p>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p>Diferença entre o valor CBHPM 2015 e o valor efetivamente pago pelo plano</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <p className={`text-2xl font-bold ${totalDiferenca < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                {totalDiferenca < 0 ? '-' : '+'} R$ {Math.abs(totalDiferenca).toFixed(2)}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className={`${procedimentosNaoPagos > 0 ? 'bg-red-500/10 border-red-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-center mb-1">
-                <p className="text-sm text-muted-foreground">Procedimentos Não Pagos</p>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p>Procedimentos que constam na guia mas não foram pagos pelo plano</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <p className={`text-2xl font-bold ${procedimentosNaoPagos > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                {procedimentosNaoPagos}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <SummaryCards 
+          totalCBHPM={totalCBHPM}
+          totalPago={totalPago}
+          totalDiferenca={totalDiferenca}
+          procedimentosNaoPagos={procedimentosNaoPagos}
+        />
 
         <Table>
           <TableHeader>
