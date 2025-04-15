@@ -9,11 +9,15 @@ import {
   CreditCard, 
   Settings, 
   LogOut, 
-  HelpCircle
+  HelpCircle,
+  User,
+  Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface SideNavProps {
   className?: string;
@@ -73,6 +77,21 @@ export function SideNav({ className }: SideNavProps) {
       </div>
       
       <div className="px-3 py-2">
+        <div className="flex flex-col items-center mb-6 p-2">
+          <Avatar className="h-16 w-16 mb-2">
+            <AvatarImage src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=200" alt="Avatar" />
+            <AvatarFallback>AS</AvatarFallback>
+          </Avatar>
+          <h3 className="font-medium">Dra. Ana Silva</h3>
+          <p className="text-xs text-muted-foreground">Ortopedia</p>
+          <p className="text-xs text-muted-foreground">CRM 123456/SP</p>
+          <Button variant="outline" size="sm" className="mt-2 w-full" asChild>
+            <Link to="/profile">Ver perfil</Link>
+          </Button>
+        </div>
+      </div>
+      
+      <div className="px-3 py-2">
         <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
           Principal
         </h2>
@@ -101,15 +120,57 @@ export function SideNav({ className }: SideNavProps) {
       
       <div className="px-3 py-2">
         <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
-          Configurações
+          Notificações
         </h2>
         <div className="space-y-1">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start relative"
+                >
+                  <Bell className="mr-2 h-4 w-4" />
+                  Notificações
+                  <Badge className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs">3</Badge>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Notificações</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+      
+      <div className="px-3 py-2">
+        <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
+          Conta
+        </h2>
+        <div className="space-y-1">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link to="/profile">
+                  <Button
+                    variant={location.pathname === "/profile" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="w-full justify-start"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Perfil
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">Perfil</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Link to="/settings">
                   <Button
-                    variant="ghost"
+                    variant={location.pathname === "/settings" ? "secondary" : "ghost"}
                     size="sm"
                     className="w-full justify-start"
                   >
@@ -121,13 +182,20 @@ export function SideNav({ className }: SideNavProps) {
               <TooltipContent side="right">Configurações</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+        </div>
+      </div>
+      
+      <div className="px-3 py-2">
+        <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
+          Ajuda
+        </h2>
+        <div className="space-y-1">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link to="/help">
                   <Button
-                    variant="ghost"
+                    variant={location.pathname === "/help" ? "secondary" : "ghost"}
                     size="sm"
                     className="w-full justify-start"
                   >
@@ -145,7 +213,7 @@ export function SideNav({ className }: SideNavProps) {
       <div className="mt-auto px-3 py-2">
         <div className="flex items-center justify-between p-2">
           <ThemeToggle />
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10">
             <LogOut className="h-5 w-5" />
             <span className="sr-only">Sair</span>
           </Button>
