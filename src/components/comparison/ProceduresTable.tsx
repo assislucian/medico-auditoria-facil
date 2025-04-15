@@ -3,8 +3,18 @@ import { Procedure } from '@/types/medical';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle, HelpCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AlertCircle, CheckCircle, HelpCircle, Users } from 'lucide-react';
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface ProceduresTableProps {
   procedimentos: Procedure[];
@@ -19,7 +29,7 @@ export const ProceduresTable = ({ procedimentos, isDetailView }: ProceduresTable
           <TableHead>Código</TableHead>
           <TableHead>Guia</TableHead>
           <TableHead className="w-[300px]">Procedimento</TableHead>
-          <TableHead>Papel</TableHead>
+          <TableHead>Médicos</TableHead>
           <TableHead className="text-right">Valor CBHPM</TableHead>
           <TableHead className="text-right">Valor Pago</TableHead>
           <TableHead className="text-right">Diferença</TableHead>
@@ -48,13 +58,34 @@ export const ProceduresTable = ({ procedimentos, isDetailView }: ProceduresTable
               </div>
             </TableCell>
             <TableCell>
-              <Badge variant="outline" className={
-                item.papel === "Cirurgião" ? "bg-blue-500/10 text-blue-500" : 
-                item.papel === "1º Auxiliar" ? "bg-green-500/10 text-green-500" : 
-                "bg-amber-500/10 text-amber-500"
-              }>
-                {item.papel}
-              </Badge>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8">
+                    <Users className="h-4 w-4 mr-2" />
+                    {item.doctors.length} médicos
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <div className="space-y-2">
+                    {item.doctors.map((doctor, index) => (
+                      <div key={doctor.code} className="flex flex-col space-y-1 border-b last:border-0 pb-2">
+                        <span className="font-medium">{doctor.name}</span>
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <Badge variant="outline" className={
+                            doctor.role === "Cirurgião" ? "bg-blue-500/10 text-blue-500" : 
+                            doctor.role === "Primeiro Auxiliar" ? "bg-green-500/10 text-green-500" : 
+                            doctor.role === "Anestesista" ? "bg-amber-500/10 text-amber-500" :
+                            "bg-purple-500/10 text-purple-500"
+                          }>
+                            {doctor.role}
+                          </Badge>
+                          <span>CRM: {doctor.code}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </TableCell>
             <TableCell className="text-right">R$ {item.valorCBHPM.toFixed(2)}</TableCell>
             <TableCell className="text-right">

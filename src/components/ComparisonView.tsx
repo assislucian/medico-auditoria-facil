@@ -36,19 +36,21 @@ const ComparisonView = () => {
         guia: proc.guia,
         codigo: proc.codigo,
         procedimento: proc.procedimento,
-        papel: proc.papel,
-        valorCBHPM: proc.valorCBHPM,
-        valorPago: proc.valorPago,
-        diferenca: proc.diferenca,
+        medicos: proc.doctors.map(doc => ({
+          nome: doc.name,
+          papel: doc.role,
+          crm: doc.code,
+          valorCBHPM: calculateCBHPMByRole(proc.valorCBHPM, doc.role),
+          valorPago: proc.valorPago / proc.doctors.length, // Distribuição proporcional
+          diferenca: calculateCBHPMByRole(proc.valorCBHPM, doc.role) - (proc.valorPago / proc.doctors.length)
+        })),
         status: proc.pago ? (proc.diferenca < 0 ? 'Pago Parcialmente' : 'Pago Corretamente') : 'Não Pago'
       })),
       totais: getTotals()
     };
 
-    // Aqui você implementaria a lógica real de exportação
     console.log('Dados do relatório para contestação:', reportData);
     
-    // Exemplo de nome do arquivo
     const fileName = `contestacao_${currentDemonstrativo.numero}_${currentDemonstrativo.beneficiario}.pdf`;
     toast.success(`Relatório de contestação "${fileName}" gerado com sucesso!`);
   };

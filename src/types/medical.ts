@@ -1,4 +1,3 @@
-
 export interface Procedure {
   id: string;
   codigo: string;
