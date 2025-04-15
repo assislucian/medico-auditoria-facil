@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +10,10 @@ import { SearchBar } from '@/components/help/SearchBar';
 import { SearchResults } from '@/components/help/SearchResults';
 import { HelpContent } from '@/components/help/HelpContent';
 import { FAQSection } from '@/components/help/FAQSection';
+import { GuidesList } from '@/components/help/GuidesList';
+import { VideosList } from '@/components/help/VideosList';
 import type { HelpArticle } from '@/types/help';
+import { guides, videos } from '@/data/helpGuides';
 import { supabase } from "@/integrations/supabase/client";
 
 // Move these to a separate file if they grow larger
@@ -88,8 +92,6 @@ const Help = () => {
   };
 
   const goToSupport = () => navigate('/support');
-  const showGuides = () => setActiveSection('guides');
-  const showVideos = () => setActiveSection('videos');
 
   return (
     <>
@@ -111,6 +113,7 @@ const Help = () => {
             
             {isSearching ? (
               <div className="text-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto" />
                 <p>Buscando resultados...</p>
               </div>
             ) : (
@@ -120,15 +123,29 @@ const Help = () => {
               />
             )}
             
-            {(searchResults.length === 0 && !activeSection) && (
-              <>
+            {searchResults.length === 0 && (
+              <div className="space-y-12">
                 <HelpContent 
-                  onShowGuides={showGuides}
-                  onShowVideos={showVideos}
+                  onShowGuides={() => setActiveSection('guides')}
+                  onShowVideos={() => setActiveSection('videos')}
                   onContactSupport={goToSupport}
                 />
                 
-                <FAQSection items={faqItems} />
+                {activeSection === 'guides' && (
+                  <GuidesList 
+                    guides={guides} 
+                    onShowAll={() => setActiveSection(null)}
+                  />
+                )}
+                
+                {activeSection === 'videos' && (
+                  <VideosList 
+                    videos={videos}
+                    onShowAll={() => setActiveSection(null)}
+                  />
+                )}
+                
+                {!activeSection && <FAQSection items={faqItems} />}
                 
                 <div className="bg-primary/5 rounded-lg p-6 text-center">
                   <h3 className="text-xl font-medium mb-2">Não encontrou o que procurava?</h3>
@@ -137,7 +154,7 @@ const Help = () => {
                   </p>
                   <Button onClick={goToSupport}>Contatar Suporte</Button>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -147,3 +164,4 @@ const Help = () => {
 };
 
 export default Help;
+
