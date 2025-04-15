@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      analysis_history: {
+        Row: {
+          date: string
+          description: string
+          glosados: number | null
+          hospital: string | null
+          id: string
+          procedimentos: number | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          date?: string
+          description: string
+          glosados?: number | null
+          hospital?: string | null
+          id?: string
+          procedimentos?: number | null
+          status?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          date?: string
+          description?: string
+          glosados?: number | null
+          hospital?: string | null
+          id?: string
+          procedimentos?: number | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       CBHPM2015: {
         Row: {
           codigo: number | null
@@ -39,6 +75,128 @@ export type Database = {
           procedimento?: string | null
           valor_anestesista?: string | null
           valor_cirurgiao?: string | null
+        }
+        Relationships: []
+      }
+      procedures: {
+        Row: {
+          analysis_id: string
+          beneficiario: string | null
+          codigo: string
+          diferenca: number | null
+          doctors: Json | null
+          guia: string | null
+          id: string
+          pago: boolean | null
+          papel: string | null
+          procedimento: string
+          user_id: string
+          valor_cbhpm: number | null
+          valor_pago: number | null
+        }
+        Insert: {
+          analysis_id: string
+          beneficiario?: string | null
+          codigo: string
+          diferenca?: number | null
+          doctors?: Json | null
+          guia?: string | null
+          id?: string
+          pago?: boolean | null
+          papel?: string | null
+          procedimento: string
+          user_id: string
+          valor_cbhpm?: number | null
+          valor_pago?: number | null
+        }
+        Update: {
+          analysis_id?: string
+          beneficiario?: string | null
+          codigo?: string
+          diferenca?: number | null
+          doctors?: Json | null
+          guia?: string | null
+          id?: string
+          pago?: boolean | null
+          papel?: string | null
+          procedimento?: string
+          user_id?: string
+          valor_cbhpm?: number | null
+          valor_pago?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedures_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_history"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          crm: string
+          email: string
+          id: string
+          name: string
+          specialty: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          crm: string
+          email: string
+          id: string
+          name: string
+          specialty?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          crm?: string
+          email?: string
+          id?: string
+          name?: string
+          specialty?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      uploads: {
+        Row: {
+          file_name: string
+          file_path: string
+          file_type: string
+          hospital: string | null
+          id: string
+          metadata: Json | null
+          status: string
+          upload_date: string
+          user_id: string
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          file_type: string
+          hospital?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+          upload_date?: string
+          user_id: string
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          file_type?: string
+          hospital?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+          upload_date?: string
+          user_id?: string
         }
         Relationships: []
       }

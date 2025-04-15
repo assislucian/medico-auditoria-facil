@@ -1,12 +1,13 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Form,
   FormControl,
@@ -36,6 +37,8 @@ const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -51,12 +54,18 @@ const RegisterForm = () => {
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     
-    // Simulate registration - would be replaced with actual auth
-    setTimeout(() => {
-      toast.success('Cadastro realizado com sucesso!');
+    try {
+      await signUp(data.email, data.password, {
+        name: data.name,
+        crm: data.crm
+      });
+      toast.success('Cadastro realizado com sucesso! Verifique seu email.');
+      navigate('/login');
+    } catch (error) {
+      toast.error('Erro ao realizar cadastro. Tente novamente.');
+    } finally {
       setIsLoading(false);
-      window.location.href = '/login';
-    }, 1500);
+    }
   };
 
   return (
