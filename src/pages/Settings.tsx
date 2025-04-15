@@ -1,60 +1,14 @@
 
 import { Helmet } from 'react-helmet-async';
-import { useState } from 'react';
-import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
-import { useToast } from "@/hooks/use-toast";
-import ReferenceTablesSettings from '@/components/settings/ReferenceTablesSettings';
+import { ProfileSettings } from '@/components/settings/ProfileSettings';
+import { NotificationsSettings } from '@/components/settings/NotificationsSettings';
+import { ReferenceTablesSettings } from '@/components/settings/ReferenceTablesSettings';
 
 const Settings = () => {
-  const { toast } = useToast();
-  const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "Dr. Ana Silva",
-    email: "dr.anasilva@exemplo.med.br",
-    crm: "123456/SP",
-    especialidade: "Ortopedia",
-    notificacoesEmail: true,
-    notificacoesSMS: false
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-
-  const handleToggleChange = (name: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: checked
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    
-    // Simulação de salvamento
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Configurações salvas",
-      description: "Suas alterações foram salvas com sucesso."
-    });
-    
-    setSaving(false);
-  };
-
   return (
     <>
       <Helmet>
@@ -75,111 +29,11 @@ const Settings = () => {
               </TabsList>
               
               <TabsContent value="perfil">
-                <form onSubmit={handleSubmit}>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Informações de Perfil</CardTitle>
-                      <CardDescription>
-                        Gerencie suas informações pessoais e profissionais
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="name">Nome Completo</Label>
-                          <Input 
-                            id="name" 
-                            name="name" 
-                            value={formData.name} 
-                            onChange={handleChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
-                          <Input 
-                            id="email" 
-                            name="email" 
-                            type="email"
-                            value={formData.email} 
-                            onChange={handleChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="crm">CRM</Label>
-                          <Input 
-                            id="crm" 
-                            name="crm"
-                            value={formData.crm} 
-                            onChange={handleChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="especialidade">Especialidade</Label>
-                          <Input 
-                            id="especialidade" 
-                            name="especialidade"
-                            value={formData.especialidade} 
-                            onChange={handleChange}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="mt-6 flex justify-between items-center">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-muted-foreground">Tema:</span>
-                          <ThemeToggle />
-                        </div>
-                        <Button type="submit" disabled={saving}>
-                          {saving ? "Salvando..." : "Salvar Alterações"}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </form>
+                <ProfileSettings />
               </TabsContent>
               
               <TabsContent value="notificacoes">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Preferências de Notificação</CardTitle>
-                    <CardDescription>
-                      Configure como você deseja receber notificações do sistema
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Notificações por Email</p>
-                        <p className="text-sm text-muted-foreground">
-                          Receba alertas sobre novos relatórios por email
-                        </p>
-                      </div>
-                      <Switch 
-                        checked={formData.notificacoesEmail} 
-                        onCheckedChange={(checked) => handleToggleChange('notificacoesEmail', checked)}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Notificações por SMS</p>
-                        <p className="text-sm text-muted-foreground">
-                          Receba alertas sobre novos relatórios por SMS
-                        </p>
-                      </div>
-                      <Switch 
-                        checked={formData.notificacoesSMS} 
-                        onCheckedChange={(checked) => handleToggleChange('notificacoesSMS', checked)}
-                      />
-                    </div>
-                    
-                    <div className="mt-6 flex justify-end">
-                      <Button onClick={handleSubmit} disabled={saving}>
-                        {saving ? "Salvando..." : "Salvar Alterações"}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <NotificationsSettings />
               </TabsContent>
               
               <TabsContent value="tabelas">
@@ -192,12 +46,6 @@ const Settings = () => {
                   </CardHeader>
                   <CardContent>
                     <ReferenceTablesSettings />
-                    
-                    <div className="mt-6 flex justify-end">
-                      <Button onClick={handleSubmit} disabled={saving}>
-                        {saving ? "Salvando..." : "Salvar Alterações"}
-                      </Button>
-                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
