@@ -1,4 +1,3 @@
-
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
@@ -104,7 +103,6 @@ const Support = () => {
     try {
       if (!user) throw new Error('Usuário não autenticado');
       
-      // Criar o ticket
       const { data, error } = await supabase
         .from('support_tickets')
         .insert([

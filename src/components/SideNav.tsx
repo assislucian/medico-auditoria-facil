@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
@@ -28,7 +27,7 @@ interface SideNavProps {
 export function SideNav({ className }: SideNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   
   const handleSignOut = async () => {
     try {

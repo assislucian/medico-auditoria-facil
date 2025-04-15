@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
@@ -103,60 +102,45 @@ const Help = () => {
   const [searchResults, setSearchResults] = useState<HelpArticle[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [helpArticles, setHelpArticles] = useState<HelpArticle[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Este efeito será executado quando o componente for montado 
-    // Simula a recuperação de artigos de ajuda do banco de dados
+    fetchHelpArticles();
   }, []);
+
+  const fetchHelpArticles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('help_articles')
+        .select('*')
+        .eq('published', true);
+
+      if (error) throw error;
+      setHelpArticles(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar artigos de ajuda:', error);
+      // Note: in a real app, you might want to show a toast or handle the error more gracefully
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!searchTerm.trim()) return;
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      return;
+    }
     
     setIsSearching(true);
     
-    // Simulação de busca nos FAQs e guias
-    const results: HelpArticle[] = [];
-    
-    // Busca nos FAQs
-    faqItems.forEach(item => {
-      if (
-        item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.answer.toLowerCase().includes(searchTerm.toLowerCase())
-      ) {
-        results.push({
-          id: item.id,
-          title: item.question,
-          content: item.answer,
-          category: "faq",
-          tags: ["ajuda", "faq"]
-        });
-      }
-    });
-    
-    // Busca nos guias
-    guides.forEach(guide => {
-      if (
-        guide.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        guide.content.toLowerCase().includes(searchTerm.toLowerCase())
-      ) {
-        results.push({
-          id: guide.id,
-          title: guide.title,
-          content: guide.content,
-          category: "guia",
-          tags: [guide.category]
-        });
-      }
-    });
+    const results = helpArticles.filter(article => 
+      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
     
     setSearchResults(results);
-    
-    // Registrar busca (em uma aplicação real, isso enviaria para o banco de dados)
-    console.log("Pesquisa realizada:", searchTerm);
-    
     setIsSearching(false);
   };
 
@@ -207,7 +191,7 @@ const Help = () => {
                     <Card key={result.id}>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{result.title}</CardTitle>
-                        <CardDescription>Categoria: {result.category === 'faq' ? 'Perguntas Frequentes' : 'Guia'}</CardDescription>
+                        <CardDescription>Categoria: {result.category}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <p className="text-sm">{result.content}</p>
