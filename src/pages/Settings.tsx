@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SideNav } from "@/components/SideNav";
 import { useToast } from "@/hooks/use-toast";
+import ReferenceTablesSettings from '@/components/settings/ReferenceTablesSettings';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -186,46 +187,16 @@ const Settings = () => {
                   <CardHeader>
                     <CardTitle>Tabelas de Referência</CardTitle>
                     <CardDescription>
-                      Configure quais tabelas de valores médicos você deseja usar como referência
+                      Configure quais tabelas de valores médicos você deseja usar como referência para análises de pagamentos
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <Switch id="cbhpm" defaultChecked />
-                        <div>
-                          <Label htmlFor="cbhpm">CBHPM 2022</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Classificação Brasileira Hierarquizada de Procedimentos Médicos
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Switch id="tuss" defaultChecked />
-                        <div>
-                          <Label htmlFor="tuss">TUSS 2022</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Terminologia Unificada da Saúde Suplementar
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Switch id="amb" />
-                        <div>
-                          <Label htmlFor="amb">AMB 92</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Associação Médica Brasileira
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-6 flex justify-end">
-                        <Button onClick={handleSubmit} disabled={saving}>
-                          {saving ? "Salvando..." : "Salvar Alterações"}
-                        </Button>
-                      </div>
+                    <ReferenceTablesSettings />
+                    
+                    <div className="mt-6 flex justify-end">
+                      <Button onClick={handleSubmit} disabled={saving}>
+                        {saving ? "Salvando..." : "Salvar Alterações"}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
