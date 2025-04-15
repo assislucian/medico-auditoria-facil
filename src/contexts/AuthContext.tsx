@@ -22,7 +22,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { subscription } = supabase.auth.onAuthStateChange((event, session) => {
+    // First set up the auth state listener
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -34,13 +35,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Clean up subscription on unmount
+    return () => {
+      data.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
