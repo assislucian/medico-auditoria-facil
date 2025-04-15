@@ -1,17 +1,18 @@
 
 import { useState } from 'react';
 import { PaymentStatement, Procedure, DoctorParticipation } from '@/types/medical';
+import { findProcedureByCodigo, calculateTotalCBHPM } from '@/data/cbhpmData';
 
 export const calculateCBHPMByRole = (baseCBHPM: number, role: string): number => {
   switch (role) {
     case "Cirurgião":
       return baseCBHPM;
     case "Primeiro Auxiliar":
-      return baseCBHPM * 0.3; // 30% do valor do cirurgião
+      return baseCBHPM * 0.3;
     case "Segundo Auxiliar":
-      return baseCBHPM * 0.2; // 20% do valor do cirurgião
+      return baseCBHPM * 0.2;
     case "Anestesista":
-      return baseCBHPM * 0.3; // 30% do valor do cirurgião
+      return baseCBHPM * 0.3;
     default:
       return 0;
   }
@@ -75,9 +76,12 @@ export const useDemonstrativoSelection = () => {
 
   const getTotals = () => {
     const totalCBHPM = procedimentos.reduce((acc, curr) => {
-      // Calculate CBHPM for each doctor's role
+      const cbhpmData = findProcedureByCodigo(curr.codigo);
+      if (!cbhpmData) return acc;
+
+      const baseCBHPM = calculateTotalCBHPM(cbhpmData);
       const doctorsCBHPM = curr.doctors.reduce((sum, doctor) => 
-        sum + calculateCBHPMByRole(curr.valorCBHPM, doctor.role), 0);
+        sum + calculateCBHPMByRole(baseCBHPM, doctor.role), 0);
       return acc + doctorsCBHPM;
     }, 0);
 
