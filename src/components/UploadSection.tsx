@@ -3,14 +3,27 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import FileDropZone from './upload/FileDropZone';
 import FileList from './upload/FileList';
 import UploadProgress from './upload/UploadProgress';
 import ComparisonView from './ComparisonView';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type FileType = 'guia' | 'demonstrativo';
 type ProcessingStage = 'idle' | 'extracting' | 'analyzing' | 'comparing' | 'complete';
+
+interface FileWithStatus {
+  name: string;
+  type: FileType;
+  file: File;
+  status?: 'valid' | 'invalid' | 'processing';
+}
 
 /**
  * UploadSection Component
@@ -21,7 +34,7 @@ type ProcessingStage = 'idle' | 'extracting' | 'analyzing' | 'comparing' | 'comp
 const UploadSection = () => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [selectedFiles, setSelectedFiles] = useState<{name: string, type: FileType, file: File}[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<FileWithStatus[]>([]);
   const [showComparison, setShowComparison] = useState(false);
   const [processingStage, setProcessingStage] = useState<ProcessingStage>('idle');
   const [processingMsg, setProcessingMsg] = useState('Preparando arquivos...');
@@ -40,11 +53,39 @@ const UploadSection = () => {
         return;
       }
 
-      const fileArray = files.map(file => ({
+      const fileArray: FileWithStatus[] = files.map(file => ({
         name: file.name,
         type,
-        file
+        file,
+        status: 'processing'
       }));
+      
+      // Simulate file validation
+      setTimeout(() => {
+        const updatedFiles = fileArray.map(file => {
+          // Randomly mark some files as invalid for demonstration
+          const isValid = file.name.toLowerCase().includes('invalid') ? false : true;
+          return { ...file, status: isValid ? 'valid' : 'invalid' };
+        });
+        
+        setSelectedFiles(prev => {
+          const newFiles = [...prev];
+          updatedFiles.forEach(file => {
+            const existingIndex = newFiles.findIndex(f => f.name === file.name && f.type === file.type);
+            if (existingIndex >= 0) {
+              newFiles[existingIndex] = file;
+            } else {
+              newFiles.push(file);
+            }
+          });
+          return newFiles;
+        });
+        
+        const invalidCount = updatedFiles.filter(f => f.status === 'invalid').length;
+        if (invalidCount > 0) {
+          toast.warning(`${invalidCount} ${invalidCount === 1 ? 'arquivo não pôde' : 'arquivos não puderam'} ser processado. Verifique o formato.`);
+        }
+      }, 1500);
       
       setSelectedFiles([...selectedFiles, ...fileArray]);
       e.target.value = '';
@@ -56,7 +97,10 @@ const UploadSection = () => {
    */
   const removeFile = (index: number) => {
     setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
-    setShowComparison(false);
+    if (showComparison) {
+      setShowComparison(false);
+      toast.info("A comparação foi resetada devido à remoção de arquivos.");
+    }
   };
 
   /**
@@ -70,52 +114,72 @@ const UploadSection = () => {
     }
 
     // Verificar se temos pelo menos uma guia e um demonstrativo
-    const hasGuia = selectedFiles.some(f => f.type === 'guia');
-    const hasDemonstrativo = selectedFiles.some(f => f.type === 'demonstrativo');
+    const hasGuia = selectedFiles.some(f => f.type === 'guia' && f.status !== 'invalid');
+    const hasDemonstrativo = selectedFiles.some(f => f.type === 'demonstrativo' && f.status !== 'invalid');
 
     if (!hasGuia || !hasDemonstrativo) {
-      toast.error('É necessário enviar pelo menos uma guia e um demonstrativo');
+      toast.error('É necessário enviar pelo menos uma guia válida e um demonstrativo válido');
       return;
+    }
+
+    // Check if any files are invalid
+    const invalidFiles = selectedFiles.filter(f => f.status === 'invalid');
+    if (invalidFiles.length > 0) {
+      toast.warning('Existem arquivos inválidos que serão ignorados na análise');
     }
 
     setUploading(true);
     setProgress(0);
     setProcessingStage('extracting');
+    setShowComparison(false);
     
     try {
       // Simular estágio de extração de dados dos PDFs
       setProcessingMsg('Extraindo dados dos documentos...');
-      for (let i = 0; i <= 3; i++) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        setProgress(i * 8);
+      for (let i = 1; i <= 30; i++) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        setProgress(i);
       }
       
       // Simular estágio de análise de procedimentos
       setProcessingStage('analyzing');
-      setProcessingMsg('Identificando procedimentos na tabela CBHPM...');
-      for (let i = 3; i <= 6; i++) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        setProgress(i * 10);
+      setProcessingMsg('Identificando procedimentos e consultando tabela CBHPM 2015...');
+      for (let i = 31; i <= 60; i++) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        setProgress(i);
       }
       
       // Simular estágio de comparação de valores
       setProcessingStage('comparing');
-      setProcessingMsg('Comparando valores pagos com referência CBHPM...');
-      for (let i = 6; i <= 10; i++) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        setProgress(i * 10);
+      setProcessingMsg('Comparando valores pagos com referência CBHPM e calculando diferenças...');
+      for (let i = 61; i <= 95; i++) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        setProgress(i);
       }
       
+      // Finalizar processamento
+      setProgress(100);
       setProcessingStage('complete');
-      toast.success('Arquivos analisados com sucesso!');
+      setProcessingMsg('Processamento concluído com sucesso!');
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Análise concluída com sucesso!', {
+        icon: <CheckCircle className="h-4 w-4" />,
+        description: 'Os resultados da comparação estão disponíveis abaixo.'
+      });
+      
       setShowComparison(true);
     } catch (error) {
-      toast.error('Erro ao processar os arquivos');
       console.error('Erro no processamento:', error);
+      toast.error('Erro ao processar os arquivos', {
+        description: 'Por favor, tente novamente ou contate o suporte.'
+      });
     } finally {
-      setUploading(false);
-      setProgress(0);
-      setProcessingStage('idle');
+      setTimeout(() => {
+        setUploading(false);
+        setProgress(0);
+        setProcessingStage('idle');
+      }, 1500);
     }
   };
 
@@ -134,11 +198,13 @@ const UploadSection = () => {
               type="guia"
               onFileChange={(e) => handleFileChange(e, 'guia')}
               disabled={uploading}
+              hasFiles={hasFile('guia')}
             />
             <FileDropZone
               type="demonstrativo"
               onFileChange={(e) => handleFileChange(e, 'demonstrativo')}
               disabled={uploading}
+              hasFiles={hasFile('demonstrativo')}
             />
           </div>
           
@@ -152,18 +218,22 @@ const UploadSection = () => {
             <div className="rounded-lg border p-4 bg-muted/30">
               <h5 className="font-medium flex items-center gap-2 mb-2">
                 {processingStage === 'complete' ? (
-                  'Processamento concluído'
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Processamento concluído
+                  </span>
                 ) : (
-                  <>
-                    <span className="animate-pulse inline-block h-2 w-2 rounded-full bg-medblue-500"></span>
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     Processando documentos
-                  </>
+                  </span>
                 )}
               </h5>
               <div className="text-sm text-muted-foreground mb-3">{processingMsg}</div>
               <UploadProgress
                 progress={progress}
                 show={true}
+                stage={processingStage}
               />
             </div>
           )}
@@ -179,15 +249,55 @@ const UploadSection = () => {
               </div>
             </div>
           )}
+          
+          {selectedFiles.length > 0 && hasInvalidFiles() && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900/50 p-3 text-sm flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Atenção:</span> Alguns arquivos podem estar em formato não reconhecido ou serem ilegíveis.
+                Arquivos marcados como inválidos serão ignorados durante o processamento.
+              </div>
+            </div>
+          )}
         </CardContent>
         <CardFooter>
-          <Button 
-            className="w-full" 
-            disabled={selectedFiles.length === 0 || uploading || !hasGuiaDemonstrativoPair()}
-            onClick={processFiles}
-          >
-            {uploading ? 'Processando...' : 'Analisar Documentos'}
-          </Button>
+          <div className="w-full flex flex-col sm:flex-row gap-3">
+            <Button 
+              className="flex-1" 
+              disabled={selectedFiles.length === 0 || uploading || !hasGuiaDemonstrativoPair()}
+              onClick={processFiles}
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processando...
+                </>
+              ) : 'Analisar Documentos'}
+            </Button>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Button 
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setSelectedFiles([]);
+                        setShowComparison(false);
+                      }}
+                      disabled={selectedFiles.length === 0 || uploading}
+                    >
+                      Limpar Arquivos
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Remove todos os arquivos selecionados</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </CardFooter>
       </Card>
 
@@ -206,7 +316,16 @@ const UploadSection = () => {
    * Helper function to check if we have at least one guia and one demonstrativo
    */
   function hasGuiaDemonstrativoPair(): boolean {
-    return hasFile('guia') && hasFile('demonstrativo');
+    const validGuias = selectedFiles.filter(f => f.type === 'guia' && f.status !== 'invalid').length > 0;
+    const validDemos = selectedFiles.filter(f => f.type === 'demonstrativo' && f.status !== 'invalid').length > 0;
+    return validGuias && validDemos;
+  }
+  
+  /**
+   * Helper function to check if any files are marked as invalid
+   */
+  function hasInvalidFiles(): boolean {
+    return selectedFiles.some(f => f.status === 'invalid');
   }
 };
 

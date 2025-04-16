@@ -12,6 +12,7 @@ type FileDropZoneProps = {
   type: 'guia' | 'demonstrativo';
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   disabled: boolean;
+  hasFiles?: boolean;
 };
 
 /**
@@ -23,16 +24,24 @@ type FileDropZoneProps = {
  * @param type - The type of document to upload ('guia' or 'demonstrativo')
  * @param onFileChange - Function to handle file selection change events
  * @param disabled - Whether the component is disabled (e.g., during uploads)
+ * @param hasFiles - Whether files of this type have already been added
  */
-const FileDropZone = ({ type, onFileChange, disabled }: FileDropZoneProps) => {
+const FileDropZone = ({ type, onFileChange, disabled, hasFiles = false }: FileDropZoneProps) => {
   const isGuia = type === 'guia';
   const inputId = `${type}PdfInput`;
 
   return (
     <div 
       className={`flex flex-col items-center p-4 border border-dashed rounded-lg 
-      ${disabled ? 'bg-muted/30 border-muted' : 'hover:border-primary/50 transition-colors border-border'} 
-      ${isGuia ? 'hover:bg-medblue-600/5' : 'hover:bg-green-600/5'}`}
+      ${disabled ? 'bg-muted/30 border-muted cursor-not-allowed' : 'hover:border-primary/50 transition-colors border-border cursor-pointer'} 
+      ${isGuia ? 'hover:bg-medblue-600/5' : 'hover:bg-green-600/5'}
+      ${hasFiles ? (isGuia ? 'bg-medblue-600/10' : 'bg-green-600/10') : ''}
+      `}
+      onClick={() => {
+        if (!disabled) {
+          document.getElementById(inputId)?.click();
+        }
+      }}
     >
       <input
         type="file"
@@ -45,9 +54,9 @@ const FileDropZone = ({ type, onFileChange, disabled }: FileDropZoneProps) => {
         aria-label={isGuia ? "Selecionar guias médicas em PDF" : "Selecionar demonstrativos em PDF"}
       />
       {isGuia ? (
-        <FileUp className="h-10 w-10 text-primary mb-2" />
+        <FileUp className={`h-10 w-10 ${hasFiles ? 'text-medblue-600' : 'text-primary'} mb-2`} />
       ) : (
-        <FileText className="h-10 w-10 text-primary mb-2" />
+        <FileText className={`h-10 w-10 ${hasFiles ? 'text-green-600' : 'text-primary'} mb-2`} />
       )}
       <label
         htmlFor={inputId}
@@ -57,7 +66,7 @@ const FileDropZone = ({ type, onFileChange, disabled }: FileDropZoneProps) => {
           {isGuia ? 'Guias TISS' : 'Demonstrativos de Pagamento'}
         </span>
         <span className="text-sm text-muted-foreground">
-          Arraste ou clique para selecionar PDFs
+          {hasFiles ? 'Clique para adicionar mais' : 'Arraste ou clique para selecionar PDFs'}
         </span>
       </label>
       <TooltipProvider>
@@ -68,6 +77,8 @@ const FileDropZone = ({ type, onFileChange, disabled }: FileDropZoneProps) => {
               size="icon"
               className="mt-2"
               tabIndex={0}
+              type="button"
+              onClick={(e) => e.stopPropagation()}
             >
               <Info className="h-4 w-4" />
               <span className="sr-only">Informações sobre {isGuia ? 'guias' : 'demonstrativos'}</span>
@@ -82,6 +93,12 @@ const FileDropZone = ({ type, onFileChange, disabled }: FileDropZoneProps) => {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+      
+      {hasFiles && (
+        <div className="mt-1 px-2 py-0.5 bg-muted rounded-full text-xs text-muted-foreground">
+          Arquivos adicionados
+        </div>
+      )}
     </div>
   );
 };
