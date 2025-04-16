@@ -1,7 +1,7 @@
-
 import { Button } from '@/components/ui/button';
 import { FileUp, FileText, Trash2, Eye, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
+import { FileType, FileStatus, FileWithStatus } from '@/types/upload';
 import {
   Dialog,
   DialogContent,
@@ -16,11 +16,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-type FileType = 'guia' | 'demonstrativo';
-type FileStatus = 'valid' | 'invalid' | 'processing';
-
 type FileListProps = {
-  files: { name: string; type: FileType; file: File; status?: FileStatus }[];
+  files: FileWithStatus[];
   onRemove: (index: number) => void;
   disabled: boolean;
 };

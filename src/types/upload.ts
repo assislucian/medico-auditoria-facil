@@ -1,0 +1,50 @@
+
+export type FileType = 'guia' | 'demonstrativo';
+export type ProcessingStage = 'idle' | 'extracting' | 'analyzing' | 'comparing' | 'complete';
+export type FileStatus = 'valid' | 'invalid' | 'processing';
+
+export interface FileWithStatus {
+  name: string;
+  type: FileType;
+  file: File;
+  status?: FileStatus;
+}
+
+export interface DoctorParticipation {
+  code: string;
+  name: string;
+  role: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+}
+
+export interface ProcedureExtracted {
+  codigo: string;
+  procedimento: string;
+  papel: string;
+  valorCBHPM: number;
+  valorPago: number;
+  diferenca: number;
+  pago: boolean;
+  guia: string;
+  beneficiario: string;
+  doctors: DoctorParticipation[];
+}
+
+export interface ExtractedData {
+  demonstrativoInfo: {
+    numero: string;
+    competencia: string;
+    hospital: string;
+    data: string;
+    beneficiario: string;
+  };
+  procedimentos: ProcedureExtracted[];
+  totais: {
+    valorCBHPM: number;
+    valorPago: number;
+    diferenca: number;
+    procedimentosNaoPagos: number;
+  };
+}
