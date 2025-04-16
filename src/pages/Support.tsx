@@ -16,15 +16,21 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Send, Plus, MessageSquare } from "lucide-react";
 
+type TicketStatus = 'aberto' | 'em_andamento' | 'resolvido' | 'fechado';
+type TicketPriority = 'baixa' | 'media' | 'alta' | 'critica';
+type TicketCategory = 'technical' | 'billing' | 'feature' | 'question' | 'other';
+
 type Ticket = {
   id: string;
   title: string;
   description: string;
-  status: 'aberto' | 'em_andamento' | 'resolvido' | 'fechado';
-  priority: 'baixa' | 'media' | 'alta' | 'critica';
+  status: TicketStatus;
+  priority: TicketPriority;
   created_at: string;
   user_id: string;
-  category: string;
+  category: TicketCategory;
+  updated_at?: string;
+  resolved_at?: string | null;
 };
 
 type Message = {
@@ -45,8 +51,8 @@ const Support = () => {
   const [newTicket, setNewTicket] = useState({
     title: '',
     description: '',
-    category: 'technical',
-    priority: 'media',
+    category: 'technical' as TicketCategory,
+    priority: 'media' as TicketPriority,
   });
   const [newMessage, setNewMessage] = useState('');
 
@@ -71,7 +77,15 @@ const Support = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTickets(data || []);
+      
+      const typedData = (data || []).map(ticket => ({
+        ...ticket,
+        status: ticket.status as TicketStatus,
+        priority: ticket.priority as TicketPriority,
+        category: ticket.category as TicketCategory
+      }));
+      
+      setTickets(typedData);
     } catch (error) {
       console.error('Erro ao buscar tickets de suporte:', error);
       toast.error('Não foi possível carregar seus tickets de suporte');
@@ -110,7 +124,7 @@ const Support = () => {
             title: newTicket.title,
             description: newTicket.description,
             user_id: user.id,
-            status: 'aberto',
+            status: 'aberto' as TicketStatus,
             category: newTicket.category,
             priority: newTicket.priority
           }
@@ -120,7 +134,6 @@ const Support = () => {
 
       if (error) throw error;
       
-      // Adicionar entrada de log de atividade
       await supabase.from('activity_logs').insert([
         {
           user_id: user.id,
@@ -132,7 +145,15 @@ const Support = () => {
       ]);
       
       toast.success('Ticket criado com sucesso');
-      setTickets([data, ...tickets]);
+      
+      const typedTicket: Ticket = {
+        ...data,
+        status: data.status as TicketStatus,
+        priority: data.priority as TicketPriority,
+        category: data.category as TicketCategory
+      };
+      
+      setTickets([typedTicket, ...tickets]);
       setNewTicket({
         title: '',
         description: '',
@@ -166,7 +187,6 @@ const Support = () => {
 
       if (error) throw error;
       
-      // Registrar atividade
       await supabase.from('activity_logs').insert([
         {
           user_id: user!.id,
@@ -180,7 +200,6 @@ const Support = () => {
       setMessages([...messages, data]);
       setNewMessage('');
       
-      // Atualizar status do ticket para "em_andamento" se estiver "aberto"
       if (selectedTicket.status === 'aberto') {
         const { error: updateError } = await supabase
           .from('support_tickets')
@@ -190,7 +209,7 @@ const Support = () => {
         if (!updateError) {
           setSelectedTicket({...selectedTicket, status: 'em_andamento'});
           setTickets(tickets.map(t => 
-            t.id === selectedTicket.id ? {...t, status: 'em_andamento'} : t
+            t.id === selectedTicket.id ? {...t, status: 'em_andamento' as TicketStatus} : t
           ));
         }
       }
@@ -211,7 +230,7 @@ const Support = () => {
     }).format(date);
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: TicketStatus) => {
     switch (status) {
       case 'aberto':
         return <Badge variant="outline" className="bg-blue-100 text-blue-800">Aberto</Badge>;
@@ -226,7 +245,7 @@ const Support = () => {
     }
   };
 
-  const getPriorityBadge = (priority: string) => {
+  const getPriorityBadge = (priority: TicketPriority) => {
     switch (priority) {
       case 'baixa':
         return <Badge variant="outline" className="bg-green-100 text-green-800">Baixa</Badge>;
@@ -238,6 +257,13 @@ const Support = () => {
         return <Badge variant="outline" className="bg-red-100 text-red-800">Crítica</Badge>;
       default:
         return <Badge>{priority}</Badge>;
+    }
+  };
+
+  const navigateToNewTicket = () => {
+    const newTicketTab = document.querySelector('[data-value="new-ticket"]') as HTMLElement;
+    if (newTicketTab) {
+      newTicketTab.click();
     }
   };
 
@@ -277,7 +303,7 @@ const Support = () => {
                         ) : tickets.length === 0 ? (
                           <div className="text-center py-8">
                             <p className="text-muted-foreground mb-4">Você ainda não tem tickets de suporte.</p>
-                            <Button onClick={() => document.querySelector('[data-value="new-ticket"]')?.click()}>
+                            <Button onClick={navigateToNewTicket}>
                               <Plus className="mr-2 h-4 w-4" />
                               Criar Ticket
                             </Button>
@@ -399,7 +425,7 @@ const Support = () => {
                           <p className="text-muted-foreground mb-6">
                             Selecione um ticket para visualizar a conversa ou crie um novo ticket de suporte.
                           </p>
-                          <Button onClick={() => document.querySelector('[data-value="new-ticket"]')?.click()}>
+                          <Button onClick={navigateToNewTicket}>
                             <Plus className="mr-2 h-4 w-4" />
                             Criar Novo Ticket
                           </Button>

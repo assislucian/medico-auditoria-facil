@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { Json } from '@/integrations/supabase/types';
 
 interface NotificationPreferences {
   email: {
@@ -57,7 +58,11 @@ export const NotificationsSettings = () => {
         if (error) throw error;
         
         if (data?.notification_preferences) {
-          setNotifications(data.notification_preferences as NotificationPreferences);
+          // Type assertion to fix the type error
+          const prefs = data.notification_preferences as unknown as NotificationPreferences;
+          if (prefs.email && prefs.sms) {
+            setNotifications(prefs);
+          }
         }
       } catch (error) {
         console.error('Error fetching notification preferences:', error);
@@ -88,7 +93,7 @@ export const NotificationsSettings = () => {
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          notification_preferences: notifications,
+          notification_preferences: notifications as unknown as Json,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);

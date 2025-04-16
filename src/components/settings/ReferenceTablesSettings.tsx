@@ -10,6 +10,7 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { medicalReferenceTables, medicalRoles } from '@/data/referenceTables';
+import { Json } from '@/integrations/supabase/types';
 
 interface ReferenceTable {
   id: string;
@@ -17,6 +18,11 @@ interface ReferenceTable {
   description?: string;
   category: 'table' | 'role';
   checked: boolean;
+}
+
+interface ReferenceTablesPreferences {
+  tables: ReferenceTable[];
+  roles: ReferenceTable[];
 }
 
 export const ReferenceTablesSettings = () => {
@@ -46,17 +52,19 @@ export const ReferenceTablesSettings = () => {
         if (error) throw error;
         
         if (data?.reference_tables_preferences) {
-          const prefs = data.reference_tables_preferences;
+          const prefs = data.reference_tables_preferences as unknown as ReferenceTablesPreferences;
+          
           if (prefs.tables) {
             setTables(prev => prev.map(table => ({
               ...table,
-              checked: prefs.tables.find((t: ReferenceTable) => t.id === table.id)?.checked || false
+              checked: prefs.tables.find(t => t.id === table.id)?.checked || false
             })));
           }
+          
           if (prefs.roles) {
             setRoles(prev => prev.map(role => ({
               ...role,
-              checked: prefs.roles.find((r: ReferenceTable) => r.id === role.id)?.checked || false
+              checked: prefs.roles.find(r => r.id === role.id)?.checked || false
             })));
           }
         }
@@ -101,13 +109,12 @@ export const ReferenceTablesSettings = () => {
     
     setSaving(true);
     try {
+      const preferences: ReferenceTablesPreferences = { tables, roles };
+      
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          reference_tables_preferences: {
-            tables,
-            roles
-          },
+          reference_tables_preferences: preferences as unknown as Json,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
