@@ -1,7 +1,6 @@
-
 import { toast } from 'sonner';
 import { CheckCircle } from 'lucide-react';
-import { ProcessingStage, FileWithStatus, ExtractedData } from '@/types/upload';
+import { ProcessingStage, FileWithStatus, ExtractedData, ProcessMode } from '@/types/upload';
 
 // Dados simulados para demonstração - representando o que seria extraído dos PDFs
 const mockExtractedData: ExtractedData = {
@@ -216,7 +215,7 @@ function getCompletionMessage(mode: 'complete' | 'guia-only' | 'demonstrativo-on
 /**
  * Retorna a mensagem de sucesso apropriada para o tipo de processamento
  */
-function getSuccessMessage(mode: 'complete' | 'guia-only' | 'demonstrativo-only'): string {
+function getSuccessMessage(mode: ProcessMode): string {
   switch (mode) {
     case 'complete':
       return 'Análise concluída com sucesso!';
@@ -230,7 +229,7 @@ function getSuccessMessage(mode: 'complete' | 'guia-only' | 'demonstrativo-only'
 /**
  * Retorna a descrição de sucesso apropriada para o tipo de processamento
  */
-function getSuccessDescription(mode: 'complete' | 'guia-only' | 'demonstrativo-only'): string {
+function getSuccessDescription(mode: ProcessMode): string {
   switch (mode) {
     case 'complete':
       return 'Os resultados da comparação estão disponíveis abaixo.';
