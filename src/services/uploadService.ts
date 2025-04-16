@@ -17,7 +17,7 @@ const mockExtractedData: ExtractedData = {
       codigo: "30602246",
       procedimento: "Reconstrução Mamária Com Retalhos Cutâneos Regionais",
       papel: "Cirurgião",
-      valorCBHPM: 3772.88,  // Valor total CBHPM calculado corretamente
+      valorCBHPM: 3772.88,
       valorPago: 457.64,
       diferenca: -3315.24,
       pago: true,
@@ -49,13 +49,55 @@ const mockExtractedData: ExtractedData = {
           status: "Fechada"
         }
       ]
+    },
+    {
+      codigo: "30801036",
+      procedimento: "Reconstrução com Retalho Miocutâneo",
+      papel: "Cirurgião",
+      valorCBHPM: 2981.75,
+      valorPago: 596.35,
+      diferenca: -2385.40,
+      pago: true,
+      guia: "10467538",
+      beneficiario: "00620040000604690",
+      doctors: [
+        {
+          code: "8425",
+          name: "FERNANDA MABEL BATISTA DE AQUINO",
+          role: "Cirurgião",
+          startTime: "2024-08-19T15:30:00",
+          endTime: "2024-08-19T16:45:00",
+          status: "Fechada"
+        }
+      ]
+    },
+    {
+      codigo: "40809048",
+      procedimento: "Consulta em Pronto-Socorro",
+      papel: "Cirurgião",
+      valorCBHPM: 264.00,
+      valorPago: 0.00,
+      diferenca: -264.00,
+      pago: false,
+      guia: "10467649",
+      beneficiario: "00620040000604690",
+      doctors: [
+        {
+          code: "8425",
+          name: "FERNANDA MABEL BATISTA DE AQUINO",
+          role: "Cirurgião",
+          startTime: "2024-08-20T08:30:00",
+          endTime: "2024-08-20T09:00:00",
+          status: "Fechada"
+        }
+      ]
     }
   ],
   totais: {
-    valorCBHPM: 3772.88,
-    valorPago: 457.64,
-    diferenca: -3315.24,
-    procedimentosNaoPagos: 0
+    valorCBHPM: 7018.63,
+    valorPago: 1053.99,
+    diferenca: -5964.64,
+    procedimentosNaoPagos: 1
   }
 };
 
