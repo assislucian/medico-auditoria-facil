@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,12 +16,13 @@ import {
 
 type FileType = 'guia' | 'demonstrativo';
 type ProcessingStage = 'idle' | 'extracting' | 'analyzing' | 'comparing' | 'complete';
+type FileStatus = 'valid' | 'invalid' | 'processing';
 
 interface FileWithStatus {
   name: string;
   type: FileType;
   file: File;
-  status?: 'valid' | 'invalid' | 'processing';
+  status?: FileStatus;
 }
 
 /**
@@ -57,7 +57,7 @@ const UploadSection = () => {
         name: file.name,
         type,
         file,
-        status: 'processing'
+        status: 'processing' as FileStatus
       }));
       
       // Simulate file validation
@@ -65,7 +65,7 @@ const UploadSection = () => {
         const updatedFiles = fileArray.map(file => {
           // Randomly mark some files as invalid for demonstration
           const isValid = file.name.toLowerCase().includes('invalid') ? false : true;
-          return { ...file, status: isValid ? 'valid' : 'invalid' };
+          return { ...file, status: isValid ? 'valid' as FileStatus : 'invalid' as FileStatus };
         });
         
         setSelectedFiles(prev => {

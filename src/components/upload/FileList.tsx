@@ -17,9 +17,10 @@ import {
 } from "@/components/ui/tooltip";
 
 type FileType = 'guia' | 'demonstrativo';
+type FileStatus = 'valid' | 'invalid' | 'processing';
 
 type FileListProps = {
-  files: { name: string; type: FileType; file: File; status?: 'valid' | 'invalid' | 'processing' }[];
+  files: { name: string; type: FileType; file: File; status?: FileStatus }[];
   onRemove: (index: number) => void;
   disabled: boolean;
 };
