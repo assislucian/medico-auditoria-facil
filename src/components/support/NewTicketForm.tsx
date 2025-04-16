@@ -19,6 +19,15 @@ interface NewTicketFormProps {
   submitting: boolean;
 }
 
+/**
+ * NewTicketForm Component
+ * 
+ * Form for creating a new support ticket with title, description,
+ * category, and priority fields.
+ * 
+ * @param onSubmit - Function to handle form submission
+ * @param submitting - Whether the form is currently submitting
+ */
 export const NewTicketForm = ({ onSubmit, submitting }: NewTicketFormProps) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -30,6 +39,16 @@ export const NewTicketForm = ({ onSubmit, submitting }: NewTicketFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onSubmit(formData);
+    
+    // Only reset form if not using the submitting state to track submission
+    if (!submitting) {
+      setFormData({
+        title: '',
+        description: '',
+        category: 'technical',
+        priority: 'media',
+      });
+    }
   };
 
   return (
@@ -50,7 +69,12 @@ export const NewTicketForm = ({ onSubmit, submitting }: NewTicketFormProps) => {
               onChange={(e) => setFormData({...formData, title: e.target.value})}
               placeholder="Resumo do problema ou solicitação"
               required
+              disabled={submitting}
+              aria-describedby="title-description"
             />
+            <p id="title-description" className="text-xs text-muted-foreground">
+              Forneça um título breve e descritivo para o seu problema
+            </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -59,8 +83,9 @@ export const NewTicketForm = ({ onSubmit, submitting }: NewTicketFormProps) => {
               <Select 
                 value={formData.category}
                 onValueChange={(value: TicketCategory) => setFormData({...formData, category: value})}
+                disabled={submitting}
               >
-                <SelectTrigger>
+                <SelectTrigger id="category">
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -78,8 +103,9 @@ export const NewTicketForm = ({ onSubmit, submitting }: NewTicketFormProps) => {
               <Select 
                 value={formData.priority}
                 onValueChange={(value: TicketPriority) => setFormData({...formData, priority: value})}
+                disabled={submitting}
               >
-                <SelectTrigger>
+                <SelectTrigger id="priority">
                   <SelectValue placeholder="Selecione a prioridade" />
                 </SelectTrigger>
                 <SelectContent>
@@ -101,7 +127,13 @@ export const NewTicketForm = ({ onSubmit, submitting }: NewTicketFormProps) => {
               placeholder="Descreva detalhadamente o problema ou solicitação..."
               rows={5}
               required
+              disabled={submitting}
+              className="resize-y"
             />
+            <p className="text-xs text-muted-foreground">
+              Inclua informações relevantes como: passos para reproduzir o problema, 
+              comportamento esperado vs. observado, e outras informações úteis
+            </p>
           </div>
           
           <Button type="submit" disabled={submitting} className="w-full">

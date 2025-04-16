@@ -1,10 +1,10 @@
 
-import { Ticket, TicketStatus, TicketPriority } from './types';
+import { TicketStatus, TicketPriority } from './types';
 
 /**
- * Gets the appropriate CSS class for a ticket status badge
+ * Returns the appropriate CSS class for a ticket status badge
  * @param status - The ticket status
- * @returns CSS class string for the badge
+ * @returns CSS class string for styling the badge
  */
 export const getStatusClass = (status: TicketStatus): string => {
   switch (status) {
@@ -20,9 +20,9 @@ export const getStatusClass = (status: TicketStatus): string => {
 };
 
 /**
- * Gets the display text for a ticket status
+ * Returns the appropriate display text for a ticket status
  * @param status - The ticket status
- * @returns Localized status text
+ * @returns Localized status text for display
  */
 export const getStatusText = (status: TicketStatus): string => {
   switch (status) {
@@ -38,9 +38,9 @@ export const getStatusText = (status: TicketStatus): string => {
 };
 
 /**
- * Gets the appropriate CSS class for a ticket priority badge
+ * Returns the appropriate CSS class for a ticket priority badge
  * @param priority - The ticket priority
- * @returns CSS class string for the badge
+ * @returns CSS class string for styling the badge
  */
 export const getPriorityClass = (priority: TicketPriority): string => {
   switch (priority) {
@@ -56,9 +56,9 @@ export const getPriorityClass = (priority: TicketPriority): string => {
 };
 
 /**
- * Gets the display text for a ticket priority
+ * Returns the appropriate display text for a ticket priority
  * @param priority - The ticket priority
- * @returns Localized priority text
+ * @returns Localized priority text for display
  */
 export const getPriorityText = (priority: TicketPriority): string => {
   switch (priority) {
@@ -74,9 +74,29 @@ export const getPriorityText = (priority: TicketPriority): string => {
 };
 
 /**
- * Converts a category code to display text
- * @param category - The ticket category
- * @returns Localized category text
+ * Get color for category badge
+ * @param category - Ticket category
+ * @returns CSS class string for styling the category badge
+ */
+export const getCategoryClass = (category: string): string => {
+  switch (category) {
+    case 'technical':
+      return 'bg-purple-100 text-purple-800';
+    case 'billing':
+      return 'bg-emerald-100 text-emerald-800';
+    case 'feature':
+      return 'bg-indigo-100 text-indigo-800';
+    case 'question':
+      return 'bg-cyan-100 text-cyan-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+/**
+ * Get localized display text for category
+ * @param category - Ticket category
+ * @returns Localized category text for display
  */
 export const getCategoryText = (category: string): string => {
   switch (category) {
