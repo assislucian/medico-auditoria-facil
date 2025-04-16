@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { CheckCircle } from 'lucide-react';
 import { ProcessingStage, FileWithStatus, ExtractedData } from '@/types/upload';
@@ -13,6 +14,7 @@ const mockExtractedData: ExtractedData = {
   },
   procedimentos: [
     {
+      id: "proc-1",
       codigo: "30602246",
       procedimento: "Reconstrução Mamária Com Retalhos Cutâneos Regionais",
       papel: "Cirurgião",
@@ -50,6 +52,7 @@ const mockExtractedData: ExtractedData = {
       ]
     },
     {
+      id: "proc-2",
       codigo: "30801036",
       procedimento: "Reconstrução com Retalho Miocutâneo",
       papel: "Cirurgião",
@@ -71,6 +74,7 @@ const mockExtractedData: ExtractedData = {
       ]
     },
     {
+      id: "proc-3",
       codigo: "40809048",
       procedimento: "Consulta em Pronto-Socorro",
       papel: "Cirurgião",
@@ -100,6 +104,15 @@ const mockExtractedData: ExtractedData = {
   }
 };
 
+/**
+ * Processa os arquivos de upload para extração de dados
+ * 
+ * @param files Lista de arquivos para processamento
+ * @param setProgress Função para atualizar o progresso do processamento
+ * @param setProcessingStage Função para atualizar o estágio do processamento
+ * @param setProcessingMsg Função para atualizar a mensagem de processamento
+ * @returns Boolean indicando sucesso ou falha no processamento
+ */
 export async function processFiles(
   files: FileWithStatus[],
   setProgress: (progress: number) => void,
@@ -107,6 +120,12 @@ export async function processFiles(
   setProcessingMsg: (msg: string) => void
 ): Promise<boolean> {
   try {
+    const hasGuias = files.some(f => f.type === 'guia' && f.status === 'valid');
+    const hasDemonstrativos = files.some(f => f.type === 'demonstrativo' && f.status === 'valid');
+    
+    // Determinar o modo de processamento com base nos arquivos disponíveis
+    const processMode = getProcessMode(hasGuias, hasDemonstrativos);
+    
     // Simular estágio de extração de dados dos PDFs
     setProcessingMsg('Extraindo dados dos documentos...');
     setProcessingStage('extracting');
@@ -117,29 +136,34 @@ export async function processFiles(
     
     // Simular estágio de análise de procedimentos
     setProcessingStage('analyzing');
-    setProcessingMsg('Identificando procedimentos e consultando tabela CBHPM 2015...');
+    setProcessingMsg(getAnalysisMessage(processMode));
     for (let i = 31; i <= 60; i++) {
       await new Promise(resolve => setTimeout(resolve, 100));
       setProgress(i);
     }
     
-    // Simular estágio de comparação de valores
-    setProcessingStage('comparing');
-    setProcessingMsg('Comparando valores pagos com referência CBHPM e calculando diferenças...');
-    for (let i = 61; i <= 95; i++) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      setProgress(i);
+    // Simular estágio de comparação de valores (se aplicável)
+    if (processMode === 'complete') {
+      setProcessingStage('comparing');
+      setProcessingMsg('Comparando valores pagos com referência CBHPM e calculando diferenças...');
+      for (let i = 61; i <= 95; i++) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        setProgress(i);
+      }
+    } else {
+      // Pular a etapa de comparação para processamento parcial
+      setProgress(95);
     }
     
     // Finalizar processamento
     setProgress(100);
     setProcessingStage('complete');
-    setProcessingMsg('Processamento concluído com sucesso!');
+    setProcessingMsg(getCompletionMessage(processMode));
     
     await new Promise(resolve => setTimeout(resolve, 1000));
-    toast.success('Análise concluída com sucesso!', {
+    toast.success(getSuccessMessage(processMode), {
       icon: CheckCircle,
-      description: 'Os resultados da comparação estão disponíveis abaixo.'
+      description: getSuccessDescription(processMode)
     });
     
     return true;
@@ -152,7 +176,78 @@ export async function processFiles(
   }
 }
 
-// Função para obter os dados processados (simulada)
-export function getExtractedData(): ExtractedData {
+/**
+ * Determina o modo de processamento com base nos tipos de arquivos disponíveis
+ */
+function getProcessMode(hasGuias: boolean, hasDemonstrativos: boolean): 'complete' | 'guia-only' | 'demonstrativo-only' {
+  if (hasGuias && hasDemonstrativos) return 'complete';
+  if (hasGuias) return 'guia-only';
+  return 'demonstrativo-only';
+}
+
+/**
+ * Retorna a mensagem apropriada para o estágio de análise
+ */
+function getAnalysisMessage(mode: 'complete' | 'guia-only' | 'demonstrativo-only'): string {
+  switch (mode) {
+    case 'complete':
+      return 'Identificando procedimentos e consultando tabela CBHPM 2015...';
+    case 'guia-only':
+      return 'Identificando procedimentos nas guias médicas...';
+    case 'demonstrativo-only':
+      return 'Extraindo valores e procedimentos do demonstrativo de pagamento...';
+  }
+}
+
+/**
+ * Retorna a mensagem apropriada para o estágio de conclusão
+ */
+function getCompletionMessage(mode: 'complete' | 'guia-only' | 'demonstrativo-only'): string {
+  switch (mode) {
+    case 'complete':
+      return 'Análise completa concluída com sucesso!';
+    case 'guia-only':
+      return 'Extração de dados das guias concluída!';
+    case 'demonstrativo-only':
+      return 'Extração de dados do demonstrativo concluída!';
+  }
+}
+
+/**
+ * Retorna a mensagem de sucesso apropriada para o tipo de processamento
+ */
+function getSuccessMessage(mode: 'complete' | 'guia-only' | 'demonstrativo-only'): string {
+  switch (mode) {
+    case 'complete':
+      return 'Análise concluída com sucesso!';
+    case 'guia-only':
+      return 'Guias processadas com sucesso!';
+    case 'demonstrativo-only':
+      return 'Demonstrativo processado com sucesso!';
+  }
+}
+
+/**
+ * Retorna a descrição de sucesso apropriada para o tipo de processamento
+ */
+function getSuccessDescription(mode: 'complete' | 'guia-only' | 'demonstrativo-only'): string {
+  switch (mode) {
+    case 'complete':
+      return 'Os resultados da comparação estão disponíveis abaixo.';
+    case 'guia-only':
+      return 'Adicione um demonstrativo para comparar valores com tabelas CBHPM.';
+    case 'demonstrativo-only':
+      return 'Adicione guias para verificar procedimentos realizados.';
+  }
+}
+
+/**
+ * Retorna dados extraídos com base nos tipos de arquivos disponíveis
+ * @param hasGuias Indica se há guias disponíveis
+ * @param hasDemonstrativos Indica se há demonstrativos disponíveis
+ */
+export function getExtractedData(hasGuias: boolean = true, hasDemonstrativos: boolean = true): ExtractedData {
+  // Em um cenário real, retornaríamos dados parciais baseados no que foi processado
+  // Para o mock, retornamos os dados completos
   return mockExtractedData;
 }

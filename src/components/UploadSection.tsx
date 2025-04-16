@@ -1,7 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import FileDropZone from './upload/FileDropZone';
 import FileList from './upload/FileList';
@@ -9,19 +9,20 @@ import ComparisonView from './ComparisonView';
 import UploadAlerts from './upload/UploadAlerts';
 import ProcessingSection from './upload/ProcessingSection';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { processFiles } from '@/services/uploadService';
+import { processFiles, getExtractedData } from '@/services/uploadService';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 /**
  * UploadSection Component
  * 
- * Main component for handling file uploads, processing, and displaying results.
- * Manages the entire workflow from file selection to displaying comparison results.
+ * Componente principal para gestão de uploads, processamento e exibição de resultados.
+ * Gerencia todo o fluxo desde a seleção de arquivos até a exibição dos resultados de comparação.
  */
 const UploadSection = () => {
   const {
@@ -36,17 +37,21 @@ const UploadSection = () => {
     setProcessingStage,
     processingMsg,
     setProcessingMsg,
+    processingMode,
+    setProcessingMode,
     hasFile,
     hasGuiaDemonstrativoPair,
+    hasValidFilesForProcessing,
     hasInvalidFiles,
     handleFileChange,
     removeFile,
-    resetFiles
+    resetFiles,
+    determineProcessingMode
   } = useFileUpload();
 
   /**
-   * Main processing function for analyzing the uploaded files
-   * Simulates the extraction and processing of data from PDFs
+   * Função principal de processamento para analisar os arquivos enviados
+   * Simula a extração e processamento de dados dos PDFs
    */
   const processFilesHandler = async () => {
     if (selectedFiles.length === 0) {
@@ -54,16 +59,12 @@ const UploadSection = () => {
       return;
     }
 
-    // Verificar se temos pelo menos uma guia e um demonstrativo
-    const hasGuia = selectedFiles.some(f => f.type === 'guia' && f.status !== 'invalid');
-    const hasDemonstrativo = selectedFiles.some(f => f.type === 'demonstrativo' && f.status !== 'invalid');
-
-    if (!hasGuia || !hasDemonstrativo) {
-      toast.error('É necessário enviar pelo menos uma guia válida e um demonstrativo válido');
+    if (!hasValidFilesForProcessing()) {
+      toast.error('Não há arquivos válidos para processar');
       return;
     }
 
-    // Check if any files are invalid
+    // Verificar se há arquivos inválidos
     const invalidFiles = selectedFiles.filter(f => f.status === 'invalid');
     if (invalidFiles.length > 0) {
       toast.warning('Existem arquivos inválidos que serão ignorados na análise');
@@ -73,8 +74,12 @@ const UploadSection = () => {
     setProgress(0);
     setShowComparison(false);
     
+    // Determinar o modo de processamento
+    const mode = determineProcessingMode();
+    setProcessingMode(mode);
+    
     const success = await processFiles(
-      selectedFiles,
+      selectedFiles.filter(f => f.status === 'valid'),
       setProgress,
       setProcessingStage,
       setProcessingMsg
@@ -91,6 +96,10 @@ const UploadSection = () => {
     }, 1500);
   };
 
+  // Determinar se deve mostrar alertas explicando o processo
+  const showGuideAlert = !hasFile('guia') && hasFile('demonstrativo');
+  const showDemonstrativoAlert = hasFile('guia') && !hasFile('demonstrativo');
+
   return (
     <div className="space-y-6">
       <Card>
@@ -101,6 +110,18 @@ const UploadSection = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Explicação do processo */}
+          <div className="text-sm text-muted-foreground mb-4">
+            <p className="mb-2">
+              <strong>Como funciona:</strong> Você pode enviar guias médicas, demonstrativos de pagamento, ou ambos.
+            </p>
+            <ul className="list-disc ml-5 space-y-1">
+              <li><strong>Guias médicas:</strong> Contêm os procedimentos realizados e servem como comprovante do serviço.</li>
+              <li><strong>Demonstrativos:</strong> Documentos de pagamento que detalham os valores pagos pelo plano de saúde.</li>
+              <li><strong>Análise completa:</strong> Quando ambos são enviados, o sistema compara os valores pagos com a tabela CBHPM.</li>
+            </ul>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FileDropZone
               type="guia"
@@ -115,6 +136,27 @@ const UploadSection = () => {
               hasFiles={hasFile('demonstrativo')}
             />
           </div>
+          
+          {/* Alertas explicativos baseados no que o usuário fez upload */}
+          {showGuideAlert && (
+            <Alert variant="default" className="bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/50">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Você enviou apenas demonstrativos. O sistema irá extrair os valores pagos, mas não poderá verificar 
+                detalhes dos procedimentos ou comparar com a tabela CBHPM. Para uma análise completa, adicione também guias médicas.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {showDemonstrativoAlert && (
+            <Alert variant="default" className="bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/50">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Você enviou apenas guias médicas. O sistema irá extrair os procedimentos realizados, mas não poderá 
+                verificar os valores pagos ou detectar glosas. Para uma análise completa, adicione também demonstrativos de pagamento.
+              </AlertDescription>
+            </Alert>
+          )}
           
           <FileList
             files={selectedFiles}
@@ -133,13 +175,14 @@ const UploadSection = () => {
             hasGuiaDemonstrativoPair={hasGuiaDemonstrativoPair()}
             hasInvalidFiles={hasInvalidFiles()}
             hasFile={hasFile}
+            hasValidFilesForProcessing={hasValidFilesForProcessing()}
           />
         </CardContent>
         <CardFooter>
           <div className="w-full flex flex-col sm:flex-row gap-3">
             <Button 
               className="flex-1" 
-              disabled={selectedFiles.length === 0 || uploading || !hasGuiaDemonstrativoPair()}
+              disabled={selectedFiles.length === 0 || uploading || !hasValidFilesForProcessing()}
               onClick={processFilesHandler}
             >
               {uploading ? (
@@ -147,7 +190,9 @@ const UploadSection = () => {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processando...
                 </>
-              ) : 'Analisar Documentos'}
+              ) : (
+                hasGuiaDemonstrativoPair() ? 'Analisar e Comparar Documentos' : 'Processar Documentos'
+              )}
             </Button>
             
             <TooltipProvider>

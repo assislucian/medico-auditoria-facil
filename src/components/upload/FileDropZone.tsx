@@ -7,10 +7,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { FileType } from '@/types/upload';
 
 type FileDropZoneProps = {
-  type: 'guia' | 'demonstrativo';
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  type: FileType;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>, type: FileType) => Promise<void>;
   disabled: boolean;
   hasFiles?: boolean;
 };
@@ -18,17 +19,21 @@ type FileDropZoneProps = {
 /**
  * FileDropZone Component
  * 
- * Provides a drop zone for users to upload PDF documents, either medical guides (TISS)
- * or payment statements from health insurance companies.
+ * Fornece uma área para upload de documentos PDF, seja guias médicas (TISS)
+ * ou demonstrativos de pagamento das operadoras de saúde.
  * 
- * @param type - The type of document to upload ('guia' or 'demonstrativo')
- * @param onFileChange - Function to handle file selection change events
- * @param disabled - Whether the component is disabled (e.g., during uploads)
- * @param hasFiles - Whether files of this type have already been added
+ * @param type - O tipo de documento para upload ('guia' ou 'demonstrativo')
+ * @param onFileChange - Função para tratar eventos de seleção de arquivo
+ * @param disabled - Se o componente está desativado (ex: durante uploads)
+ * @param hasFiles - Se arquivos deste tipo já foram adicionados
  */
 const FileDropZone = ({ type, onFileChange, disabled, hasFiles = false }: FileDropZoneProps) => {
   const isGuia = type === 'guia';
   const inputId = `${type}PdfInput`;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onFileChange(e, type);
+  };
 
   return (
     <div 
@@ -49,7 +54,7 @@ const FileDropZone = ({ type, onFileChange, disabled, hasFiles = false }: FileDr
         className="hidden"
         accept=".pdf"
         multiple
-        onChange={onFileChange}
+        onChange={handleFileChange}
         disabled={disabled}
         aria-label={isGuia ? "Selecionar guias médicas em PDF" : "Selecionar demonstrativos em PDF"}
       />
@@ -87,8 +92,8 @@ const FileDropZone = ({ type, onFileChange, disabled, hasFiles = false }: FileDr
           <TooltipContent side="bottom" align="center" className="max-w-xs">
             <p>
               {isGuia 
-                ? 'Envie PDFs das guias TISS contendo os procedimentos realizados. Os arquivos devem incluir informações como código do procedimento, beneficiário e médicos participantes.'
-                : 'Envie PDFs dos demonstrativos de pagamento do plano de saúde. O sistema extrairá automaticamente valores pagos, códigos de procedimentos e glosas.'}
+                ? 'Guias TISS: Documentos que contêm os procedimentos realizados com detalhes como código do procedimento, beneficiário, data e médicos participantes. Servem como comprovante do serviço prestado.'
+                : 'Demonstrativos: Documentos emitidos pelos planos de saúde que detalham o pagamento realizado para os procedimentos. Contêm informações sobre valores pagos, glosas e códigos dos procedimentos.'}
             </p>
           </TooltipContent>
         </Tooltip>

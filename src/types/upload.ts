@@ -2,6 +2,7 @@
 export type FileType = 'guia' | 'demonstrativo';
 export type ProcessingStage = 'idle' | 'extracting' | 'analyzing' | 'comparing' | 'complete';
 export type FileStatus = 'valid' | 'invalid' | 'processing';
+export type ProcessMode = 'complete' | 'guia-only' | 'demonstrativo-only';
 
 export interface FileWithStatus {
   name: string;
@@ -20,6 +21,7 @@ export interface DoctorParticipation {
 }
 
 export interface ProcedureExtracted {
+  id: string;
   codigo: string;
   procedimento: string;
   papel: string;
