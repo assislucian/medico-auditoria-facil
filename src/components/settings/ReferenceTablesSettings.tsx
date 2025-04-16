@@ -1,30 +1,29 @@
+
 import { useState, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from "sonner";
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { medicalReferenceTables, medicalRoles } from '@/data/referenceTables';
-import { Json } from '@/integrations/supabase/types';
+import { TablesList } from './reference-tables/TablesList';
+import { RolesList } from './reference-tables/RolesList';
+import { 
+  ReferenceTable, 
+  ReferenceTablesPreferences,
+  parseReferenceTablesPreferences,
+  referenceTablesPreferencesToJson 
+} from './reference-tables/types';
 
-interface ReferenceTable {
-  id: string;
-  name: string;
-  description?: string;
-  category: 'table' | 'role';
-  checked: boolean;
-}
-
-interface ReferenceTablesPreferences {
-  tables: ReferenceTable[];
-  roles: ReferenceTable[];
-}
-
+/**
+ * ReferenceTablesSettings Component
+ * 
+ * Allows users to select which reference tables and medical roles
+ * they want to use for payment analysis in the system.
+ */
 export const ReferenceTablesSettings = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -37,6 +36,7 @@ export const ReferenceTablesSettings = () => {
   );
   const [filterCategory, setFilterCategory] = useState<string>('all');
   
+  // Fetch user preferences on component mount
   useEffect(() => {
     const fetchPreferences = async () => {
       if (!user?.id) return;
@@ -51,17 +51,18 @@ export const ReferenceTablesSettings = () => {
 
         if (error) throw error;
         
+        // Parse preferences using helper function
         if (data?.reference_tables_preferences) {
-          const prefs = data.reference_tables_preferences as unknown as ReferenceTablesPreferences;
+          const prefs = parseReferenceTablesPreferences(data.reference_tables_preferences);
           
-          if (prefs.tables) {
+          if (prefs.tables && Array.isArray(prefs.tables)) {
             setTables(prev => prev.map(table => ({
               ...table,
               checked: prefs.tables.find(t => t.id === table.id)?.checked || false
             })));
           }
           
-          if (prefs.roles) {
+          if (prefs.roles && Array.isArray(prefs.roles)) {
             setRoles(prev => prev.map(role => ({
               ...role,
               checked: prefs.roles.find(r => r.id === role.id)?.checked || false
@@ -79,6 +80,10 @@ export const ReferenceTablesSettings = () => {
     fetchPreferences();
   }, [user?.id]);
   
+  /**
+   * Filters tables based on selected category
+   * @returns Filtered array of tables
+   */
   const getFilteredTables = () => {
     if (filterCategory === 'all') return tables;
     if (filterCategory === 'tuss') return tables.filter(table => table.id.startsWith('tuss'));
@@ -92,18 +97,27 @@ export const ReferenceTablesSettings = () => {
     return tables;
   };
   
+  /**
+   * Handles toggling a table's checked state
+   */
   const handleTableToggle = (id: string) => {
     setTables(prev => prev.map(table => 
       table.id === id ? { ...table, checked: !table.checked } : table
     ));
   };
   
+  /**
+   * Handles toggling a role's checked state
+   */
   const handleRoleToggle = (id: string) => {
     setRoles(prev => prev.map(role => 
       role.id === id ? { ...role, checked: !role.checked } : role
     ));
   };
 
+  /**
+   * Saves updated preferences to the database
+   */
   const handleSave = async () => {
     if (!user?.id) return;
     
@@ -114,7 +128,7 @@ export const ReferenceTablesSettings = () => {
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          reference_tables_preferences: preferences as unknown as Json,
+          reference_tables_preferences: referenceTablesPreferencesToJson(preferences),
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -130,6 +144,7 @@ export const ReferenceTablesSettings = () => {
     }
   };
 
+  // Show loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -164,30 +179,11 @@ export const ReferenceTablesSettings = () => {
           </div>
           
           <ScrollArea className="h-[400px] rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[300px]">Tabela</TableHead>
-                  <TableHead className="hidden md:table-cell">Descrição</TableHead>
-                  <TableHead className="w-[100px] text-right">Ativo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {getFilteredTables().map(table => (
-                  <TableRow key={table.id}>
-                    <TableCell className="font-medium">{table.name}</TableCell>
-                    <TableCell className="hidden md:table-cell">{table.description || "-"}</TableCell>
-                    <TableCell className="text-right">
-                      <Switch 
-                        checked={table.checked} 
-                        onCheckedChange={() => handleTableToggle(table.id)}
-                        disabled={saving}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <TablesList 
+              tables={getFilteredTables()}
+              onToggle={handleTableToggle}
+              disabled={saving}
+            />
           </ScrollArea>
         </TabsContent>
         
@@ -195,23 +191,11 @@ export const ReferenceTablesSettings = () => {
           <p className="text-sm text-muted-foreground">
             Selecione os papéis médicos que você deseja incluir nas análises de pagamentos.
           </p>
-          <div className="space-y-4">
-            {roles.map(role => (
-              <div key={role.id} className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{role.name}</p>
-                  {role.description && (
-                    <p className="text-sm text-muted-foreground">{role.description}</p>
-                  )}
-                </div>
-                <Switch 
-                  checked={role.checked} 
-                  onCheckedChange={() => handleRoleToggle(role.id)}
-                  disabled={saving}
-                />
-              </div>
-            ))}
-          </div>
+          <RolesList 
+            roles={roles}
+            onToggle={handleRoleToggle}
+            disabled={saving}
+          />
         </TabsContent>
       </Tabs>
 

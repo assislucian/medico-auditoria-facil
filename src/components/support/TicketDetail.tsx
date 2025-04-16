@@ -3,9 +3,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Send } from "lucide-react";
 import { Ticket, Message } from "./types";
 import { useState } from "react";
+import { getStatusClass, getStatusText, getPriorityClass, getPriorityText } from "./helpers";
 
 interface TicketDetailProps {
   ticket: Ticket | null;
@@ -14,6 +16,17 @@ interface TicketDetailProps {
   onCreateTicket: () => void;
 }
 
+/**
+ * TicketDetail Component
+ * 
+ * Displays the details of a selected support ticket and its message history.
+ * Provides functionality to send new messages if the ticket is still active.
+ * 
+ * @param ticket - The currently selected ticket object or null if none selected
+ * @param messages - Array of message objects related to the ticket
+ * @param onSendMessage - Function to handle sending a new message
+ * @param onCreateTicket - Function to handle creating a new ticket
+ */
 export const TicketDetail = ({
   ticket,
   messages,
@@ -22,6 +35,9 @@ export const TicketDetail = ({
 }: TicketDetailProps) => {
   const [newMessage, setNewMessage] = useState('');
 
+  /**
+   * Formats a date string to a localized date-time format
+   */
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('pt-BR', {
@@ -33,6 +49,9 @@ export const TicketDetail = ({
     }).format(date);
   };
 
+  /**
+   * Handles form submission for sending a new message
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -41,6 +60,7 @@ export const TicketDetail = ({
     setNewMessage('');
   };
 
+  // Show placeholder when no ticket is selected
   if (!ticket) {
     return (
       <Card className="h-full flex items-center justify-center">
