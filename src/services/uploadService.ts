@@ -138,7 +138,7 @@ export async function processFiles(
     
     await new Promise(resolve => setTimeout(resolve, 1000));
     toast.success('Análise concluída com sucesso!', {
-      icon: () => <CheckCircle width={16} height={16} className="h-4 w-4" />,
+      icon: CheckCircle,
       description: 'Os resultados da comparação estão disponíveis abaixo.'
     });
     
