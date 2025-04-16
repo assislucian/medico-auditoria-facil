@@ -17,7 +17,6 @@ interface CreateTicketData {
  * Provides functionality to fetch, create, and interact with support tickets
  * 
  * @param userId - The current user's ID
- * @returns Object containing ticket state and functions for managing tickets
  */
 export const useTickets = (userId: string | undefined) => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -80,9 +79,8 @@ export const useTickets = (userId: string | undefined) => {
 
   /**
    * Creates a new support ticket
-   * @returns The newly created ticket
    */
-  const createTicket = useCallback(async (formData: CreateTicketData): Promise<Ticket> => {
+  const createTicket = useCallback(async (formData: CreateTicketData) => {
     if (!userId) throw new Error('Usuário não autenticado');
     
     setSubmitting(true);

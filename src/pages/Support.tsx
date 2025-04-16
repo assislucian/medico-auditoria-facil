@@ -5,7 +5,6 @@ import { TicketList } from '@/components/support/TicketList';
 import { TicketDetail } from '@/components/support/TicketDetail';
 import { NewTicketForm } from '@/components/support/NewTicketForm';
 import { useTickets } from '@/hooks/useTickets';
-import { Ticket, TicketCategory, TicketPriority } from '@/components/support/types';
 
 /**
  * Support Page
@@ -34,20 +33,6 @@ const Support = () => {
    */
   const navigateToNewTicket = () => {
     setActiveTab('new-ticket');
-  };
-
-  /**
-   * Wrapper for createTicket that ensures it returns void
-   * to match the NewTicketForm component's expected prop type
-   */
-  const handleCreateTicket = async (data: {
-    title: string;
-    description: string;
-    category: TicketCategory;
-    priority: TicketPriority;
-  }) => {
-    await createTicket(data);
-    // Return void to satisfy the Promise<void> return type
   };
 
   /**
@@ -81,7 +66,7 @@ const Support = () => {
    */
   const NewTicketContent = (
     <NewTicketForm
-      onSubmit={handleCreateTicket}
+      onSubmit={createTicket}
       submitting={submitting}
     />
   );

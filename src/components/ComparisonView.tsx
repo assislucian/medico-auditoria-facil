@@ -8,8 +8,7 @@ import { SummaryCards } from './comparison/SummaryCards';
 import { ComparisonHeader } from './comparison/ComparisonHeader';
 import { DemonstrativeInfo } from './comparison/DemonstrativeInfo';
 import { ProceduresTable } from './comparison/ProceduresTable';
-import { useDemonstrativoSelection } from '@/hooks/useDemonstrativoSelection';
-import { getExtractedData } from '@/services/uploadService';
+import { useDemonstrativoSelection, calculateCBHPMByRole } from '@/hooks/useDemonstrativoSelection';
 
 const ComparisonView = () => {
   const [isDetailView, setIsDetailView] = useState(false);
@@ -18,20 +17,36 @@ const ComparisonView = () => {
     selectedDemonstrativo,
     setSelectedDemonstrativo,
     currentDemonstrativo,
-    procedimentos
+    procedimentos,
+    getTotals
   } = useDemonstrativoSelection();
-
-  // Obter dados extraídos do serviço (que seriam os dados completos)
-  const extractedData = getExtractedData();
-  const totais = extractedData.totais;
 
   const exportReport = () => {
     if (!currentDemonstrativo) return;
 
     const reportData = {
-      demonstrativo: extractedData.demonstrativoInfo,
-      procedimentos: extractedData.procedimentos,
-      totais: extractedData.totais
+      demonstrativo: {
+        numero: currentDemonstrativo.numero,
+        competencia: currentDemonstrativo.competencia,
+        hospital: currentDemonstrativo.hospital,
+        data: currentDemonstrativo.data,
+        beneficiario: currentDemonstrativo.beneficiario
+      },
+      procedimentos: currentDemonstrativo.procedimentos.map(proc => ({
+        guia: proc.guia,
+        codigo: proc.codigo,
+        procedimento: proc.procedimento,
+        medicos: proc.doctors.map(doc => ({
+          nome: doc.name,
+          papel: doc.role,
+          crm: doc.code,
+          valorCBHPM: calculateCBHPMByRole(proc.valorCBHPM, doc.role),
+          valorPago: proc.valorPago / proc.doctors.length, // Distribuição proporcional
+          diferenca: calculateCBHPMByRole(proc.valorCBHPM, doc.role) - (proc.valorPago / proc.doctors.length)
+        })),
+        status: proc.pago ? (proc.diferenca < 0 ? 'Pago Parcialmente' : 'Pago Corretamente') : 'Não Pago'
+      })),
+      totais: getTotals()
     };
 
     console.log('Dados do relatório para contestação:', reportData);
@@ -39,6 +54,8 @@ const ComparisonView = () => {
     const fileName = `contestacao_${currentDemonstrativo.numero}_${currentDemonstrativo.beneficiario}.pdf`;
     toast.success(`Relatório de contestação "${fileName}" gerado com sucesso!`);
   };
+
+  const { totalCBHPM, totalPago, totalDiferenca, procedimentosNaoPagos } = getTotals();
 
   return (
     <Card className="w-full">
@@ -52,21 +69,18 @@ const ComparisonView = () => {
       
       <CardContent>
         {currentDemonstrativo && (
-          <DemonstrativeInfo demonstrativo={{
-            ...currentDemonstrativo,
-            ...extractedData.demonstrativoInfo
-          }} />
+          <DemonstrativeInfo demonstrativo={currentDemonstrativo} />
         )}
 
         <SummaryCards 
-          totalCBHPM={totais.valorCBHPM}
-          totalPago={totais.valorPago}
-          totalDiferenca={totais.diferenca}
-          procedimentosNaoPagos={totais.procedimentosNaoPagos}
+          totalCBHPM={totalCBHPM}
+          totalPago={totalPago}
+          totalDiferenca={totalDiferenca}
+          procedimentosNaoPagos={procedimentosNaoPagos}
         />
 
         <ProceduresTable 
-          procedimentos={extractedData.procedimentos}
+          procedimentos={procedimentos}
           isDetailView={isDetailView}
         />
       </CardContent>

@@ -11,19 +11,18 @@ interface RolesListProps {
 /**
  * RolesList Component
  * 
- * Displays a list of medical roles that the user can toggle on/off to include in
- * payment analysis calculations. Each role has a name, description, and toggle switch.
+ * Displays a list of medical roles that the user can toggle on/off
  * 
- * @param roles - Array of medical roles with their status (enabled/disabled)
- * @param onToggle - Function to handle toggling a role's status
- * @param disabled - Whether the switches are disabled (during saving operations)
+ * @param roles - Array of medical roles
+ * @param onToggle - Function to handle toggling a role
+ * @param disabled - Whether the switches are disabled
  */
 export const RolesList = ({ roles, onToggle, disabled }: RolesListProps) => {
   return (
     <div className="space-y-4">
       {roles.map(role => (
-        <div key={role.id} className="flex items-center justify-between p-3 rounded-md hover:bg-secondary/30 transition-colors">
-          <div className="mr-4">
+        <div key={role.id} className="flex items-center justify-between">
+          <div>
             <p className="font-medium">{role.name}</p>
             {role.description && (
               <p className="text-sm text-muted-foreground">{role.description}</p>
@@ -33,16 +32,9 @@ export const RolesList = ({ roles, onToggle, disabled }: RolesListProps) => {
             checked={role.checked} 
             onCheckedChange={() => onToggle(role.id)}
             disabled={disabled}
-            aria-label={`Toggle ${role.name} role`}
           />
         </div>
       ))}
-
-      {roles.length === 0 && (
-        <p className="text-muted-foreground text-center py-4">
-          Nenhum papel médico disponível para seleção
-        </p>
-      )}
     </div>
   );
 };
