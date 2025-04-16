@@ -139,7 +139,8 @@ export async function processFiles(
     
     await new Promise(resolve => setTimeout(resolve, 1000));
     toast.success('Análise concluída com sucesso!', {
-      icon: <CheckCircle className="h-4 w-4" />,
+      // Fix: Wrap the CheckCircle in a function to resolve syntax error
+      icon: () => <CheckCircle className="h-4 w-4" />,
       description: 'Os resultados da comparação estão disponíveis abaixo.'
     });
     
