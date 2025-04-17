@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
@@ -10,7 +11,8 @@ import {
   LogOut, 
   HelpCircle,
   User,
-  Bell
+  Bell,
+  FileBarChart // Added for Compare page
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -60,6 +62,11 @@ export function SideNav({ className }: SideNavProps) {
       name: "Relatórios",
       href: "/reports",
       icon: BarChart2,
+    },
+    {
+      name: "Comparativo",
+      href: "/compare",
+      icon: FileBarChart,
     },
     {
       name: "Planos",

@@ -24,6 +24,7 @@ import Help from "./pages/Help";
 import Support from "./pages/Support";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
+import CompareContracheque from "./pages/CompareContracheque";
 
 const queryClient = new QueryClient();
 
