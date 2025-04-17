@@ -4,12 +4,11 @@ import { ProcessingStage, FileWithStatus, ProcessMode } from '@/types/upload';
 import { getExtractedMockData } from './mockData';
 import { 
   getProcessMode, 
-  getAnalysisMessage,
-  getCompletionMessage,
   getSuccessMessage,
   getSuccessDescription 
 } from './messageUtils';
-import { supabase } from '@/integrations/supabase/client';
+import { simulateProcessingStages } from './processingService';
+import { saveAnalysisToDatabase } from './databaseService';
 
 /**
  * Processa os arquivos de upload para extração de dados
@@ -62,56 +61,6 @@ export async function processFiles(
 }
 
 /**
- * Simula os estágios de processamento dos arquivos
- */
-async function simulateProcessingStages(
-  processMode: ProcessMode,
-  setProgress: (progress: number) => void,
-  setProcessingStage: (stage: ProcessingStage) => void,
-  setProcessingMsg: (msg: string) => void
-): Promise<void> {
-  // Estágio 1: Extração de dados
-  setProcessingMsg('Extraindo dados dos documentos...');
-  setProcessingStage('extracting');
-  await simulateProgress(1, 30, setProgress);
-  
-  // Estágio 2: Análise de procedimentos
-  setProcessingStage('analyzing');
-  setProcessingMsg(getAnalysisMessage(processMode));
-  await simulateProgress(31, 60, setProgress);
-  
-  // Estágio 3: Comparação (apenas para modo completo)
-  if (processMode === 'complete') {
-    setProcessingStage('comparing');
-    setProcessingMsg('Comparando valores pagos com referência CBHPM e calculando diferenças...');
-    await simulateProgress(61, 95, setProgress);
-  } else {
-    setProgress(95);
-  }
-  
-  // Finalizar processamento
-  setProgress(100);
-  setProcessingStage('complete');
-  setProcessingMsg(getCompletionMessage(processMode));
-  
-  await new Promise(resolve => setTimeout(resolve, 1000));
-}
-
-/**
- * Simula o progresso do processamento
- */
-async function simulateProgress(
-  start: number,
-  end: number,
-  setProgress: (progress: number) => void
-): Promise<void> {
-  for (let i = start; i <= end; i++) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    setProgress(i);
-  }
-}
-
-/**
  * Retorna dados extraídos com base nos tipos de arquivos disponíveis
  * @param hasGuias Indica se há guias disponíveis
  * @param hasDemonstrativos Indica se há demonstrativos disponíveis
@@ -119,103 +68,4 @@ async function simulateProgress(
 export function getExtractedData(hasGuias: boolean = true, hasDemonstrativos: boolean = true) {
   // Em um cenário real, retornaríamos dados parciais baseados no que foi processado
   return getExtractedMockData();
-}
-
-/**
- * Salva os resultados da análise no banco de dados
- * @param files Arquivos processados
- * @param processMode Modo de processamento
- * @param extractedData Dados extraídos dos arquivos
- */
-async function saveAnalysisToDatabase(
-  files: FileWithStatus[],
-  processMode: ProcessMode, 
-  extractedData: any
-): Promise<boolean> {
-  try {
-    // Obter o ID do usuário atual
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.error('Usuário não está autenticado');
-      return false;
-    }
-    
-    // 1. Criar um registro de análise
-    const { data: analysisData, error: analysisError } = await supabase
-      .from('analysis_results')
-      .insert({
-        user_id: user.id,
-        file_name: files.map(f => f.name).join(', '),
-        file_type: processMode,
-        hospital: extractedData.demonstrativoInfo?.hospital || null,
-        competencia: extractedData.demonstrativoInfo?.competencia || null,
-        numero: extractedData.demonstrativoInfo?.numero || null,
-        summary: {
-          totalCBHPM: extractedData.totais?.valorCBHPM || 0,
-          totalPago: extractedData.totais?.valorPago || 0,
-          totalDiferenca: extractedData.totais?.diferenca || 0,
-          procedimentosTotal: extractedData.procedimentos?.length || 0,
-          procedimentosNaoPagos: extractedData.totais?.procedimentosNaoPagos || 0
-        },
-        status: 'processed'
-      })
-      .select('id')
-      .single();
-    
-    if (analysisError) {
-      console.error('Erro ao inserir análise:', analysisError);
-      return false;
-    }
-    
-    // 2. Inserir procedimentos relacionados
-    if (extractedData.procedimentos && extractedData.procedimentos.length > 0) {
-      const proceduresForInsert = extractedData.procedimentos.map((proc: any) => ({
-        analysis_id: analysisData.id,
-        codigo: proc.codigo,
-        procedimento: proc.procedimento,
-        papel: proc.papel,
-        valor_cbhpm: proc.valorCBHPM,
-        valor_pago: proc.valorPago,
-        diferenca: proc.diferenca,
-        pago: proc.pago,
-        guia: proc.guia,
-        beneficiario: proc.beneficiario,
-        doctors: proc.doctors
-      }));
-      
-      const { error: proceduresError } = await supabase
-        .from('procedure_results')
-        .insert(proceduresForInsert);
-        
-      if (proceduresError) {
-        console.error('Erro ao inserir procedimentos:', proceduresError);
-        return false;
-      }
-    }
-    
-    // 3. Também criar um registro na tabela de histórico para exibição na lista
-    const { error: historyError } = await supabase
-      .from('analysis_history')
-      .insert({
-        user_id: user.id,
-        type: processMode === 'complete' ? 'Guia + Demonstrativo' : 
-              processMode === 'guia-only' ? 'Guia' : 'Demonstrativo',
-        hospital: extractedData.demonstrativoInfo?.hospital || null,
-        description: `${extractedData.demonstrativoInfo?.hospital || 'Hospital'} - ${extractedData.demonstrativoInfo?.competencia || 'Competência não informada'}`,
-        procedimentos: extractedData.procedimentos?.length || 0,
-        glosados: extractedData.totais?.procedimentosNaoPagos || 0,
-        status: 'Analisado'
-      });
-      
-    if (historyError) {
-      console.error('Erro ao inserir no histórico:', historyError);
-      // Não falharemos a operação se apenas o histórico falhar
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Erro ao salvar no banco de dados:', error);
-    return false;
-  }
 }
