@@ -128,7 +128,7 @@ export function useFileUpload() {
     try {
       setIsUploading(true);
       setProgress(0);
-      setProcessingStage('uploading');
+      setProcessingStage('extracting');
       setProcessingMsg('Enviando arquivos...');
       
       // Determine the processing mode
