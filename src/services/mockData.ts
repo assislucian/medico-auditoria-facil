@@ -2,6 +2,7 @@
 import { ExtractedData } from '@/types/upload';
 
 // Dados simulados para demonstração - representando o que seria extraído dos PDFs
+// Atualizados para corresponder exatamente ao conteúdo da guia fornecida
 const mockExtractedData: ExtractedData = {
   demonstrativoInfo: {
     numero: "DEM-2024-001",
@@ -51,12 +52,12 @@ const mockExtractedData: ExtractedData = {
     },
     {
       id: "proc-2",
-      codigo: "30801036",
-      procedimento: "Reconstrução com Retalho Miocutâneo",
+      codigo: "30602076",
+      procedimento: "Exérese De Lesão Da Mama Por Marcação Estereotáxica Ou Roll",
       papel: "Cirurgião",
-      valorCBHPM: 2981.75,
-      valorPago: 596.35,
-      diferenca: -2385.40,
+      valorCBHPM: 2450.65,
+      valorPago: 325.20,
+      diferenca: -2125.45,
       pago: true,
       guia: "10467538",
       beneficiario: "00620040000604690",
@@ -65,39 +66,71 @@ const mockExtractedData: ExtractedData = {
           code: "8425",
           name: "FERNANDA MABEL BATISTA DE AQUINO",
           role: "Cirurgião",
-          startTime: "2024-08-19T15:30:00",
-          endTime: "2024-08-19T16:45:00",
+          startTime: "2024-08-19T14:09:00",
+          endTime: "2024-08-19T15:24:00",
+          status: "Fechada"
+        },
+        {
+          code: "6091",
+          name: "MOISES DE OLIVEIRA SCHOTS",
+          role: "Primeiro Auxiliar",
+          startTime: "2024-08-19T14:15:00",
+          endTime: "2024-08-19T15:17:00",
+          status: "Fechada"
+        },
+        {
+          code: "4127",
+          name: "LILIANE ANNUZA DA SILVA",
+          role: "Anestesista",
+          startTime: "2024-08-19T15:17:00",
+          endTime: "2024-08-19T15:43:00",
           status: "Fechada"
         }
       ]
     },
     {
       id: "proc-3",
-      codigo: "40809048",
-      procedimento: "Consulta em Pronto-Socorro",
+      codigo: "30602203",
+      procedimento: "Quadrantectomia - Ressecção Segmentar",
       papel: "Cirurgião",
-      valorCBHPM: 264.00,
+      valorCBHPM: 2185.30,
       valorPago: 0.00,
-      diferenca: -264.00,
+      diferenca: -2185.30,
       pago: false,
-      guia: "10467649",
+      guia: "10467538",
       beneficiario: "00620040000604690",
       doctors: [
         {
           code: "8425",
           name: "FERNANDA MABEL BATISTA DE AQUINO",
           role: "Cirurgião",
-          startTime: "2024-08-20T08:30:00",
-          endTime: "2024-08-20T09:00:00",
+          startTime: "2024-08-19T14:09:00",
+          endTime: "2024-08-19T15:24:00",
+          status: "Fechada"
+        },
+        {
+          code: "6091",
+          name: "MOISES DE OLIVEIRA SCHOTS",
+          role: "Primeiro Auxiliar",
+          startTime: "2024-08-19T14:15:00",
+          endTime: "2024-08-19T15:17:00",
+          status: "Fechada"
+        },
+        {
+          code: "4127",
+          name: "LILIANE ANNUZA DA SILVA",
+          role: "Anestesista",
+          startTime: "2024-08-19T15:17:00",
+          endTime: "2024-08-19T15:43:00",
           status: "Fechada"
         }
       ]
     }
   ],
   totais: {
-    valorCBHPM: 7018.63,
-    valorPago: 1053.99,
-    diferenca: -5964.64,
+    valorCBHPM: 8408.83,
+    valorPago: 782.84,
+    diferenca: -7625.99,
     procedimentosNaoPagos: 1
   }
 };

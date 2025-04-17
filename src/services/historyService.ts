@@ -82,7 +82,7 @@ export async function fetchAnalysisDetails(analysisId: string) {
         pago: proc.pago,
         guia: proc.guia,
         beneficiario: proc.beneficiario,
-        doctors: proc.doctors
+        doctors: proc.doctors || []
       }))
     };
   } catch (error) {

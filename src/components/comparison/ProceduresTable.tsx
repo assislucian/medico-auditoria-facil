@@ -1,3 +1,4 @@
+
 import { Procedure } from '@/types/medical';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -74,7 +75,7 @@ export const ProceduresTable = ({ procedimentos, isDetailView }: ProceduresTable
                   </PopoverTrigger>
                   <PopoverContent className="w-80">
                     <div className="space-y-2">
-                      {item.doctors.map((doctor, index) => (
+                      {item.doctors.map((doctor) => (
                         <div key={doctor.code} className="flex flex-col space-y-1 border-b last:border-0 pb-2">
                           <span className="font-medium">{doctor.name}</span>
                           <div className="flex justify-between text-sm text-muted-foreground">
