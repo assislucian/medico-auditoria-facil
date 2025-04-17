@@ -24,12 +24,15 @@ export async function fetchReportsTotals() {
     // Calcular os totais
     const totals = data.reduce((acc, item) => {
       // Garantir que summary é um objeto e não uma string
-      const summary = typeof item.summary === 'object' ? item.summary : {};
+      const summary = typeof item.summary === 'object' && item.summary !== null ? item.summary : {};
       
-      // Usar operador de encadeamento opcional para evitar erros
-      acc.totalRecebido += Number(summary?.totalPago || 0);
-      acc.totalGlosado += Number(summary?.totalDiferenca || 0);
-      acc.totalProcedimentos += Number(summary?.procedimentosTotal || 0);
+      // Usar uma abordagem mais segura para acessar propriedades
+      // Primeiro convertemos para any para evitar erros de TypeScript
+      const summaryObj = summary as any;
+      
+      acc.totalRecebido += Number(summaryObj?.totalPago || 0);
+      acc.totalGlosado += Number(summaryObj?.totalDiferenca || 0);
+      acc.totalProcedimentos += Number(summaryObj?.procedimentosTotal || 0);
       return acc;
     }, {
       totalRecebido: 0,
@@ -83,8 +86,12 @@ export async function fetchMonthlyData() {
         acc[month] = { recebido: 0, glosado: 0 };
       }
       
-      acc[month].recebido += Number(item.summary?.totalPago || 0);
-      acc[month].glosado += Math.abs(Number(item.summary?.totalDiferenca || 0));
+      // Usar uma abordagem mais segura para acessar propriedades
+      const summary = typeof item.summary === 'object' && item.summary !== null ? item.summary : {};
+      const summaryObj = summary as any;
+      
+      acc[month].recebido += Number(summaryObj?.totalPago || 0);
+      acc[month].glosado += Math.abs(Number(summaryObj?.totalDiferenca || 0));
       
       return acc;
     }, {});
@@ -127,10 +134,14 @@ export async function fetchHospitalData() {
         };
       }
       
-      acc[hospital].procedimentos += Number(item.summary?.procedimentosTotal || 0);
-      acc[hospital].glosados += Number(item.summary?.procedimentosNaoPagos || 0);
+      // Usar uma abordagem mais segura para acessar propriedades
+      const summary = typeof item.summary === 'object' && item.summary !== null ? item.summary : {};
+      const summaryObj = summary as any;
+      
+      acc[hospital].procedimentos += Number(summaryObj?.procedimentosTotal || 0);
+      acc[hospital].glosados += Number(summaryObj?.procedimentosNaoPagos || 0);
       // Simulando uma taxa de recuperação de 30% das glosas
-      acc[hospital].recuperados += Math.round(Number(item.summary?.procedimentosNaoPagos || 0) * 0.3);
+      acc[hospital].recuperados += Math.round(Number(summaryObj?.procedimentosNaoPagos || 0) * 0.3);
       
       return acc;
     }, {});
