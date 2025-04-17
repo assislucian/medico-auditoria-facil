@@ -1,224 +1,75 @@
 
-import { useState } from 'react';
-import { FileWithStatus, FileType, ProcessingStage, ProcessMode } from '@/types/upload';
-import { validateFiles } from '@/utils/fileValidation';
-import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { processFiles } from '@/services/uploadService';
-import { determineProcessingMode } from '@/utils/uploadUtils';
+import { useFileList } from './upload/useFileList';
+import { useProcessingStatus } from './upload/useProcessingStatus';
+import { useFileUploadService } from './upload/useFileUploadService';
+import { FileWithStatus } from '@/types/upload';
 
 /**
  * Custom hook for handling file uploads
+ * Combines multiple smaller hooks to provide full upload functionality
  */
 export function useFileUpload() {
-  const [files, setFiles] = useState<FileWithStatus[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [processingStage, setProcessingStage] = useState<ProcessingStage>('idle');
-  const [processingMsg, setProcessingMsg] = useState('');
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [showComparison, setShowComparison] = useState(false);
-  const [processingMode, setProcessingMode] = useState<ProcessMode>('complete');
-  const [crmRegistrado, setCrmRegistrado] = useState('');
   const { user } = useAuth();
   
-  /**
-   * Check if we have files of a specific type
-   */
-  const hasFile = (type: FileType): boolean => {
-    return files.some(file => file.type === type && file.status !== 'invalid');
-  };
-  
-  /**
-   * Check if we have both guia and demonstrativo files
-   */
-  const hasGuiaDemonstrativoPair = (): boolean => {
-    return hasFile('guia') && hasFile('demonstrativo');
-  };
-  
-  /**
-   * Check if we have any valid files for processing
-   */
-  const hasValidFilesForProcessing = (): boolean => {
-    return files.some(file => file.status !== 'invalid');
-  };
-  
-  /**
-   * Check if we have any invalid files
-   */
-  const hasInvalidFiles = (): boolean => {
-    return files.some(file => file.status === 'invalid');
-  };
-  
-  /**
-   * Handle file selection from input
-   * @param event File input change event
-   */
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, type: FileType) => {
-    return handleFileSelect(event);
-  };
-  
-  /**
-   * Handle file selection from input
-   * @param event File input change event
-   */
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length === 0) {
-      return;
-    }
-    
-    const newFiles = Array.from(event.target.files).map(file => ({
-      name: file.name,
-      file,
-      type: detectFileType(file.name),
-      status: 'processing' as const,
-    }));
-    
-    // Validate the files
-    const validatedFiles = await validateFiles(newFiles);
-    
-    setFiles(prev => [...prev, ...validatedFiles]);
-  };
-  
-  /**
-   * Remove a file from the list
-   * @param index Index of the file to remove
-   */
-  const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  };
-  
-  /**
-   * Clear all files from the list
-   */
-  const clearFiles = () => {
-    setFiles([]);
-    setProgress(0);
-    setProcessingStage('idle');
-    setProcessingMsg('');
-    setUploadSuccess(false);
-  };
-  
-  /**
-   * Reset files - alias for clearFiles to match UploadSection
-   */
-  const resetFiles = () => {
-    clearFiles();
-  };
+  // Use smaller, focused hooks
+  const fileList = useFileList();
+  const processingStatus = useProcessingStatus();
+  const fileUploadService = useFileUploadService();
   
   /**
    * Process the uploaded files
    * @param crmRegistrado CRM to filter by (optional)
    */
   const processUploadedFiles = async (crmRegistrado: string = '') => {
-    if (files.length === 0) {
-      toast.error('Nenhum arquivo selecionado', {
-        description: 'Por favor, selecione arquivos para processar.'
-      });
-      return false;
+    processingStatus.setUploading(true);
+    processingStatus.setShowComparison(false);
+    
+    // Save CRM if provided
+    if (crmRegistrado) {
+      processingStatus.setCrmRegistrado(crmRegistrado);
     }
     
-    if (!files.some(file => file.status === 'valid')) {
-      toast.error('Arquivos inválidos', {
-        description: 'Todos os arquivos selecionados são inválidos. Por favor, selecione arquivos válidos.'
-      });
-      return false;
+    // Process the files
+    const result = await fileUploadService.processUploadedFiles(
+      fileList.files,
+      processingStatus.setProgress,
+      processingStatus.setProcessingStage,
+      processingStatus.setProcessingMsg,
+      crmRegistrado || processingStatus.crmRegistrado
+    );
+    
+    processingStatus.setUploading(false);
+    processingStatus.setUploadSuccess(result);
+    
+    if (result) {
+      processingStatus.setShowComparison(true);
     }
     
-    try {
-      setIsUploading(true);
-      setProgress(0);
-      setProcessingStage('extracting');
-      setProcessingMsg('Enviando arquivos...');
-      
-      // Determine the processing mode
-      const mode = determineProcessingMode(files);
-      setProcessingMode(mode);
-      
-      // Process the files
-      const result = await processFiles(
-        files.filter(f => f.status === 'valid'), 
-        setProgress, 
-        setProcessingStage, 
-        setProcessingMsg, 
-        crmRegistrado
-      );
-      
-      setIsUploading(false);
-      setUploadSuccess(result);
-      
-      if (result) {
-        setShowComparison(true);
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Error processing files:', error);
-      setIsUploading(false);
-      setProcessingStage('error');
-      setProcessingMsg('Erro ao processar os arquivos');
-      
-      toast.error('Erro ao processar os arquivos', {
-        description: 'Por favor, tente novamente ou contate o suporte.'
-      });
-      
-      return false;
-    }
+    return result;
   };
   
   /**
-   * Determine the type of file based on its name
-   * @param fileName Name of the file
-   * @returns Type of the file
+   * Reset files and status
    */
-  const detectFileType = (fileName: string): FileType => {
-    const lowercaseName = fileName.toLowerCase();
-    
-    // Check for demonstrativo file
-    if (
-      lowercaseName.includes('demonstrativo') || 
-      lowercaseName.includes('pagamento') || 
-      lowercaseName.includes('recebiveis')
-    ) {
-      return 'demonstrativo';
-    }
-    
-    // Default to guia
-    return 'guia';
+  const resetFiles = () => {
+    fileList.clearFiles();
+    processingStatus.resetStatus();
   };
   
+  // Combine all the exports from other hooks plus this hook's functions
   return {
-    files,
-    selectedFiles: files, // Alias for selectedFiles to match UploadSection
-    isUploading,
-    uploading: isUploading, // Alias for uploading to match UploadSection
-    progress,
-    processingStage,
-    processingMsg,
-    processingMode,
-    uploadSuccess,
-    showComparison,
-    crmRegistrado,
-    // Return setter functions
-    setUploading: setIsUploading,
-    setProgress,
-    setProcessingStage,
-    setProcessingMsg,
-    setProcessingMode,
-    setShowComparison,
-    setCrmRegistrado,
-    // Return helper methods
-    hasFile,
-    hasGuiaDemonstrativoPair,
-    hasValidFilesForProcessing,
-    hasInvalidFiles,
-    // Return action methods
-    handleFileSelect,
-    handleFileChange,
-    removeFile,
-    clearFiles,
-    resetFiles,
+    // From fileList
+    ...fileList,
+    
+    // From processingStatus
+    ...processingStatus,
+    
+    // From fileUploadService
+    determineProcessingMode: () => fileUploadService.determineProcessingMode(fileList.files),
+    
+    // This hook's functions
     processUploadedFiles,
-    determineProcessingMode: () => determineProcessingMode(files)
+    resetFiles
   };
 }
