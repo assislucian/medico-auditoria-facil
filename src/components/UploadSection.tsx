@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Loader2 } from 'lucide-react';
@@ -40,6 +39,7 @@ const UploadSection = () => {
     processingMode,
     setProcessingMode,
     crmRegistrado,
+    setCrmRegistrado,
     hasFile,
     hasGuiaDemonstrativoPair,
     hasValidFilesForProcessing,

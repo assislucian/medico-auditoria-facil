@@ -1,11 +1,10 @@
-
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProceduresTable } from './comparison/ProceduresTable';
 import { SummaryCards } from './comparison/SummaryCards';
 import { ComparisonHeader } from './comparison/ComparisonHeader';
 import { DemonstrativeInfo } from './comparison/DemonstrativeInfo';
-import { getExtractedData } from '@/services/uploadService';
+import { getExtractedData } from '@/services/analysisService';
 import { ExtractedData } from '@/types/upload';
 import { Procedure } from '@/types/medical';
 import { Skeleton } from '@/components/ui/skeleton';
