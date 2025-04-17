@@ -163,7 +163,9 @@ export async function processFiles(
     
     // Fixed: Correctly pass icon as a function
     toast.success(getSuccessMessage(processMode), {
-      icon: () => (<CheckCircle className="h-4 w-4" />),
+      icon: () => {
+        return <CheckCircle className="h-4 w-4" />;
+      },
       description: getSuccessDescription(processMode)
     });
     
