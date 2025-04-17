@@ -1,9 +1,12 @@
 
 import { toast } from 'sonner';
-import { ProcessingStage, FileWithStatus, ProcessMode } from '@/types/upload';
+import { ProcessingStage, FileWithStatus, ProcessMode, ExtractedData } from '@/types/upload';
 import { getProcessMode, getSuccessMessage, getSuccessDescription } from './messageUtils';
 import { simulateProcessingStages, processarMultiplasGuias, extrairDadosDePDFs } from './processingService';
 import { saveAnalysisToDatabase } from './databaseService';
+
+// Store the extracted data in memory for components to access
+let currentExtractedData: ExtractedData | null = null;
 
 /**
  * Processa os arquivos de upload para extração de dados
@@ -32,6 +35,9 @@ export async function processFiles(
     
     // Extrair e processar dados dos arquivos
     const extractedData = await extractDataFromFiles(files, processMode);
+
+    // Salvar os dados extraídos na variável de memória para acesso pelos componentes
+    currentExtractedData = extractedData;
 
     // Salvar os dados no banco de dados
     const success = await saveAnalysisToDatabase(files, processMode, extractedData);
@@ -105,4 +111,79 @@ async function extractDataFromFiles(files: FileWithStatus[], processMode: Proces
       }
     };
   }
+}
+
+/**
+ * Obtém os dados extraídos do último processamento
+ * 
+ * @returns Os dados extraídos ou dados simulados caso não haja dados disponíveis
+ */
+export function getExtractedData(): ExtractedData {
+  // Retorna os dados extraídos se disponíveis
+  if (currentExtractedData) {
+    return currentExtractedData;
+  }
+  
+  // Retorna dados simulados caso não haja dados disponíveis
+  return {
+    demonstrativoInfo: {
+      numero: 'DM' + Math.floor(Math.random() * 1000000),
+      competencia: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+      hospital: 'Hospital Demonstrativo',
+      data: new Date().toLocaleDateString('pt-BR'),
+      beneficiario: 'Paciente Demonstrativo'
+    },
+    procedimentos: [
+      {
+        id: 'proc-1',
+        codigo: '30602246',
+        procedimento: 'Reconstrução Mamária Com Retalhos Cutâneos Regionais',
+        papel: 'Cirurgiao',
+        valorCBHPM: 3772.88,
+        valorPago: 3200.50,
+        diferenca: -572.38,
+        pago: true,
+        guia: '10467538',
+        beneficiario: 'THAYSE BORGES',
+        doctors: [
+          {
+            code: '8425',
+            name: 'FERNANDA MABEL BATISTA DE AQUINO',
+            role: 'Cirurgiao',
+            startTime: '19/08/2024 14:09',
+            endTime: '19/08/2024 15:24',
+            status: 'Fechada'
+          }
+        ]
+      },
+      {
+        id: 'proc-2',
+        codigo: '30602076',
+        procedimento: 'Exérese De Lesão Da Mama Por Marcação Estereotáxica Ou Roll',
+        papel: 'Cirurgiao',
+        valorCBHPM: 2450.65,
+        valorPago: 2100.30,
+        diferenca: -350.35,
+        pago: true,
+        guia: '10467538',
+        beneficiario: 'THAYSE BORGES',
+        doctors: [
+          {
+            code: '8425',
+            name: 'FERNANDA MABEL BATISTA DE AQUINO',
+            role: 'Cirurgiao',
+            startTime: '19/08/2024 14:09',
+            endTime: '19/08/2024 15:24',
+            status: 'Fechada'
+          }
+        ]
+      }
+    ],
+    totais: {
+      valorCBHPM: 6223.53,
+      valorPago: 5300.80,
+      diferenca: -922.73,
+      procedimentosNaoPagos: 0
+    }
+  };
 }
