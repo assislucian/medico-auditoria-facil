@@ -133,10 +133,19 @@ async function saveAnalysisToDatabase(
   extractedData: any
 ): Promise<boolean> {
   try {
+    // Obter o ID do usuário atual
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('Usuário não está autenticado');
+      return false;
+    }
+    
     // 1. Criar um registro de análise
     const { data: analysisData, error: analysisError } = await supabase
       .from('analysis_results')
       .insert({
+        user_id: user.id,
         file_name: files.map(f => f.name).join(', '),
         file_type: processMode,
         hospital: extractedData.demonstrativoInfo?.hospital || null,
@@ -189,6 +198,7 @@ async function saveAnalysisToDatabase(
     const { error: historyError } = await supabase
       .from('analysis_history')
       .insert({
+        user_id: user.id,
         type: processMode === 'complete' ? 'Guia + Demonstrativo' : 
               processMode === 'guia-only' ? 'Guia' : 'Demonstrativo',
         hospital: extractedData.demonstrativoInfo?.hospital || null,

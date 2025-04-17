@@ -23,10 +23,13 @@ export async function fetchReportsTotals() {
     
     // Calcular os totais
     const totals = data.reduce((acc, item) => {
-      const summary = item.summary || {};
-      acc.totalRecebido += Number(summary.totalPago || 0);
-      acc.totalGlosado += Number(summary.totalDiferenca || 0);
-      acc.totalProcedimentos += Number(summary.procedimentosTotal || 0);
+      // Garantir que summary é um objeto e não uma string
+      const summary = typeof item.summary === 'object' ? item.summary : {};
+      
+      // Usar operador de encadeamento opcional para evitar erros
+      acc.totalRecebido += Number(summary?.totalPago || 0);
+      acc.totalGlosado += Number(summary?.totalDiferenca || 0);
+      acc.totalProcedimentos += Number(summary?.procedimentosTotal || 0);
       return acc;
     }, {
       totalRecebido: 0,
