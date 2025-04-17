@@ -1,20 +1,15 @@
-import { Button } from '@/components/ui/button';
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import FileDropZone from './upload/FileDropZone';
-import FileList from './upload/FileList';
 import ComparisonView from './ComparisonView';
 import UploadAlerts from './upload/UploadAlerts';
 import ProcessingSection from './upload/ProcessingSection';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import FileList from './upload/FileList';
+import UploadInstructions from './upload/UploadInstructions';
+import UploadDropzoneArea from './upload/UploadDropzoneArea';
+import UploadActionButtons from './upload/UploadActionButtons';
+import UploadContextAlerts from './upload/UploadContextAlerts';
 
 /**
  * UploadSection Component
@@ -85,53 +80,18 @@ const UploadSection = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Explicação do processo */}
-          <div className="text-sm text-muted-foreground mb-4">
-            <p className="mb-2">
-              <strong>Como funciona:</strong> Você pode enviar guias médicas, demonstrativos de pagamento, ou ambos.
-            </p>
-            <ul className="list-disc ml-5 space-y-1">
-              <li><strong>Guias médicas:</strong> Contêm os procedimentos realizados e servem como comprovante do serviço.</li>
-              <li><strong>Demonstrativos:</strong> Documentos de pagamento que detalham os valores pagos pelo plano de saúde.</li>
-              <li><strong>Análise completa:</strong> Quando ambos são enviados, o sistema compara os valores pagos com a tabela CBHPM.</li>
-            </ul>
-          </div>
+          <UploadInstructions />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FileDropZone
-              type="guia"
-              onFileChange={handleFileChange}
-              disabled={isUploading}
-              hasFiles={hasFile('guia')}
-            />
-            <FileDropZone
-              type="demonstrativo"
-              onFileChange={handleFileChange}
-              disabled={isUploading}
-              hasFiles={hasFile('demonstrativo')}
-            />
-          </div>
+          <UploadDropzoneArea 
+            handleFileChange={handleFileChange}
+            isUploading={isUploading}
+            hasFile={hasFile}
+          />
           
-          {/* Alertas explicativos baseados no que o usuário fez upload */}
-          {showGuideAlert && (
-            <Alert variant="default" className="bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/50">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Você enviou apenas demonstrativos. O sistema irá extrair os valores pagos, mas não poderá verificar 
-                detalhes dos procedimentos ou comparar com a tabela CBHPM. Para uma análise completa, adicione também guias médicas.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {showDemonstrativoAlert && (
-            <Alert variant="default" className="bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/50">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Você enviou apenas guias médicas. O sistema irá extrair os procedimentos realizados, mas não poderá 
-                verificar os valores pagos ou detectar glosas. Para uma análise completa, adicione também demonstrativos de pagamento.
-              </AlertDescription>
-            </Alert>
-          )}
+          <UploadContextAlerts 
+            showGuideAlert={showGuideAlert}
+            showDemonstrativoAlert={showDemonstrativoAlert}
+          />
           
           <FileList
             files={files}
@@ -154,42 +114,14 @@ const UploadSection = () => {
           />
         </CardContent>
         <CardFooter>
-          <div className="w-full flex flex-col sm:flex-row gap-3">
-            <Button 
-              className="flex-1" 
-              disabled={files.length === 0 || isUploading || !hasValidFilesForProcessing()}
-              onClick={processFilesHandler}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processando...
-                </>
-              ) : (
-                hasGuiaDemonstrativoPair() ? 'Analisar e Comparar Documentos' : 'Processar Documentos'
-              )}
-            </Button>
-            
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <Button 
-                      variant="outline"
-                      className="flex-1"
-                      onClick={resetFiles}
-                      disabled={files.length === 0 || isUploading}
-                    >
-                      Limpar Arquivos
-                    </Button>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Remove todos os arquivos selecionados</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+          <UploadActionButtons 
+            isUploading={isUploading}
+            filesLength={files.length}
+            hasGuiaDemonstrativoPair={hasGuiaDemonstrativoPair()}
+            hasValidFilesForProcessing={hasValidFilesForProcessing()}
+            onProcess={processFilesHandler}
+            onReset={resetFiles}
+          />
         </CardFooter>
       </Card>
 
