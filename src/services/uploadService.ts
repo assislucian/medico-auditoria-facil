@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { CheckCircle } from 'lucide-react';
 import { ProcessingStage, FileWithStatus, ExtractedData, ProcessMode } from '@/types/upload';
@@ -160,8 +161,10 @@ export async function processFiles(
     setProcessingMsg(getCompletionMessage(processMode));
     
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Fix: Pass icon as a function that renders the component instead of passing component directly
     toast.success(getSuccessMessage(processMode), {
-      icon: CheckCircle,
+      icon: () => <CheckCircle className="h-4 w-4" />,
       description: getSuccessDescription(processMode)
     });
     
