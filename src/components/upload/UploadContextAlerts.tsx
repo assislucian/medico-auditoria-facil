@@ -17,7 +17,8 @@ const UploadContextAlerts = ({ showGuideAlert, showDemonstrativoAlert }: UploadC
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Você enviou apenas demonstrativos. O sistema irá extrair os valores pagos, mas não poderá verificar 
-            detalhes dos procedimentos ou comparar com a tabela CBHPM. Para uma análise completa, adicione também guias médicas.
+            detalhes dos procedimentos ou comparar com a tabela CBHPM 2015. Para uma análise completa incluindo 
+            comparativo por papel médico (cirurgião, auxiliares), adicione também guias médicas.
           </AlertDescription>
         </Alert>
       )}
@@ -27,7 +28,8 @@ const UploadContextAlerts = ({ showGuideAlert, showDemonstrativoAlert }: UploadC
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Você enviou apenas guias médicas. O sistema irá extrair os procedimentos realizados, mas não poderá 
-            verificar os valores pagos ou detectar glosas. Para uma análise completa, adicione também demonstrativos de pagamento.
+            verificar os valores pagos ou detectar glosas. Para comparação com tabela CBHPM 2015 por papel médico, 
+            adicione também demonstrativos de pagamento.
           </AlertDescription>
         </Alert>
       )}

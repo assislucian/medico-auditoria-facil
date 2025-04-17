@@ -11,6 +11,7 @@ const UploadInstructions = () => {
         <li><strong>Guias médicas:</strong> Contêm os procedimentos realizados e servem como comprovante do serviço.</li>
         <li><strong>Demonstrativos:</strong> Documentos de pagamento que detalham os valores pagos pelo plano de saúde.</li>
         <li><strong>Análise completa:</strong> Quando ambos são enviados, o sistema compara os valores pagos com a tabela CBHPM.</li>
+        <li><strong>Comparativo CBHPM 2015:</strong> Análise detalhada por papel (Cirurgião, 1º Auxiliar, 2º Auxiliar) dos valores pagos versus CBHPM.</li>
       </ul>
     </div>
   );

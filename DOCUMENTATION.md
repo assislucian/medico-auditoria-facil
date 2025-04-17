@@ -1,4 +1,3 @@
-
 # MedCheck - Documentação Completa
 
 ## Visão Geral do Projeto
@@ -107,6 +106,13 @@ src/
 ### 13. Sobre (`/about`)
 - Informações sobre a empresa/plataforma
 - Componente: `src/pages/About.tsx`
+
+### 14. Comparativo Contracheque (`/compare`)
+- Comparação detalhada entre procedimentos e valores pagos
+- Verificação com tabela CBHPM 2015
+- Análise por papel médico (cirurgião, auxiliares)
+- Identificação de pagamentos conforme, abaixo, ou acima da tabela
+- Componente: `src/pages/CompareContracheque.tsx`
 
 ## Componentes Principais
 
@@ -220,6 +226,20 @@ src/
 #### 3. ReferenceTablesSettings (`src/components/settings/ReferenceTablesSettings.tsx`)
 - Configuração das tabelas de referência para análise de pagamentos
 
+### Comparativo Contracheque
+
+#### 1. CBHPMComparisonTable (`src/components/comparison/CBHPMComparisonTable.tsx`)
+- Tabela detalhada do comparativo CBHPM
+- Colunas: código, descrição, quantidade, valor CBHPM, valor pago, diferença, status, papel
+- Filtros por papel médico e status de pagamento
+
+#### 2. CBHPMSummaryCards (`src/components/comparison/CBHPMSummaryCards.tsx`)
+- Cards de resumo para o comparativo
+- Total de procedimentos
+- Procedimentos conforme tabela
+- Procedimentos abaixo da tabela
+- Procedimentos acima da tabela
+
 ## Hooks Personalizados
 
 ### 1. useProfile (`src/hooks/use-profile.ts`)
@@ -258,6 +278,14 @@ src/
 - Usuário acessa a página de Perfil
 - Visualiza suas informações e estatísticas
 - Pode navegar para Configurações para editar dados
+
+### 5. Fluxo de Comparativo Contracheque
+- Usuário faz upload de guias e demonstrativos
+- Sistema processa os arquivos e identifica procedimentos
+- Usuário acessa a página de Comparativo
+- Sistema compara valores pagos com referência CBHPM 2015
+- Os resultados são exibidos agrupados por papel médico (cirurgião, auxiliar)
+- Usuário pode filtrar por papel ou status (conforme, abaixo, acima)
 
 ## Integração de Dados
 
@@ -311,6 +339,9 @@ A aplicação é totalmente responsiva, adaptando-se a diferentes tamanhos de te
 6. **Notificações Push**: Implementar notificações em tempo real
 7. **Dashboard Personalizado**: Permitir que o usuário customize seu dashboard
 8. **App Mobile**: Desenvolver uma versão mobile nativa
+9. **Aprimorar Comparativo CBHPM**: Adicionar opção para diferentes tabelas CBHPM e personalização de parâmetros
+10. **Relatório por Operadora**: Segmentar análises por operadora de saúde
+11. **Exportação de Comparativo**: Permitir exportação do comparativo CBHPM em PDF ou Excel
 
 ## Considerações para Desenvolvimento
 
@@ -324,3 +355,29 @@ A aplicação é totalmente responsiva, adaptando-se a diferentes tamanhos de te
 ## Conclusão
 
 O MedCheck é uma aplicação robusta para auditoria de pagamentos médicos, oferecendo uma interface moderna e funcional para que médicos e profissionais de saúde identifiquem e recuperem valores pagos incorretamente pelas operadoras de saúde. A arquitetura do projeto é modular e extensível, permitindo fácil manutenção e adição de novas funcionalidades.
+
+## Comparativo Contracheque
+
+### Visão Geral
+O módulo de comparativo contracheque permite comparar valores pagos com a tabela de referência CBHPM 2015. Ele identifica pagamentos em conformidade, abaixo ou acima da tabela, e separa por papel (Cirurgião, Primeiro Auxiliar, Segundo Auxiliar).
+
+### Como Utilizar
+1. Envie guias médicas e demonstrativos de pagamento na página de Upload
+2. Após o processamento, acesse a página de Comparativo no menu lateral
+3. Visualize o resumo geral nos cards no topo da página
+4. Analise os detalhes na tabela, podendo filtrar por papel médico ou status
+5. Identifique valores em desacordo com a tabela CBHPM 2015 para possíveis contestações
+
+### Filtros Disponíveis
+- **Por Papel**: Cirurgião, Primeiro Auxiliar, Segundo Auxiliar, ou Todos
+- **Por Status**: Conforme, Abaixo, Acima, Não Pago, ou Todos
+
+### Campos da Tabela
+- **Código**: Código do procedimento
+- **Descrição**: Nome do procedimento
+- **Quantidade**: Quantidade realizada
+- **CBHPM**: Valor de referência da tabela CBHPM 2015
+- **Pago**: Valor efetivamente pago pelo plano
+- **Diferença**: Diferença entre valor pago e valor CBHPM
+- **Status**: Categorização (Conforme, Abaixo, Acima, Não Pago)
+- **Papel**: Função do médico no procedimento

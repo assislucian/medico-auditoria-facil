@@ -75,6 +75,7 @@ const App = () => {
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                   <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
                   <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+                  <Route path="/compare" element={<ProtectedRoute><CompareContracheque /></ProtectedRoute>} />
                   
                   {/* Catch-all route */}
                   <Route path="*" element={<NotFound />} />
