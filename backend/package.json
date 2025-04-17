@@ -1,0 +1,27 @@
+
+{
+  "name": "medico-auditoria-facil-backend",
+  "version": "1.0.0",
+  "description": "Backend services for Médico Auditoria Fácil",
+  "private": true,
+  "scripts": {
+    "test": "jest",
+    "migrate": "node scripts/migrate.js",
+    "deploy:functions": "node scripts/deploy-functions.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "file-saver": "^2.0.5",
+    "xlsx": "^0.18.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/file-saver": "^2.0.7",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.24",
+    "dotenv": "^16.4.5",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
+  }
+}
