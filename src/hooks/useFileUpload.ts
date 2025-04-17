@@ -1,151 +1,147 @@
-import { useState, useEffect } from 'react';
-import { FileWithStatus, FileType, FileStatus, ProcessingStage } from '@/types/upload';
+
+import { useState } from 'react';
+import { FileWithStatus, ProcessingStage } from '@/types/upload';
+import { validateFiles } from '@/utils/fileValidation';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { determineProcessingMode } from '@/utils/uploadUtils';
+import { useAuth } from '@/contexts/AuthContext';
+import { processFiles } from '@/services/uploadService';
 
+/**
+ * Custom hook for handling file uploads
+ */
 export function useFileUpload() {
-  const [uploading, setUploading] = useState(false);
+  const [files, setFiles] = useState<FileWithStatus[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [selectedFiles, setSelectedFiles] = useState<FileWithStatus[]>([]);
-  const [showComparison, setShowComparison] = useState(false);
   const [processingStage, setProcessingStage] = useState<ProcessingStage>('idle');
-  const [processingMsg, setProcessingMsg] = useState('Preparando arquivos...');
-  const [processingMode, setProcessingMode] = useState<'complete' | 'guia-only' | 'demonstrativo-only' | null>(null);
-  const [crmRegistrado, setCrmRegistrado] = useState<string>('');
-
-  useEffect(() => {
-    loadUserCrm();
-  }, []);
-
-  const loadUserCrm = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) return;
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('crm')
-        .eq('id', user.id)
-        .single();
-      
-      if (profile?.crm) {
-        console.log('CRM carregado:', profile.crm);
-        setCrmRegistrado(profile.crm);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar CRM:', error);
+  const [processingMsg, setProcessingMsg] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const { user } = useAuth();
+  
+  /**
+   * Handle file selection from input
+   * @param event File input change event
+   */
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) {
+      return;
     }
+    
+    const newFiles = Array.from(event.target.files).map(file => ({
+      name: file.name,
+      file,
+      type: determineFileType(file.name),
+      status: 'processing' as const,
+    }));
+    
+    // Validate the files
+    const validatedFiles = await validateFiles(newFiles);
+    
+    setFiles(prev => [...prev, ...validatedFiles]);
   };
-
-  const hasFile = (type: FileType): boolean => {
-    return selectedFiles.some(f => f.type === type);
-  };
-
-  const hasGuiaDemonstrativoPair = (): boolean => {
-    const validGuias = selectedFiles.filter(f => f.type === 'guia' && f.status !== 'invalid').length > 0;
-    const validDemos = selectedFiles.filter(f => f.type === 'demonstrativo' && f.status !== 'invalid').length > 0;
-    return validGuias && validDemos;
-  };
-
-  const hasValidFilesForProcessing = (): boolean => {
-    return selectedFiles.some(f => f.status !== 'invalid');
-  };
-
-  const hasInvalidFiles = (): boolean => {
-    return selectedFiles.some(f => f.status === 'invalid');
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: FileType) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const files = Array.from(e.target.files);
-      
-      const invalidFiles = files.filter(file => file.type !== 'application/pdf');
-      if (invalidFiles.length > 0) {
-        toast.error('Por favor, envie apenas arquivos PDF');
-        return;
-      }
-
-      const fileArray: FileWithStatus[] = files.map(file => ({
-        name: file.name,
-        type,
-        file,
-        status: 'processing' as FileStatus
-      }));
-      
-      setTimeout(() => {
-        const updatedFiles = fileArray.map(file => {
-          const isValid = file.name.toLowerCase().includes('invalid') ? false : true;
-          return { ...file, status: isValid ? 'valid' as FileStatus : 'invalid' as FileStatus };
-        });
-        
-        setSelectedFiles(prev => {
-          const newFiles = [...prev];
-          updatedFiles.forEach(file => {
-            const existingIndex = newFiles.findIndex(f => f.name === file.name && f.type === file.type);
-            if (existingIndex >= 0) {
-              newFiles[existingIndex] = file;
-            } else {
-              newFiles.push(file);
-            }
-          });
-          return newFiles;
-        });
-        
-        const invalidCount = updatedFiles.filter(f => f.status === 'invalid').length;
-        if (invalidCount > 0) {
-          toast.warning(`${invalidCount} ${invalidCount === 1 ? 'arquivo não pôde' : 'arquivos não puderam'} ser processado. Verifique o formato.`);
-        }
-      }, 1500);
-      
-      setSelectedFiles(prev => [...prev, ...fileArray]);
-      e.target.value = '';
-    }
-  };
-
+  
+  /**
+   * Remove a file from the list
+   * @param index Index of the file to remove
+   */
   const removeFile = (index: number) => {
-    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
-    if (showComparison) {
-      setShowComparison(false);
-      toast.info("A comparação foi resetada devido à remoção de arquivos.");
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  /**
+   * Clear all files from the list
+   */
+  const clearFiles = () => {
+    setFiles([]);
+    setProgress(0);
+    setProcessingStage('idle');
+    setProcessingMsg('');
+    setUploadSuccess(false);
+  };
+  
+  /**
+   * Process the uploaded files
+   * @param crmRegistrado CRM to filter by (optional)
+   */
+  const processUploadedFiles = async (crmRegistrado: string = '') => {
+    if (files.length === 0) {
+      toast.error('Nenhum arquivo selecionado', {
+        description: 'Por favor, selecione arquivos para processar.'
+      });
+      return false;
+    }
+    
+    if (!files.some(file => file.status === 'valid')) {
+      toast.error('Arquivos inválidos', {
+        description: 'Todos os arquivos selecionados são inválidos. Por favor, selecione arquivos válidos.'
+      });
+      return false;
+    }
+    
+    try {
+      setIsUploading(true);
+      setProgress(0);
+      setProcessingStage('uploading');
+      setProcessingMsg('Enviando arquivos...');
+      
+      // Process the files
+      const result = await processFiles(
+        files,
+        setProgress,
+        setProcessingStage,
+        setProcessingMsg,
+        crmRegistrado
+      );
+      
+      setIsUploading(false);
+      setUploadSuccess(result);
+      
+      return result;
+    } catch (error) {
+      console.error('Error processing files:', error);
+      setIsUploading(false);
+      setProcessingStage('error');
+      setProcessingMsg('Erro ao processar os arquivos');
+      
+      toast.error('Erro ao processar os arquivos', {
+        description: 'Por favor, tente novamente ou contate o suporte.'
+      });
+      
+      return false;
     }
   };
-
-  const resetFiles = () => {
-    setSelectedFiles([]);
-    setShowComparison(false);
-    setProcessingMode(null);
+  
+  /**
+   * Determine the type of file based on its name
+   * @param fileName Name of the file
+   * @returns Type of the file
+   */
+  const determineFileType = (fileName: string): 'guia' | 'demonstrativo' => {
+    const lowercaseName = fileName.toLowerCase();
+    
+    // Check for demonstrativo file
+    if (
+      lowercaseName.includes('demonstrativo') || 
+      lowercaseName.includes('pagamento') || 
+      lowercaseName.includes('recebiveis')
+    ) {
+      return 'demonstrativo';
+    }
+    
+    // Default to guia
+    return 'guia';
   };
-
-  const determineProcessingMode = (): 'complete' | 'guia-only' | 'demonstrativo-only' => {
-    return determineProcessingMode(selectedFiles);
-  };
-
+  
   return {
-    uploading,
-    setUploading,
+    files,
+    isUploading,
     progress,
-    setProgress,
-    selectedFiles,
-    setSelectedFiles,
-    showComparison,
-    setShowComparison,
     processingStage,
-    setProcessingStage,
     processingMsg,
-    setProcessingMsg,
-    processingMode,
-    setProcessingMode,
-    crmRegistrado,
-    setCrmRegistrado,
-    hasFile,
-    hasGuiaDemonstrativoPair,
-    hasValidFilesForProcessing,
-    hasInvalidFiles,
-    handleFileChange,
+    uploadSuccess,
+    handleFileSelect,
     removeFile,
-    resetFiles,
-    determineProcessingMode
+    clearFiles,
+    processUploadedFiles
   };
 }
