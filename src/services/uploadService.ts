@@ -1,13 +1,8 @@
 
 import { toast } from 'sonner';
 import { ProcessingStage, FileWithStatus, ProcessMode } from '@/types/upload';
-import { getExtractedMockData } from './mockData';
-import { 
-  getProcessMode, 
-  getSuccessMessage,
-  getSuccessDescription 
-} from './messageUtils';
-import { simulateProcessingStages } from './processingService';
+import { getProcessMode, getSuccessMessage, getSuccessDescription } from './messageUtils';
+import { simulateProcessingStages, processarMultiplasGuias, extrairDadosDePDFs } from './processingService';
 import { saveAnalysisToDatabase } from './databaseService';
 
 /**
@@ -35,8 +30,8 @@ export async function processFiles(
     // Simular os estágios de processamento
     await simulateProcessingStages(processMode, setProgress, setProcessingStage, setProcessingMsg);
     
-    // Extrair os dados
-    const extractedData = getExtractedData(hasGuias, hasDemonstrativos);
+    // Extrair e processar dados dos arquivos
+    const extractedData = await extractDataFromFiles(files, processMode);
 
     // Salvar os dados no banco de dados
     const success = await saveAnalysisToDatabase(files, processMode, extractedData);
@@ -61,11 +56,53 @@ export async function processFiles(
 }
 
 /**
- * Retorna dados extraídos com base nos tipos de arquivos disponíveis
- * @param hasGuias Indica se há guias disponíveis
- * @param hasDemonstrativos Indica se há demonstrativos disponíveis
+ * Extrai dados dos arquivos com base no tipo
+ * 
+ * @param files Arquivos para processamento
+ * @param processMode Modo de processamento
+ * @returns Dados extraídos dos arquivos
  */
-export function getExtractedData(hasGuias: boolean = true, hasDemonstrativos: boolean = true) {
-  // Em um cenário real, retornaríamos dados parciais baseados no que foi processado
-  return getExtractedMockData();
+async function extractDataFromFiles(files: FileWithStatus[], processMode: ProcessMode) {
+  // Filtrar apenas os arquivos válidos
+  const validFiles = files.filter(f => f.status === 'valid');
+  
+  // Separar os arquivos por tipo
+  const guiasFiles = validFiles.filter(f => f.type === 'guia').map(f => f.file);
+  const demonstrativosFiles = validFiles.filter(f => f.type === 'demonstrativo').map(f => f.file);
+  
+  // Em um cenário real, extrairíamos dados reais dos PDFs
+  // Aqui estamos usando funções de simulação
+  
+  if (processMode === 'complete' || processMode === 'guia-only') {
+    // Extrair dados das guias (PDFs)
+    const guiasData = await extrairDadosDePDFs(guiasFiles);
+    
+    // Processar as guias e demonstrativos
+    if (processMode === 'complete' && demonstrativosFiles.length > 0) {
+      // Em produção: processar dados de ambos guias e demonstrativos
+      // Para demonstração, usamos o processarMultiplasGuias
+      return processarMultiplasGuias(guiasData);
+    } else {
+      // Processamento somente com guias
+      return processarMultiplasGuias(guiasData);
+    }
+  } else {
+    // Processamento somente com demonstrativos (simplificado para demonstração)
+    return {
+      demonstrativoInfo: {
+        numero: 'DM' + Math.floor(Math.random() * 1000000),
+        competencia: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+        hospital: 'Hospital Demonstrativo',
+        data: new Date().toLocaleDateString('pt-BR'),
+        beneficiario: 'Paciente Demonstrativo'
+      },
+      procedimentos: [],
+      totais: {
+        valorCBHPM: 0,
+        valorPago: 0,
+        diferenca: 0,
+        procedimentosNaoPagos: 0
+      }
+    };
+  }
 }

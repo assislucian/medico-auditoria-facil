@@ -34,19 +34,55 @@ export interface ProcedureExtracted {
   doctors: DoctorParticipation[];
 }
 
+export interface DemonstrativoInfo {
+  numero: string;
+  competencia: string;
+  hospital: string;
+  data: string;
+  beneficiario: string;
+}
+
+export interface ProcessingTotals {
+  valorCBHPM: number;
+  valorPago: number;
+  diferenca: number;
+  procedimentosNaoPagos: number;
+}
+
 export interface ExtractedData {
-  demonstrativoInfo: {
-    numero: string;
-    competencia: string;
-    hospital: string;
-    data: string;
-    beneficiario: string;
-  };
+  demonstrativoInfo: DemonstrativoInfo;
   procedimentos: ProcedureExtracted[];
-  totais: {
-    valorCBHPM: number;
-    valorPago: number;
-    diferenca: number;
-    procedimentosNaoPagos: number;
+  totais: ProcessingTotals;
+}
+
+export interface GuiaData {
+  numero: string;
+  execucao: string;
+  beneficiario: {
+    codigo: string;
+    nome: string;
   };
+  prestador: {
+    codigo: string;
+    nome: string;
+  };
+  procedimentos: ProcedimentoGuia[];
+}
+
+export interface ProcedimentoGuia {
+  codigo: string;
+  descricao: string;
+  dataExecucao: string;
+  quantidade: number;
+  status: string;
+  participacoes: ParticipacaoMedica[];
+}
+
+export interface ParticipacaoMedica {
+  funcao: string;
+  crm: string;
+  nome: string;
+  dataInicio: string;
+  dataFim: string;
+  status: string;
 }
