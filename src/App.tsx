@@ -17,6 +17,7 @@ import Uploads from "./pages/Uploads";
 import History from "./pages/History";
 import Reports from "./pages/Reports";
 import Pricing from "./pages/Pricing";
+import CheckoutPage from "./components/checkout/CheckoutPage";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
@@ -63,6 +64,7 @@ const App = () => {
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/checkout" element={<CheckoutPage />} />
                   
                   {/* Protected routes */}
                   <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

@@ -1,7 +1,7 @@
 
 import { CardDescription, CardTitle } from '@/components/ui/card';
 
-interface ComparisonHeaderProps {
+export interface ComparisonHeaderProps {
   totalProcedimentos: number;
   hospital?: string;
   competencia?: string;

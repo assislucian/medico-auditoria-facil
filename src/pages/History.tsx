@@ -7,6 +7,7 @@ import { HistoryTable } from "@/components/history/HistoryTable";
 import { fetchHistoryData } from '@/services/historyService';
 import { HistoryItem } from '@/components/history/data';
 import { Loader2 } from 'lucide-react';
+import { exportToExcel } from '@/services/exportService';
 
 const HistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,6 +33,10 @@ const HistoryPage = () => {
     
     return matchesSearch && matchesStatus;
   });
+  
+  const handleExport = () => {
+    exportToExcel(filteredHistory, 'historico-analises');
+  };
 
   return (
     <>
@@ -48,6 +53,7 @@ const HistoryPage = () => {
             onSearchChange={setSearchTerm}
             filterStatus={filterStatus}
             onFilterChange={setFilterStatus}
+            onExport={handleExport}
           />
           
           {loading ? (

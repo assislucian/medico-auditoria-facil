@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, ChevronRight, Headset, BadgeDollarSign, ShieldCheck, Star } from 'lucide-react';
@@ -83,15 +84,30 @@ const plans = [
 const PricingPlans = () => {
   const [billingInterval, setBillingInterval] = useState<BillingInterval>('monthly');
   const { theme } = useTheme();
+  const navigate = useNavigate();
 
   const handlePlanSelect = (planId: string) => {
+    const selectedPlan = filteredPlans.find(plan => plan.id === planId);
+    
+    if (!selectedPlan) return;
+    
     if (planId.includes('premium')) {
       toast('Fale com nossa equipe de vendas', {
         description: 'Entraremos em contato para criar uma solução personalizada.',
+        action: {
+          label: 'Contato',
+          onClick: () => navigate('/contact')
+        }
       });
     } else {
-      toast('Redirecionando para checkout...', {
-        description: 'Esta funcionalidade estará disponível em breve.',
+      // Navegue para a página de checkout com os dados do plano
+      navigate('/checkout', {
+        state: {
+          planId: selectedPlan.id,
+          planName: selectedPlan.name,
+          price: selectedPlan.price[billingInterval],
+          interval: billingInterval
+        }
       });
     }
   };

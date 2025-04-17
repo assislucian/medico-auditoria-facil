@@ -23,6 +23,15 @@ export async function saveAnalysisToDatabase(
       return {success: false, analysisId: null};
     }
     
+    // Preparar o resumo em formato seguro para armazenamento
+    const summary = {
+      totalCBHPM: extractedData.totais?.valorCBHPM || 0,
+      totalPago: extractedData.totais?.valorPago || 0,
+      totalDiferenca: extractedData.totais?.diferenca || 0,
+      procedimentosTotal: extractedData.procedimentos?.length || 0,
+      procedimentosNaoPagos: extractedData.totais?.procedimentosNaoPagos || 0
+    };
+    
     // 1. Criar um registro de análise
     const { data: analysisData, error: analysisError } = await supabase
       .from('analysis_results')
@@ -33,13 +42,7 @@ export async function saveAnalysisToDatabase(
         hospital: extractedData.demonstrativoInfo?.hospital || null,
         competencia: extractedData.demonstrativoInfo?.competencia || null,
         numero: extractedData.demonstrativoInfo?.numero || null,
-        summary: {
-          totalCBHPM: extractedData.totais?.valorCBHPM || 0,
-          totalPago: extractedData.totais?.valorPago || 0,
-          totalDiferenca: extractedData.totais?.diferenca || 0,
-          procedimentosTotal: extractedData.procedimentos?.length || 0,
-          procedimentosNaoPagos: extractedData.totais?.procedimentosNaoPagos || 0
-        },
+        summary: summary,
         status: 'processed'
       })
       .select('id')
@@ -133,8 +136,8 @@ export async function getAnalysisById(analysisId: string) {
       return null;
     }
 
-    // Acesso seguro ao objeto summary com tipagem correta
-    const summary = analysisData.summary as Record<string, any> || {};
+    // Acesso seguro ao objeto summary
+    const summary = typeof analysisData.summary === 'object' ? analysisData.summary as Record<string, any> : {};
     
     // Formatar os dados no formato esperado pelo frontend
     return {

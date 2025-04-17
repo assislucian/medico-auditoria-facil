@@ -1,7 +1,7 @@
 
 import { DemonstrativoInfo } from '@/types/upload';
 
-interface DemonstrativeInfoProps {
+export interface DemonstrativeInfoProps {
   info: DemonstrativoInfo;
 }
 

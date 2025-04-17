@@ -3,20 +3,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Download, Search } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface HistorySearchProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   filterStatus: string;
   onFilterChange: (value: string) => void;
+  onExport: () => void;
 }
 
 export function HistorySearch({ 
   searchTerm, 
   onSearchChange, 
   filterStatus, 
-  onFilterChange 
+  onFilterChange,
+  onExport 
 }: HistorySearchProps) {
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  
+  const handleExport = () => {
+    onExport();
+    toast.success("Exportação iniciada", {
+      description: "Seu relatório será baixado em breve."
+    });
+  };
+
   return (
     <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
       <div className="flex gap-2 w-full max-w-md">
@@ -43,11 +56,11 @@ export function HistorySearch({
       </div>
       
       <div className="flex gap-2">
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={() => setShowDateFilter(!showDateFilter)}>
           <Calendar className="mr-2 h-4 w-4" />
           Filtrar por Data
         </Button>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={handleExport}>
           <Download className="mr-2 h-4 w-4" />
           Exportar Excel
         </Button>
