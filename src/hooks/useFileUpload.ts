@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileWithStatus, FileType, FileStatus, ProcessingStage } from '@/types/upload';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,9 +15,9 @@ export function useFileUpload() {
   const [crmRegistrado, setCrmRegistrado] = useState<string>('');
 
   // Carregar o CRM do usuário ao inicializar o hook
-  useState(() => {
+  useEffect(() => {
     loadUserCrm();
-  });
+  }, []);
 
   /**
    * Carrega o CRM do usuário a partir do perfil
