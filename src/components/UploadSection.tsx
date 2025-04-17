@@ -8,14 +8,13 @@ import ComparisonView from './ComparisonView';
 import UploadAlerts from './upload/UploadAlerts';
 import ProcessingSection from './upload/ProcessingSection';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { processFiles } from '@/services/uploadService';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 /**
  * UploadSection Component
@@ -25,21 +24,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
  */
 const UploadSection = () => {
   const {
-    uploading,
-    setUploading,
+    isUploading,
     progress,
-    setProgress,
-    selectedFiles,
+    files,
     showComparison,
-    setShowComparison,
     processingStage,
-    setProcessingStage,
     processingMsg,
-    setProcessingMsg,
-    processingMode,
-    setProcessingMode,
-    crmRegistrado,
-    setCrmRegistrado,
     hasFile,
     hasGuiaDemonstrativoPair,
     hasValidFilesForProcessing,
@@ -47,7 +37,8 @@ const UploadSection = () => {
     handleFileChange,
     removeFile,
     resetFiles,
-    determineProcessingMode
+    processUploadedFiles,
+    setShowComparison
   } = useFileUpload();
 
   /**
@@ -55,7 +46,7 @@ const UploadSection = () => {
    * Processa os dados dos PDFs e salva no Supabase
    */
   const processFilesHandler = async () => {
-    if (selectedFiles.length === 0) {
+    if (files.length === 0) {
       toast.error('Selecione pelo menos um arquivo para upload');
       return;
     }
@@ -66,36 +57,18 @@ const UploadSection = () => {
     }
 
     // Verificar se há arquivos inválidos
-    const invalidFiles = selectedFiles.filter(f => f.status === 'invalid');
+    const invalidFiles = files.filter(f => f.status === 'invalid');
     if (invalidFiles.length > 0) {
       toast.warning('Existem arquivos inválidos que serão ignorados na análise');
     }
 
-    setUploading(true);
-    setProgress(0);
     setShowComparison(false);
     
-    // Determinar o modo de processamento
-    const mode = determineProcessingMode();
-    setProcessingMode(mode);
+    const success = await processUploadedFiles();
     
-    const success = await processFiles(
-      selectedFiles.filter(f => f.status === 'valid'),
-      setProgress,
-      setProcessingStage,
-      setProcessingMsg,
-      crmRegistrado // Passando o CRM registrado para filtrar apenas as guias relevantes
-    );
-    
-    if (success) {
-      setShowComparison(true);
+    if (!success) {
+      toast.error('Ocorreu um erro durante o processamento');
     }
-    
-    setTimeout(() => {
-      setUploading(false);
-      setProgress(0);
-      setProcessingStage('idle');
-    }, 1500);
   };
 
   // Determinar se deve mostrar alertas explicando o processo
@@ -128,13 +101,13 @@ const UploadSection = () => {
             <FileDropZone
               type="guia"
               onFileChange={handleFileChange}
-              disabled={uploading}
+              disabled={isUploading}
               hasFiles={hasFile('guia')}
             />
             <FileDropZone
               type="demonstrativo"
               onFileChange={handleFileChange}
-              disabled={uploading}
+              disabled={isUploading}
               hasFiles={hasFile('demonstrativo')}
             />
           </div>
@@ -161,13 +134,13 @@ const UploadSection = () => {
           )}
           
           <FileList
-            files={selectedFiles}
+            files={files}
             onRemove={removeFile}
-            disabled={uploading}
+            disabled={isUploading}
           />
           
           <ProcessingSection
-            uploading={uploading}
+            uploading={isUploading}
             progress={progress}
             processingStage={processingStage}
             processingMsg={processingMsg}
@@ -184,10 +157,10 @@ const UploadSection = () => {
           <div className="w-full flex flex-col sm:flex-row gap-3">
             <Button 
               className="flex-1" 
-              disabled={selectedFiles.length === 0 || uploading || !hasValidFilesForProcessing()}
+              disabled={files.length === 0 || isUploading || !hasValidFilesForProcessing()}
               onClick={processFilesHandler}
             >
-              {uploading ? (
+              {isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processando...
@@ -205,7 +178,7 @@ const UploadSection = () => {
                       variant="outline"
                       className="flex-1"
                       onClick={resetFiles}
-                      disabled={selectedFiles.length === 0 || uploading}
+                      disabled={files.length === 0 || isUploading}
                     >
                       Limpar Arquivos
                     </Button>
