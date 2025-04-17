@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { FileWithStatus, ProcessingStage } from '@/types/upload';
+import { FileWithStatus } from '@/types/upload';
 import { validateFiles } from '@/utils/fileValidation';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,7 +30,7 @@ export function useFileUpload() {
     const newFiles = Array.from(event.target.files).map(file => ({
       name: file.name,
       file,
-      type: determineFileType(file.name),
+      type: detectFileType(file.name),
       status: 'processing' as const,
     }));
     
@@ -86,10 +86,10 @@ export function useFileUpload() {
       
       // Process the files
       const result = await processFiles(
-        files,
-        setProgress,
-        setProcessingStage,
-        setProcessingMsg,
+        files.filter(f => f.status === 'valid'), 
+        setProgress, 
+        setProcessingStage, 
+        setProcessingMsg, 
         crmRegistrado
       );
       
@@ -116,7 +116,7 @@ export function useFileUpload() {
    * @param fileName Name of the file
    * @returns Type of the file
    */
-  const determineFileType = (fileName: string): 'guia' | 'demonstrativo' => {
+  const detectFileType = (fileName: string): FileType => {
     const lowercaseName = fileName.toLowerCase();
     
     // Check for demonstrativo file
