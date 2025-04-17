@@ -4,30 +4,10 @@
  */
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
-import { ExtractedData } from '../models/types';
-import { saveAnalysisToDatabase } from './databaseService';
-import { extractDataFromFiles } from './processingService';
+import { ExtractedData, FileWithStatus, ProcessMode } from '../models/types';
 import { multipleFileUploadSchema } from '../models/schemas';
-
-/**
- * Type for file status
- */
-type FileStatus = 'valid' | 'invalid' | 'processing';
-
-/**
- * Type for file with status
- */
-interface FileWithStatus {
-  name: string;
-  type: 'guia' | 'demonstrativo';
-  file: File;
-  status: FileStatus;
-}
-
-/**
- * Type for processing mode
- */
-type ProcessMode = 'complete' | 'guia-only' | 'demonstrativo-only';
+import { extractDataFromFiles } from './processingService';
+import { saveAnalysisToDatabase } from './databaseService';
 
 /**
  * Upload files to storage

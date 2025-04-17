@@ -2,8 +2,7 @@
 import { toast } from 'sonner';
 import { ProcessingStage, FileWithStatus, ProcessMode, ExtractedData } from '@/types/upload';
 import { getProcessMode, getSuccessMessage, getSuccessDescription } from './messageUtils';
-import { simulateProcessingStages, processarMultiplasGuias, extrairDadosDePDFs } from './processingService';
-import { saveAnalysisToDatabase, getAnalysisById } from './databaseService';
+import { simulateProcessingStages } from './processingService';
 import { supabase } from '@/integrations/supabase/client';
 
 // Store the extracted data in memory for components to access
@@ -28,6 +27,9 @@ export async function processFiles(
   crmRegistrado: string = ''
 ): Promise<boolean> {
   try {
+    // Call the backend Edge Function for processing
+    const { data: uploadedFiles } = await uploadFilesToStorage(files);
+    
     const hasGuias = files.some(f => f.type === 'guia' && f.status === 'valid');
     const hasDemonstrativos = files.some(f => f.type === 'demonstrativo' && f.status === 'valid');
     
@@ -37,24 +39,21 @@ export async function processFiles(
     // Simular os estágios de processamento
     await simulateProcessingStages(processMode, setProgress, setProcessingStage, setProcessingMsg);
     
-    // Fazer upload dos arquivos para o Supabase Storage
-    const uploadedFiles = await uploadFilesToStorage(files);
+    // Call backend function to process files
+    const response = await supabase.functions.invoke('process-analysis', {
+      body: {
+        uploadIds: uploadedFiles?.map(f => f.id) || [],
+        crmRegistrado
+      }
+    });
     
-    // Extrair e processar dados dos arquivos
-    const extractedData = await extractDataFromFiles(files, processMode, crmRegistrado);
-
-    // Salvar os dados extraídos na variável de memória para acesso pelos componentes
-    currentExtractedData = extractedData;
-
-    // Salvar os dados no banco de dados
-    const { success, analysisId } = await saveAnalysisToDatabase(files, processMode, extractedData);
-    
-    if (!success) {
-      throw new Error('Falha ao salvar os dados da análise no banco de dados');
+    if (!response.data?.success) {
+      throw new Error(response.data?.error || 'Error processing files');
     }
     
-    // Armazenar o ID da análise para recuperação posterior
-    currentAnalysisId = analysisId;
+    // Store extracted data and analysis ID
+    currentExtractedData = response.data.extractedData;
+    currentAnalysisId = response.data.analysisId;
     
     // Exibir toast de sucesso
     toast.success(getSuccessMessage(processMode), {
@@ -77,110 +76,35 @@ export async function processFiles(
  * @param files Arquivos para upload
  * @returns Array de URLs dos arquivos salvos
  */
-async function uploadFilesToStorage(files: FileWithStatus[]): Promise<string[]> {
-  const fileUrls: string[] = [];
+async function uploadFilesToStorage(files: FileWithStatus[]) {
   const validFiles = files.filter(f => f.status === 'valid');
   
   try {
-    // Obter o usuário atual
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Usuário não autenticado');
+    // Call the upload-files edge function
+    const formData = new FormData();
     
-    // Verificar se o bucket existe e criar se não existir
-    const { data: buckets } = await supabase.storage.listBuckets();
-    if (!buckets?.find(b => b.name === 'uploads')) {
-      await supabase.storage.createBucket('uploads', { public: false });
+    // Add each file to the form data
+    validFiles.forEach(file => {
+      formData.append('files', file.file);
+      formData.append('fileType', file.type);
+    });
+    
+    const { data, error } = await supabase.functions.invoke('upload-files', {
+      body: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    if (error) {
+      console.error('Erro no upload dos arquivos:', error);
+      throw error;
     }
     
-    // Fazer upload de cada arquivo
-    for (const file of validFiles) {
-      const fileName = `${user.id}/${Date.now()}-${file.name}`;
-      const { data, error } = await supabase.storage
-        .from('uploads')
-        .upload(fileName, file.file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-        
-      if (error) {
-        console.error('Erro ao fazer upload:', error);
-        continue;
-      }
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('uploads')
-        .getPublicUrl(data.path);
-        
-      fileUrls.push(publicUrl);
-      
-      // Registrar o upload no banco de dados
-      await supabase.from('uploads').insert({
-        user_id: user.id,
-        file_name: file.name,
-        file_type: file.type,
-        file_path: data.path,
-        status: 'processado'
-      });
-    }
-    
-    return fileUrls;
+    return data;
   } catch (error) {
     console.error('Erro no upload dos arquivos:', error);
-    return fileUrls;
-  }
-}
-
-/**
- * Extrai dados dos arquivos com base no tipo
- * 
- * @param files Arquivos para processamento
- * @param processMode Modo de processamento
- * @param crmRegistrado CRM do médico para filtrar participações
- * @returns Dados extraídos dos arquivos
- */
-async function extractDataFromFiles(files: FileWithStatus[], processMode: ProcessMode, crmRegistrado: string = '') {
-  // Filtrar apenas os arquivos válidos
-  const validFiles = files.filter(f => f.status === 'valid');
-  
-  // Separar os arquivos por tipo
-  const guiasFiles = validFiles.filter(f => f.type === 'guia').map(f => f.file);
-  const demonstrativosFiles = validFiles.filter(f => f.type === 'demonstrativo').map(f => f.file);
-  
-  console.log(`Processando ${guiasFiles.length} guias e ${demonstrativosFiles.length} demonstrativos`);
-  console.log('CRM registrado para filtragem:', crmRegistrado || 'Nenhum (mostrando todas participações)');
-  
-  if (processMode === 'complete' || processMode === 'guia-only') {
-    // Extrair dados das guias (PDFs) - em ambiente real utilizaria OCR ou parsing específico
-    const guiasData = await extrairDadosDePDFs(guiasFiles);
-    
-    console.log('Dados extraídos das guias:', guiasData);
-    
-    // Processar as guias e demonstrativos
-    if (processMode === 'complete' && demonstrativosFiles.length > 0) {
-      // Em produção: processar dados de ambos guias e demonstrativos
-      return processarMultiplasGuias(guiasData, crmRegistrado);
-    } else {
-      // Processamento somente com guias
-      return processarMultiplasGuias(guiasData, crmRegistrado);
-    }
-  } else {
-    // Processamento somente com demonstrativos (simplificado para demonstração)
-    return {
-      demonstrativoInfo: {
-        numero: 'DM' + Math.floor(Math.random() * 1000000),
-        competencia: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
-        hospital: 'Hospital Demonstrativo',
-        data: new Date().toLocaleDateString('pt-BR'),
-        beneficiario: 'Paciente Demonstrativo'
-      },
-      procedimentos: [],
-      totais: {
-        valorCBHPM: 0,
-        valorPago: 0,
-        diferenca: 0,
-        procedimentosNaoPagos: 0
-      }
-    };
+    throw error;
   }
 }
 
@@ -198,10 +122,13 @@ export async function getExtractedData(): Promise<ExtractedData> {
   // Se temos o ID da análise, tenta buscar do banco de dados
   if (currentAnalysisId) {
     try {
-      const dadosDb = await getAnalysisById(currentAnalysisId);
-      if (dadosDb) {
-        currentExtractedData = dadosDb;
-        return dadosDb;
+      const { data, error } = await supabase.functions.invoke('get-analysis', {
+        body: { analysisId: currentAnalysisId }
+      });
+      
+      if (!error && data) {
+        currentExtractedData = data;
+        return data;
       }
     } catch (error) {
       console.error('Erro ao buscar análise:', error);

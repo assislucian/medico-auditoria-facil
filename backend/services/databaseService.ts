@@ -4,7 +4,7 @@
  */
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
-import { ExtractedData, AnalysisResult, ProcedureResult } from '../models/types';
+import { ExtractedData, AnalysisResult, ProcedureResult, ProcessMode } from '../models/types';
 import { BadRequestError, NotFoundError } from '../utils/errorHandler';
 
 /**
@@ -16,7 +16,7 @@ import { BadRequestError, NotFoundError } from '../utils/errorHandler';
  */
 export async function saveAnalysisToDatabase(
   files: { name: string, type: string }[],
-  processMode: string,
+  processMode: ProcessMode,
   extractedData: ExtractedData
 ): Promise<{ success: boolean; analysisId: string | null }> {
   try {
@@ -38,7 +38,7 @@ export async function saveAnalysisToDatabase(
       .from('analysis_results')
       .insert({
         user_id: user.id,
-        file_name: files[0]?.name || 'Multiple files',
+        file_name: files.map(f => f.name).join(', '),
         file_type: processMode,
         hospital: extractedData.demonstrativoInfo.hospital,
         competencia: extractedData.demonstrativoInfo.competencia,
@@ -64,6 +64,7 @@ export async function saveAnalysisToDatabase(
     // Insert all procedures related to this analysis
     const proceduresData = extractedData.procedimentos.map(proc => ({
       analysis_id: analysisId,
+      user_id: user.id,
       codigo: proc.codigo,
       procedimento: proc.procedimento,
       papel: proc.papel,
@@ -77,11 +78,11 @@ export async function saveAnalysisToDatabase(
     }));
     
     const { error: proceduresError } = await supabase
-      .from('procedure_results')
+      .from('procedures')
       .insert(proceduresData);
     
     if (proceduresError) {
-      logger.error('Failed to save procedure results', { error: proceduresError });
+      logger.error('Failed to save procedures', { error: proceduresError });
       // Attempt to rollback by deleting the analysis
       await supabase.from('analysis_results').delete().eq('id', analysisId);
       return { success: false, analysisId: null };
@@ -90,7 +91,8 @@ export async function saveAnalysisToDatabase(
     // Update the analysis history
     await supabase.from('analysis_history').insert({
       user_id: user.id,
-      type: processMode,
+      type: processMode === 'complete' ? 'Guia + Demonstrativo' : 
+            processMode === 'guia-only' ? 'Guia' : 'Demonstrativo',
       description: `${extractedData.demonstrativoInfo.hospital} - ${extractedData.demonstrativoInfo.competencia}`,
       procedimentos: extractedData.procedimentos.length,
       glosados: extractedData.totais.procedimentosNaoPagos,
@@ -99,7 +101,7 @@ export async function saveAnalysisToDatabase(
     
     logger.info('Analysis saved successfully', { analysisId });
     
-    return { success: true, analysisId: analysisData.id };
+    return { success: true, analysisId };
   } catch (error) {
     logger.error('Exception in saveAnalysisToDatabase', { error });
     return { success: false, analysisId: null };
@@ -129,7 +131,7 @@ export async function getAnalysisById(
     
     // Get the procedure results
     const { data: proceduresData, error: proceduresError } = await supabase
-      .from('procedure_results')
+      .from('procedures')
       .select('*')
       .eq('analysis_id', analysisId);
     
@@ -208,7 +210,7 @@ export async function getHistoryByUserId(userId: string): Promise<AnalysisResult
 export async function getProceduresByAnalysisId(analysisId: string): Promise<ProcedureResult[]> {
   try {
     const { data, error } = await supabase
-      .from('procedure_results')
+      .from('procedures')
       .select('*')
       .eq('analysis_id', analysisId);
     

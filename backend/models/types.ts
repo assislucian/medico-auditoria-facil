@@ -1,7 +1,21 @@
 
 /**
- * Core type definitions for the backend
+ * Core data types for file upload and processing
+ * Provides type definitions used across the backend services
  */
+import { z } from 'zod';
+
+export type FileType = 'guia' | 'demonstrativo';
+export type ProcessingStage = 'idle' | 'extracting' | 'analyzing' | 'comparing' | 'complete' | 'error';
+export type FileStatus = 'valid' | 'invalid' | 'processing';
+export type ProcessMode = 'complete' | 'guia-only' | 'demonstrativo-only';
+
+export interface FileWithStatus {
+  name: string;
+  type: FileType;
+  file: File;
+  status?: FileStatus;
+}
 
 export interface DoctorParticipation {
   code: string;
@@ -13,7 +27,7 @@ export interface DoctorParticipation {
 }
 
 export interface ProcedureExtracted {
-  id: string;
+  id?: string;
   codigo: string;
   procedimento: string;
   papel: string;
@@ -68,6 +82,7 @@ export interface ProcedimentoGuia {
   quantidade: number;
   status: string;
   participacoes: ParticipacaoMedica[];
+  valorPago?: number;
 }
 
 export interface ParticipacaoMedica {
@@ -79,34 +94,22 @@ export interface ParticipacaoMedica {
   status: string;
 }
 
-export interface HistoryItem {
-  id: string;
-  date: string;
-  type: string;
-  description: string;
-  procedimentos: number;
-  glosados: number;
-  status: string;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  name?: string;
-  crm?: string;
-  specialty?: string;
-}
-
 export interface AnalysisResult {
   id: string;
   user_id: string;
   file_name: string;
   file_type: string;
-  created_at: string;
-  summary: Record<string, any>;
   hospital?: string;
   competencia?: string;
   numero?: string;
+  summary: {
+    totalCBHPM?: number;
+    totalPago?: number;
+    totalDiferenca?: number;
+    procedimentosTotal?: number;
+    procedimentosNaoPagos?: number;
+  };
+  created_at: string;
   status: string;
 }
 

@@ -1,71 +1,101 @@
 
 /**
- * Error handling utilities for backend services
- * Provides standard error classes and handling functions
+ * Error handling utilities
  */
-import { logger } from './logger';
 
 /**
- * Base application error class
+ * Custom error class for bad requests
  */
-export class AppError extends Error {
-  public readonly statusCode: number;
-  public readonly isOperational: boolean;
+export class BadRequestError extends Error {
+  statusCode: number;
 
-  constructor(message: string, statusCode: number, isOperational = true) {
+  constructor(message: string) {
     super(message);
-    this.statusCode = statusCode;
-    this.isOperational = isOperational;
-    Error.captureStackTrace(this, this.constructor);
+    this.name = 'BadRequestError';
+    this.statusCode = 400;
   }
 }
 
 /**
- * Not found error (404)
+ * Custom error class for not found errors
  */
-export class NotFoundError extends AppError {
-  constructor(message = 'Resource not found') {
-    super(message, 404);
+export class NotFoundError extends Error {
+  statusCode: number;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotFoundError';
+    this.statusCode = 404;
   }
 }
 
 /**
- * Bad request error (400)
+ * Custom error class for unauthorized errors
  */
-export class BadRequestError extends AppError {
-  constructor(message = 'Bad request') {
-    super(message, 400);
+export class UnauthorizedError extends Error {
+  statusCode: number;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'UnauthorizedError';
+    this.statusCode = 401;
   }
 }
 
 /**
- * Unauthorized error (401)
+ * Custom error class for forbidden errors
  */
-export class UnauthorizedError extends AppError {
-  constructor(message = 'Unauthorized') {
-    super(message, 401);
+export class ForbiddenError extends Error {
+  statusCode: number;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'ForbiddenError';
+    this.statusCode = 403;
   }
 }
 
 /**
- * Forbidden error (403)
+ * Function to format error responses
+ * @param error Error object
+ * @returns Formatted error response
  */
-export class ForbiddenError extends AppError {
-  constructor(message = 'Forbidden') {
-    super(message, 403);
-  }
-}
+export function formatErrorResponse(error: Error): { 
+  success: false; 
+  error: string; 
+  status: number;
+  details?: any;
+} {
+  let status = 500;
+  let message = 'An unexpected error occurred';
+  let details = undefined;
 
-/**
- * Central error handler function for standardized error handling
- * @param error The error to handle
- */
-export function handleError(error: Error | AppError): void {
-  if (error instanceof AppError && error.isOperational) {
-    // Operational, trusted error - log appropriately
-    logger.warn(error.message, { statusCode: (error as AppError).statusCode });
+  if (error instanceof BadRequestError) {
+    status = error.statusCode;
+    message = error.message;
+  } else if (error instanceof NotFoundError) {
+    status = error.statusCode;
+    message = error.message;
+  } else if (error instanceof UnauthorizedError) {
+    status = error.statusCode;
+    message = error.message;
+  } else if (error instanceof ForbiddenError) {
+    status = error.statusCode;
+    message = error.message;
   } else {
-    // Programming or unknown error - log with full details
-    logger.error('Unexpected error', { error: error.message, stack: error.stack });
+    // For unexpected errors, don't expose details in production
+    if (process.env.NODE_ENV !== 'production') {
+      details = {
+        name: error.name,
+        stack: error.stack
+      };
+    }
   }
+
+  return {
+    success: false,
+    error: message,
+    status,
+    details
+  };
 }

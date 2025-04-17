@@ -3,65 +3,88 @@ import { ProcessMode } from '@/types/upload';
 
 /**
  * Determina o modo de processamento com base nos tipos de arquivos disponíveis
+ * @param hasGuias Se há guias para processamento
+ * @param hasDemonstrativos Se há demonstrativos para processamento
+ * @returns O modo de processamento determinado
  */
 export function getProcessMode(hasGuias: boolean, hasDemonstrativos: boolean): ProcessMode {
-  if (hasGuias && hasDemonstrativos) return 'complete';
-  if (hasGuias) return 'guia-only';
-  return 'demonstrativo-only';
-}
-
-/**
- * Retorna a mensagem apropriada para o estágio de análise
- */
-export function getAnalysisMessage(mode: ProcessMode): string {
-  switch (mode) {
-    case 'complete':
-      return 'Identificando procedimentos e consultando tabela CBHPM 2015...';
-    case 'guia-only':
-      return 'Identificando procedimentos nas guias médicas...';
-    case 'demonstrativo-only':
-      return 'Extraindo valores e procedimentos do demonstrativo de pagamento...';
+  if (hasGuias && hasDemonstrativos) {
+    return 'complete';
+  } else if (hasGuias) {
+    return 'guia-only';
+  } else {
+    return 'demonstrativo-only';
   }
 }
 
 /**
- * Retorna a mensagem apropriada para o estágio de conclusão
+ * Obtém a mensagem de análise baseada no modo de processamento
+ * @param processMode O modo de processamento atual
+ * @returns Mensagem de análise apropriada
  */
-export function getCompletionMessage(mode: ProcessMode): string {
-  switch (mode) {
+export function getAnalysisMessage(processMode: ProcessMode): string {
+  switch (processMode) {
     case 'complete':
-      return 'Análise completa concluída com sucesso!';
+      return 'Analisando procedimentos e calculando valores de referência...';
     case 'guia-only':
-      return 'Extração de dados das guias concluída!';
+      return 'Analisando procedimentos das guias médicas...';
     case 'demonstrativo-only':
-      return 'Extração de dados do demonstrativo concluída!';
+      return 'Analisando demonstrativos de pagamento...';
+    default:
+      return 'Analisando documentos...';
   }
 }
 
 /**
- * Retorna a mensagem de sucesso apropriada para o tipo de processamento
+ * Obtém a mensagem de conclusão baseada no modo de processamento
+ * @param processMode O modo de processamento atual
+ * @returns Mensagem de conclusão apropriada
  */
-export function getSuccessMessage(mode: ProcessMode): string {
-  switch (mode) {
+export function getCompletionMessage(processMode: ProcessMode): string {
+  switch (processMode) {
     case 'complete':
-      return 'Análise concluída com sucesso!';
+      return 'Análise completa! Agora você pode visualizar a comparação entre valores CBHPM e pagos.';
     case 'guia-only':
-      return 'Guias processadas com sucesso!';
+      return 'Análise das guias concluída! Você pode visualizar os procedimentos detectados.';
     case 'demonstrativo-only':
-      return 'Demonstrativo processado com sucesso!';
+      return 'Análise dos demonstrativos concluída! Você pode visualizar os pagamentos detectados.';
+    default:
+      return 'Processamento concluído com sucesso!';
   }
 }
 
 /**
- * Retorna a descrição de sucesso apropriada para o tipo de processamento
+ * Obtém a mensagem de sucesso baseada no modo de processamento
+ * @param processMode O modo de processamento atual
+ * @returns Mensagem de sucesso apropriada
  */
-export function getSuccessDescription(mode: ProcessMode): string {
-  switch (mode) {
+export function getSuccessMessage(processMode: ProcessMode): string {
+  switch (processMode) {
     case 'complete':
-      return 'Os resultados da comparação estão disponíveis abaixo.';
+      return 'Comparação concluída!';
     case 'guia-only':
-      return 'Adicione um demonstrativo para comparar valores com tabelas CBHPM.';
+      return 'Guias processadas!';
     case 'demonstrativo-only':
-      return 'Adicione guias para verificar procedimentos realizados.';
+      return 'Demonstrativos processados!';
+    default:
+      return 'Processamento concluído!';
+  }
+}
+
+/**
+ * Obtém a descrição de sucesso baseada no modo de processamento
+ * @param processMode O modo de processamento atual
+ * @returns Descrição de sucesso apropriada
+ */
+export function getSuccessDescription(processMode: ProcessMode): string {
+  switch (processMode) {
+    case 'complete':
+      return 'A análise comparativa foi concluída com sucesso e está pronta para visualização.';
+    case 'guia-only':
+      return 'As guias foram processadas. Para uma análise mais completa, considere enviar demonstrativos também.';
+    case 'demonstrativo-only':
+      return 'Os demonstrativos foram processados. Para uma análise mais completa, considere enviar guias também.';
+    default:
+      return 'Os documentos foram processados com sucesso.';
   }
 }
