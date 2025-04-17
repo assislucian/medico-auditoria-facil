@@ -26,6 +26,11 @@ const ProcessingSection = ({
             <CheckCircle className="h-4 w-4 text-green-500" />
             Processamento concluído
           </span>
+        ) : processingStage === 'error' ? (
+          <span className="flex items-center gap-1.5 text-red-500">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Erro no processamento
+          </span>
         ) : (
           <span className="flex items-center gap-1.5">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -44,3 +49,4 @@ const ProcessingSection = ({
 };
 
 export default ProcessingSection;
+
