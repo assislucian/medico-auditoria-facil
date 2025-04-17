@@ -1,5 +1,4 @@
 import { toast } from 'sonner';
-import { CheckCircle } from 'lucide-react';
 import { ProcessingStage, FileWithStatus, ExtractedData, ProcessMode } from '@/types/upload';
 
 // Dados simulados para demonstração - representando o que seria extraído dos PDFs
@@ -161,11 +160,8 @@ export async function processFiles(
     
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Fixed: Correctly pass icon as a function
+    // Fixed: Use a simpler approach without JSX in TypeScript file
     toast.success(getSuccessMessage(processMode), {
-      icon: () => {
-        return <CheckCircle className="h-4 w-4" />;
-      },
       description: getSuccessDescription(processMode)
     });
     
