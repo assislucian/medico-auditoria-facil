@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { FileWithStatus, FileType, FileStatus, ProcessingStage } from '@/types/upload';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useFileUpload() {
   const [uploading, setUploading] = useState(false);
@@ -11,6 +12,36 @@ export function useFileUpload() {
   const [processingStage, setProcessingStage] = useState<ProcessingStage>('idle');
   const [processingMsg, setProcessingMsg] = useState('Preparando arquivos...');
   const [processingMode, setProcessingMode] = useState<'complete' | 'guia-only' | 'demonstrativo-only' | null>(null);
+  const [crmRegistrado, setCrmRegistrado] = useState<string>('');
+
+  // Carregar o CRM do usuário ao inicializar o hook
+  useState(() => {
+    loadUserCrm();
+  });
+
+  /**
+   * Carrega o CRM do usuário a partir do perfil
+   */
+  const loadUserCrm = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('crm')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.crm) {
+        console.log('CRM carregado:', profile.crm);
+        setCrmRegistrado(profile.crm);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar CRM:', error);
+    }
+  };
 
   /**
    * Verifica se há arquivos do tipo especificado
@@ -66,7 +97,7 @@ export function useFileUpload() {
       // Simular validação de arquivos
       setTimeout(() => {
         const updatedFiles = fileArray.map(file => {
-          // Marcar alguns arquivos como inválidos para demonstração
+          // Validação real do PDF - para demo, apenas verifica o nome
           const isValid = file.name.toLowerCase().includes('invalid') ? false : true;
           return { ...file, status: isValid ? 'valid' as FileStatus : 'invalid' as FileStatus };
         });
@@ -142,6 +173,8 @@ export function useFileUpload() {
     setProcessingMsg,
     processingMode,
     setProcessingMode,
+    crmRegistrado,
+    setCrmRegistrado,
     hasFile,
     hasGuiaDemonstrativoPair,
     hasValidFilesForProcessing,

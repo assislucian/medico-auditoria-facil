@@ -1,87 +1,104 @@
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Download } from 'lucide-react';
-import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ProceduresTable } from './comparison/ProceduresTable';
 import { SummaryCards } from './comparison/SummaryCards';
 import { ComparisonHeader } from './comparison/ComparisonHeader';
 import { DemonstrativeInfo } from './comparison/DemonstrativeInfo';
-import { ProceduresTable } from './comparison/ProceduresTable';
-import { useDemonstrativoSelection } from '@/hooks/useDemonstrativoSelection';
 import { getExtractedData } from '@/services/uploadService';
+import { ExtractedData } from '@/types/upload';
+import { Procedure } from '@/types/medical';
+import { Skeleton } from '@/components/ui/skeleton';
 
+/**
+ * ComparisonView Component
+ * 
+ * Exibe os resultados da comparação entre as guias e demonstrativos,
+ * mostrando valores CBHPM x valores pagos e destacando diferenças.
+ */
 const ComparisonView = () => {
-  const [isDetailView, setIsDetailView] = useState(false);
-  const {
-    demonstrativos,
-    selectedDemonstrativo,
-    setSelectedDemonstrativo,
-    currentDemonstrativo,
-    procedimentos
-  } = useDemonstrativoSelection();
+  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState<ExtractedData | null>(null);
 
-  // Obter dados extraídos do serviço (que seriam os dados completos)
-  const extractedData = getExtractedData();
-  const totais = extractedData.totais;
-
-  const exportReport = () => {
-    if (!currentDemonstrativo) return;
-
-    const reportData = {
-      demonstrativo: extractedData.demonstrativoInfo,
-      procedimentos: extractedData.procedimentos,
-      totais: extractedData.totais
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const extractedData = await getExtractedData();
+        setData(extractedData);
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-
-    console.log('Dados do relatório para contestação:', reportData);
     
-    const fileName = `contestacao_${currentDemonstrativo.numero}_${currentDemonstrativo.beneficiario}.pdf`;
-    toast.success(`Relatório de contestação "${fileName}" gerado com sucesso!`);
-  };
+    loadData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <Skeleton className="h-8 w-64" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-24" />
+            ))}
+          </div>
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Erro ao carregar dados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Não foi possível carregar os dados da análise. Por favor, tente processar os arquivos novamente.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="w-full">
-      <ComparisonHeader 
-        demonstrativos={demonstrativos}
-        selectedDemonstrativo={selectedDemonstrativo}
-        onDemonstrativoChange={setSelectedDemonstrativo}
-        onViewChange={setIsDetailView}
-        isDetailView={isDetailView}
-      />
-      
-      <CardContent>
-        {currentDemonstrativo && (
-          <DemonstrativeInfo demonstrativo={{
-            ...currentDemonstrativo,
-            ...extractedData.demonstrativoInfo
-          }} />
-        )}
-
+    <Card className="bg-background">
+      <CardHeader>
+        <ComparisonHeader 
+          totalProcedimentos={data.procedimentos.length}
+          hospital={data.demonstrativoInfo?.hospital}
+          competencia={data.demonstrativoInfo?.competencia}
+        />
+      </CardHeader>
+      <CardContent className="space-y-6">
         <SummaryCards 
-          totalCBHPM={totais.valorCBHPM}
-          totalPago={totais.valorPago}
-          totalDiferenca={totais.diferenca}
-          procedimentosNaoPagos={totais.procedimentosNaoPagos}
+          totalCBHPM={data.totais.valorCBHPM}
+          totalPago={data.totais.valorPago}
+          totalDiferenca={data.totais.diferenca}
+          procedimentosNaoPagos={data.totais.procedimentosNaoPagos}
         />
-
-        <ProceduresTable 
-          procedimentos={extractedData.procedimentos}
-          isDetailView={isDetailView}
+        
+        <DemonstrativeInfo 
+          info={data.demonstrativoInfo}
         />
-      </CardContent>
-
-      <CardFooter className="border-t p-4">
-        <div className="flex justify-between w-full items-center">
-          <p className="text-sm text-muted-foreground">
-            Análise baseada na Tabela CBHPM 2015
-          </p>
-          <Button onClick={exportReport}>
-            <Download className="mr-2 h-4 w-4" />
-            Exportar Relatório para Contestação
-          </Button>
+        
+        <div className="rounded-lg border">
+          <div className="overflow-hidden">
+            <ProceduresTable 
+              procedimentos={data.procedimentos as unknown as Procedure[]}
+              isDetailView={false}
+            />
+          </div>
         </div>
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 };

@@ -9,7 +9,7 @@ import ComparisonView from './ComparisonView';
 import UploadAlerts from './upload/UploadAlerts';
 import ProcessingSection from './upload/ProcessingSection';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { processFiles, getExtractedData } from '@/services/uploadService';
+import { processFiles } from '@/services/uploadService';
 import {
   Tooltip,
   TooltipContent,
@@ -39,6 +39,7 @@ const UploadSection = () => {
     setProcessingMsg,
     processingMode,
     setProcessingMode,
+    crmRegistrado,
     hasFile,
     hasGuiaDemonstrativoPair,
     hasValidFilesForProcessing,
@@ -51,7 +52,7 @@ const UploadSection = () => {
 
   /**
    * Função principal de processamento para analisar os arquivos enviados
-   * Simula a extração e processamento de dados dos PDFs
+   * Processa os dados dos PDFs e salva no Supabase
    */
   const processFilesHandler = async () => {
     if (selectedFiles.length === 0) {
@@ -82,7 +83,8 @@ const UploadSection = () => {
       selectedFiles.filter(f => f.status === 'valid'),
       setProgress,
       setProcessingStage,
-      setProcessingMsg
+      setProcessingMsg,
+      crmRegistrado // Passando o CRM registrado para filtrar apenas as guias relevantes
     );
     
     if (success) {
