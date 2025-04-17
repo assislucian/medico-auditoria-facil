@@ -8,16 +8,16 @@ import { HistoryItem } from '@/components/history/data';
  * @param data Os dados a serem exportados
  * @param filename Nome do arquivo (sem extensão)
  */
-export function exportToExcel<T>(data: T[], filename: string): void {
+export function exportToExcel<T extends Record<string, any>>(data: T[], filename: string): void {
   try {
     // Preparação dos dados para exportação
     const exportData = data.map(item => {
       const cleanItem: Record<string, any> = {};
       
       // Remover propriedades com objetos complexos e formatar datas
-      Object.keys(item as object).forEach(key => {
-        if (typeof (item as any)[key] !== 'object' || (item as any)[key] === null) {
-          cleanItem[key] = (item as any)[key];
+      Object.keys(item).forEach(key => {
+        if (typeof item[key] !== 'object' || item[key] === null) {
+          cleanItem[key] = item[key];
         }
       });
       
@@ -47,7 +47,7 @@ export function exportToExcel<T>(data: T[], filename: string): void {
 /**
  * Verifica se os dados são do tipo HistoryItem[]
  */
-function isHistoryData<T>(data: T[]): data is HistoryItem[] {
+function isHistoryData(data: any[]): data is HistoryItem[] {
   return data.length > 0 && 'status' in data[0] && 'glosados' in data[0];
 }
 
