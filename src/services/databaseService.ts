@@ -132,6 +132,9 @@ export async function getAnalysisById(analysisId: string) {
       console.error('Erro ao buscar procedimentos:', proceduresError);
       return null;
     }
+
+    // Acesso seguro ao objeto summary com tipagem correta
+    const summary = analysisData.summary as Record<string, any> || {};
     
     // Formatar os dados no formato esperado pelo frontend
     return {
@@ -156,10 +159,10 @@ export async function getAnalysisById(analysisId: string) {
         doctors: proc.doctors || []
       })),
       totais: {
-        valorCBHPM: analysisData.summary?.totalCBHPM || 0,
-        valorPago: analysisData.summary?.totalPago || 0,
-        diferenca: analysisData.summary?.totalDiferenca || 0,
-        procedimentosNaoPagos: analysisData.summary?.procedimentosNaoPagos || 0
+        valorCBHPM: summary.totalCBHPM || 0,
+        valorPago: summary.totalPago || 0,
+        diferenca: summary.totalDiferenca || 0,
+        procedimentosNaoPagos: summary.procedimentosNaoPagos || 0
       }
     };
   } catch (error) {
