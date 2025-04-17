@@ -1,11 +1,18 @@
 
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ArrowUpDown, Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CheckCircle, XCircle, AlertCircle, Search } from 'lucide-react';
 
 interface ComparisonDetail {
   id: string;
@@ -16,10 +23,10 @@ interface ComparisonDetail {
   valorPago: number;
   diferenca: number;
   status: 'conforme' | 'abaixo' | 'acima' | 'não_pago';
-  papel: 'Cirurgião' | 'Primeiro Auxiliar' | 'Segundo Auxiliar';
+  papel: string;
 }
 
-interface CBHPMComparisonSummary {
+interface Summary {
   total: number;
   conforme: number;
   abaixo: number;
@@ -27,121 +34,218 @@ interface CBHPMComparisonSummary {
 }
 
 interface CBHPMComparisonTableProps {
-  summary: CBHPMComparisonSummary;
+  summary: Summary;
   details: ComparisonDetail[];
 }
 
 const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, details }) => {
-  const [currentRole, setCurrentRole] = useState<string>('all');
-  const [currentStatus, setCurrentStatus] = useState<string>('all');
+  const [filter, setFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState('all');
 
-  // Filter the details based on the selected role and status
+  // Group details by role
+  const groupedByRole: Record<string, ComparisonDetail[]> = details.reduce((acc, detail) => {
+    const role = detail.papel;
+    if (!acc[role]) {
+      acc[role] = [];
+    }
+    acc[role].push(detail);
+    return acc;
+  }, {} as Record<string, ComparisonDetail[]>);
+
+  // Get unique roles
+  const roles = Object.keys(groupedByRole);
+
+  // Filter logic
   const filteredDetails = details.filter(detail => {
-    const roleMatch = currentRole === 'all' || detail.papel === currentRole;
-    const statusMatch = currentStatus === 'all' || detail.status === currentStatus;
-    return roleMatch && statusMatch;
+    const matchesSearch = filter === '' || 
+      detail.descricao.toLowerCase().includes(filter.toLowerCase()) || 
+      detail.codigo.includes(filter);
+    
+    const matchesStatus = statusFilter === 'all' || detail.status === statusFilter;
+    const matchesRole = roleFilter === 'all' || detail.papel === roleFilter;
+    
+    return matchesSearch && matchesStatus && matchesRole;
   });
 
-  // Status badge color variants
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'conforme': 
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-300">Conforme</Badge>;
-      case 'abaixo': 
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200 border-red-300">Abaixo</Badge>;
-      case 'acima': 
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-300">Acima</Badge>;
-      case 'não_pago': 
-        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-300">Não Pago</Badge>;
-      default: 
-        return <Badge>{status}</Badge>;
+      case 'conforme':
+        return <Badge variant="outline" className="bg-green-500/10 text-green-500 flex gap-1 items-center">
+          <CheckCircle className="h-3 w-3" />Conforme
+        </Badge>;
+      case 'abaixo':
+        return <Badge variant="outline" className="bg-red-500/10 text-red-500 flex gap-1 items-center">
+          <XCircle className="h-3 w-3" />Abaixo
+        </Badge>;
+      case 'acima':
+        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 flex gap-1 items-center">
+          <AlertCircle className="h-3 w-3" />Acima
+        </Badge>;
+      default:
+        return <Badge variant="outline" className="bg-gray-500/10 text-gray-500 flex gap-1 items-center">
+          <XCircle className="h-3 w-3" />Não Pago
+        </Badge>;
+    }
+  };
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'Cirurgião':
+        return <Badge className="bg-primary/10 text-primary">{role}</Badge>;
+      case 'Primeiro Auxiliar':
+        return <Badge className="bg-green-500/10 text-green-500">{role}</Badge>;
+      case 'Segundo Auxiliar':
+        return <Badge className="bg-blue-500/10 text-blue-500">{role}</Badge>;
+      default:
+        return <Badge className="bg-amber-500/10 text-amber-500">{role}</Badge>;
     }
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-        <h3 className="text-lg font-semibold">Comparativo CBHPM 2015</h3>
-        
-        <div className="flex flex-wrap gap-2">
-          <Select value={currentRole} onValueChange={setCurrentRole}>
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por código ou descrição"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filtrar por papel" />
+              <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os papéis</SelectItem>
-              <SelectItem value="Cirurgião">Cirurgião</SelectItem>
-              <SelectItem value="Primeiro Auxiliar">Primeiro Auxiliar</SelectItem>
-              <SelectItem value="Segundo Auxiliar">Segundo Auxiliar</SelectItem>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="conforme">Conforme</SelectItem>
+              <SelectItem value="abaixo">Abaixo</SelectItem>
+              <SelectItem value="acima">Acima</SelectItem>
+              <SelectItem value="não_pago">Não Pago</SelectItem>
             </SelectContent>
           </Select>
           
-          <Tabs defaultValue="all" value={currentStatus} onValueChange={setCurrentStatus}>
-            <TabsList>
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="conforme">Conforme</TabsTrigger>
-              <TabsTrigger value="abaixo">Abaixo</TabsTrigger>
-              <TabsTrigger value="acima">Acima</TabsTrigger>
-              <TabsTrigger value="não_pago">Não pago</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Papel" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os papéis</SelectItem>
+              {roles.map(role => (
+                <SelectItem key={role} value={role}>{role}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
-      
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">Código</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead className="w-[60px] text-right">Qtd</TableHead>
-              <TableHead className="w-[120px] text-right">CBHPM</TableHead>
-              <TableHead className="w-[120px] text-right">Pago</TableHead>
-              <TableHead className="w-[120px] text-right">
-                <div className="flex items-center justify-end gap-1">
-                  Diferença
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="w-[200px]">Diferença entre o valor CBHPM 2015 e o valor pago</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </TableHead>
-              <TableHead className="w-[100px]">Status</TableHead>
-              <TableHead className="w-[150px]">Papel</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredDetails.length > 0 ? (
-              filteredDetails.map((detail) => (
-                <TableRow key={detail.id}>
-                  <TableCell className="font-medium">{detail.codigo}</TableCell>
-                  <TableCell>{detail.descricao}</TableCell>
-                  <TableCell className="text-right">{detail.qtd}</TableCell>
-                  <TableCell className="text-right">R$ {detail.valorCbhpm.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">R$ {detail.valorPago.toFixed(2)}</TableCell>
-                  <TableCell className={`text-right ${detail.diferenca < 0 ? 'text-red-600' : detail.diferenca > 0 ? 'text-green-600' : ''}`}>
-                    R$ {Math.abs(detail.diferenca).toFixed(2)}
-                  </TableCell>
-                  <TableCell>{getStatusBadge(detail.status)}</TableCell>
-                  <TableCell>{detail.papel}</TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
-                  Nenhum resultado encontrado.
+
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList>
+          <TabsTrigger value="all">Todos ({summary.total})</TabsTrigger>
+          {roles.map(role => (
+            <TabsTrigger key={role} value={role}>
+              {role} ({groupedByRole[role].length})
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        
+        <TabsContent value="all">
+          <ComparisonTable 
+            details={filteredDetails} 
+            getStatusBadge={getStatusBadge}
+            getRoleBadge={getRoleBadge}
+          />
+        </TabsContent>
+        
+        {roles.map(role => (
+          <TabsContent key={role} value={role}>
+            <ComparisonTable 
+              details={groupedByRole[role].filter(detail => {
+                const matchesSearch = filter === '' || 
+                  detail.descricao.toLowerCase().includes(filter.toLowerCase()) || 
+                  detail.codigo.includes(filter);
+                
+                const matchesStatus = statusFilter === 'all' || detail.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+              })}
+              getStatusBadge={getStatusBadge}
+              getRoleBadge={getRoleBadge}
+            />
+          </TabsContent>
+        ))}
+      </Tabs>
+    </div>
+  );
+};
+
+interface ComparisonTableProps {
+  details: ComparisonDetail[];
+  getStatusBadge: (status: string) => React.ReactNode;
+  getRoleBadge: (role: string) => React.ReactNode;
+}
+
+const ComparisonTable: React.FC<ComparisonTableProps> = ({ details, getStatusBadge, getRoleBadge }) => {
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Código</TableHead>
+            <TableHead className="w-[30%]">Procedimento</TableHead>
+            <TableHead>Papel</TableHead>
+            <TableHead className="text-right">Valor CBHPM</TableHead>
+            <TableHead className="text-right">Valor Pago</TableHead>
+            <TableHead className="text-right">Diferença</TableHead>
+            <TableHead className="text-center">Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {details.length > 0 ? (
+            details.map((detail) => (
+              <TableRow key={detail.id} className={
+                detail.status === 'não_pago' ? 'bg-red-100/50 dark:bg-red-950/20' : 
+                detail.status === 'abaixo' ? 'bg-amber-100/50 dark:bg-amber-950/20' : 
+                ''
+              }>
+                <TableCell className="font-medium">{detail.codigo}</TableCell>
+                <TableCell>{detail.descricao}</TableCell>
+                <TableCell>{getRoleBadge(detail.papel)}</TableCell>
+                <TableCell className="text-right">R$ {detail.valorCbhpm.toFixed(2)}</TableCell>
+                <TableCell className="text-right">
+                  {detail.status === 'não_pago' 
+                    ? '-' 
+                    : `R$ ${detail.valorPago.toFixed(2)}`
+                  }
+                </TableCell>
+                <TableCell className="text-right">
+                  {detail.status === 'não_pago' 
+                    ? '-' 
+                    : detail.status === 'conforme' 
+                      ? '0,00'
+                      : <span className={detail.status === 'abaixo' ? 'text-red-500' : 'text-blue-500'}>
+                          {detail.status === 'abaixo' ? '-' : '+'} R$ {Math.abs(detail.diferenca).toFixed(2)}
+                        </span>
+                  }
+                </TableCell>
+                <TableCell className="text-center">
+                  {getStatusBadge(detail.status)}
                 </TableCell>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={7} className="h-24 text-center">
+                Nenhum procedimento encontrado com os filtros atuais.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 };
