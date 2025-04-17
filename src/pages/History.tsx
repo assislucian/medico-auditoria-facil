@@ -1,16 +1,31 @@
 
 import { Helmet } from 'react-helmet-async';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { HistorySearch } from "@/components/history/HistorySearch";
 import { HistoryTable } from "@/components/history/HistoryTable";
-import { mockHistory } from "@/components/history/data";
+import { fetchHistoryData } from '@/services/historyService';
+import { HistoryItem } from '@/components/history/data';
+import { Loader2 } from 'lucide-react';
 
 const HistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
+  const [loading, setLoading] = useState(true);
+  const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
   
-  const filteredHistory = mockHistory.filter(item => {
+  useEffect(() => {
+    const loadHistoryData = async () => {
+      setLoading(true);
+      const data = await fetchHistoryData();
+      setHistoryData(data);
+      setLoading(false);
+    };
+    
+    loadHistoryData();
+  }, []);
+  
+  const filteredHistory = historyData.filter(item => {
     const matchesSearch = item.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          item.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === "todos" || item.status.toLowerCase() === filterStatus.toLowerCase();
@@ -35,7 +50,14 @@ const HistoryPage = () => {
             onFilterChange={setFilterStatus}
           />
           
-          <HistoryTable items={filteredHistory} />
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2 text-lg">Carregando histórico...</span>
+            </div>
+          ) : (
+            <HistoryTable items={filteredHistory} />
+          )}
         </div>
       </div>
     </>

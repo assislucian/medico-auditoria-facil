@@ -1,38 +1,66 @@
 
 import { StatusCard } from "@/components/StatusCard";
-import { Wallet, AlertCircle, TrendingUp, FileText } from "lucide-react";
+import { FileText, AlertCircle, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { fetchReportsTotals } from "@/services/reportsService";
 
 export function StatusCardsSection() {
+  const [reportData, setReportData] = useState({
+    totalRecebido: 0,
+    totalGlosado: 0,
+    totalProcedimentos: 0,
+    auditoriaPendente: 0
+  });
+  
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadReportsData = async () => {
+      const data = await fetchReportsTotals();
+      setReportData(data);
+      setLoading(false);
+    };
+    
+    loadReportsData();
+  }, []);
+
+  // Formatar os valores monetários
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL' 
+    }).format(value);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <StatusCard
         title="Total Recebido"
-        value="R$ 98.720,00"
-        icon={Wallet}
-        trend={{ value: 12, isPositive: true }}
-        description="Valor total recebido em 2025"
+        value={loading ? "Carregando..." : formatCurrency(reportData.totalRecebido)}
+        icon={FileText}
+        trend={{ value: 8, isPositive: true }}
+        description="Pagamentos recebidos em 2025"
       />
       <StatusCard
         title="Total Glosado"
-        value="R$ 14.430,00"
+        value={loading ? "Carregando..." : formatCurrency(Math.abs(reportData.totalGlosado))}
         icon={AlertCircle}
-        trend={{ value: 8, isPositive: false }}
+        trend={{ value: 12, isPositive: false }}
         className="border-red-500/20"
         description="Valor total glosado em 2025"
       />
       <StatusCard
-        title="Total Recuperado"
-        value="R$ 8.250,00"
-        icon={TrendingUp}
-        trend={{ value: 18, isPositive: true }}
-        className="border-green-500/20"
-        description="Valor recuperado após auditoria"
-      />
-      <StatusCard
         title="Procedimentos"
-        value="142"
+        value={loading ? "Carregando..." : reportData.totalProcedimentos.toString()}
         icon={FileText}
         description="Total de procedimentos analisados"
+      />
+      <StatusCard
+        title="Auditorias Pendentes"
+        value={loading ? "Carregando..." : reportData.auditoriaPendente.toString()}
+        icon={Clock}
+        className="border-amber-500/20"
+        description="Uploads pendentes de análise"
       />
     </div>
   );

@@ -75,6 +75,45 @@ export type Database = {
         }
         Relationships: []
       }
+      analysis_results: {
+        Row: {
+          competencia: string | null
+          created_at: string
+          file_name: string
+          file_type: string
+          hospital: string | null
+          id: string
+          numero: string | null
+          status: string
+          summary: Json
+          user_id: string
+        }
+        Insert: {
+          competencia?: string | null
+          created_at?: string
+          file_name: string
+          file_type: string
+          hospital?: string | null
+          id?: string
+          numero?: string | null
+          status?: string
+          summary?: Json
+          user_id: string
+        }
+        Update: {
+          competencia?: string | null
+          created_at?: string
+          file_name?: string
+          file_type?: string
+          hospital?: string | null
+          id?: string
+          numero?: string | null
+          status?: string
+          summary?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       CBHPM2015: {
         Row: {
           codigo: number | null
@@ -140,6 +179,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      procedure_results: {
+        Row: {
+          analysis_id: string
+          beneficiario: string | null
+          codigo: string
+          diferenca: number | null
+          doctors: Json | null
+          guia: string | null
+          id: string
+          pago: boolean | null
+          papel: string | null
+          procedimento: string
+          valor_cbhpm: number | null
+          valor_pago: number | null
+        }
+        Insert: {
+          analysis_id: string
+          beneficiario?: string | null
+          codigo: string
+          diferenca?: number | null
+          doctors?: Json | null
+          guia?: string | null
+          id?: string
+          pago?: boolean | null
+          papel?: string | null
+          procedimento: string
+          valor_cbhpm?: number | null
+          valor_pago?: number | null
+        }
+        Update: {
+          analysis_id?: string
+          beneficiario?: string | null
+          codigo?: string
+          diferenca?: number | null
+          doctors?: Json | null
+          guia?: string | null
+          id?: string
+          pago?: boolean | null
+          papel?: string | null
+          procedimento?: string
+          valor_cbhpm?: number | null
+          valor_pago?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedure_results_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_results"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       procedures: {
         Row: {

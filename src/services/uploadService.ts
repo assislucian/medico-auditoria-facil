@@ -9,6 +9,7 @@ import {
   getSuccessMessage,
   getSuccessDescription 
 } from './messageUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Processa os arquivos de upload para extração de dados
@@ -34,6 +35,16 @@ export async function processFiles(
     
     // Simular os estágios de processamento
     await simulateProcessingStages(processMode, setProgress, setProcessingStage, setProcessingMsg);
+    
+    // Extrair os dados
+    const extractedData = getExtractedData(hasGuias, hasDemonstrativos);
+
+    // Salvar os dados no banco de dados
+    const success = await saveAnalysisToDatabase(files, processMode, extractedData);
+    
+    if (!success) {
+      throw new Error('Falha ao salvar os dados da análise no banco de dados');
+    }
     
     // Exibir toast de sucesso
     toast.success(getSuccessMessage(processMode), {
@@ -108,4 +119,93 @@ async function simulateProgress(
 export function getExtractedData(hasGuias: boolean = true, hasDemonstrativos: boolean = true) {
   // Em um cenário real, retornaríamos dados parciais baseados no que foi processado
   return getExtractedMockData();
+}
+
+/**
+ * Salva os resultados da análise no banco de dados
+ * @param files Arquivos processados
+ * @param processMode Modo de processamento
+ * @param extractedData Dados extraídos dos arquivos
+ */
+async function saveAnalysisToDatabase(
+  files: FileWithStatus[],
+  processMode: ProcessMode, 
+  extractedData: any
+): Promise<boolean> {
+  try {
+    // 1. Criar um registro de análise
+    const { data: analysisData, error: analysisError } = await supabase
+      .from('analysis_results')
+      .insert({
+        file_name: files.map(f => f.name).join(', '),
+        file_type: processMode,
+        hospital: extractedData.demonstrativoInfo?.hospital || null,
+        competencia: extractedData.demonstrativoInfo?.competencia || null,
+        numero: extractedData.demonstrativoInfo?.numero || null,
+        summary: {
+          totalCBHPM: extractedData.totais?.valorCBHPM || 0,
+          totalPago: extractedData.totais?.valorPago || 0,
+          totalDiferenca: extractedData.totais?.diferenca || 0,
+          procedimentosTotal: extractedData.procedimentos?.length || 0,
+          procedimentosNaoPagos: extractedData.totais?.procedimentosNaoPagos || 0
+        },
+        status: 'processed'
+      })
+      .select('id')
+      .single();
+    
+    if (analysisError) {
+      console.error('Erro ao inserir análise:', analysisError);
+      return false;
+    }
+    
+    // 2. Inserir procedimentos relacionados
+    if (extractedData.procedimentos && extractedData.procedimentos.length > 0) {
+      const proceduresForInsert = extractedData.procedimentos.map((proc: any) => ({
+        analysis_id: analysisData.id,
+        codigo: proc.codigo,
+        procedimento: proc.procedimento,
+        papel: proc.papel,
+        valor_cbhpm: proc.valorCBHPM,
+        valor_pago: proc.valorPago,
+        diferenca: proc.diferenca,
+        pago: proc.pago,
+        guia: proc.guia,
+        beneficiario: proc.beneficiario,
+        doctors: proc.doctors
+      }));
+      
+      const { error: proceduresError } = await supabase
+        .from('procedure_results')
+        .insert(proceduresForInsert);
+        
+      if (proceduresError) {
+        console.error('Erro ao inserir procedimentos:', proceduresError);
+        return false;
+      }
+    }
+    
+    // 3. Também criar um registro na tabela de histórico para exibição na lista
+    const { error: historyError } = await supabase
+      .from('analysis_history')
+      .insert({
+        type: processMode === 'complete' ? 'Guia + Demonstrativo' : 
+              processMode === 'guia-only' ? 'Guia' : 'Demonstrativo',
+        hospital: extractedData.demonstrativoInfo?.hospital || null,
+        description: `${extractedData.demonstrativoInfo?.hospital || 'Hospital'} - ${extractedData.demonstrativoInfo?.competencia || 'Competência não informada'}`,
+        procedimentos: extractedData.procedimentos?.length || 0,
+        glosados: extractedData.totais?.procedimentosNaoPagos || 0,
+        status: 'Analisado'
+      });
+      
+    if (historyError) {
+      console.error('Erro ao inserir no histórico:', historyError);
+      // Não falharemos a operação se apenas o histórico falhar
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar no banco de dados:', error);
+    return false;
+  }
 }

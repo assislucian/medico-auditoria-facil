@@ -1,85 +1,110 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartPieChart, Pie, Cell, Legend } from "recharts";
-import { BarChart2, PieChart } from "lucide-react";
-import { monthlyData, pieData, COLORS } from "./data";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { useEffect, useState } from "react";
+import { fetchMonthlyData } from "@/services/reportsService";
+import { Loader2 } from "lucide-react";
 
 export function OverviewCharts() {
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadMonthlyData = async () => {
+      const data = await fetchMonthlyData();
+      setMonthlyData(data);
+      setLoading(false);
+    };
+    
+    loadMonthlyData();
+  }, []);
+  
+  // Dados para o gráfico de pizza
+  const pieData = [
+    { name: 'Pago', value: monthlyData.reduce((sum, item) => sum + item.recebido, 0) },
+    { name: 'Glosado', value: monthlyData.reduce((sum, item) => sum + item.glosado, 0) }
+  ];
+  
+  const COLORS = ['#1E40AF', '#EF4444'];
+  
+  const RADIAN = Math.PI / 180;
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  
+    return (
+      <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <Card className="lg:col-span-2">
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Valores Mensais</CardTitle>
-              <CardDescription>Valores recebidos e glosados ao longo do ano</CardDescription>
-            </div>
-            <BarChart2 className="h-4 w-4 text-muted-foreground" />
-          </div>
+          <CardTitle>Pagamentos por Mês</CardTitle>
+          <CardDescription>Valores recebidos e glosados</CardDescription>
         </CardHeader>
-        <CardContent className="pl-2">
-          <ChartContainer config={{
-            recebido: {
-              label: "Recebido",
-              color: "#3b82f6",
-            },
-            glosado: {
-              label: "Glosado",
-              color: "#ef4444",
-            },
-          }} className="aspect-[4/3]">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" />
-                <YAxis 
-                  tickFormatter={(value) => `R$${value/1000}k`} 
-                  style={{ fontSize: '12px' }}
-                />
-                <Tooltip 
-                  formatter={(value) => [`R$ ${value.toLocaleString()},00`, undefined]}
-                />
-                <Bar dataKey="recebido" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Bar dataKey="glosado" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2">Carregando dados...</span>
+            </div>
+          ) : (
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" />
+                  <YAxis tickFormatter={(value) => `R$${value/1000}k`} />
+                  <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, undefined]} />
+                  <Bar dataKey="recebido" name="Recebido" fill="#1E40AF" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="glosado" name="Glosado" fill="#EF4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Distribuição de Valores</CardTitle>
-              <CardDescription>Proporção entre valores recebidos, glosados e recuperados</CardDescription>
-            </div>
-            <PieChart className="h-4 w-4 text-muted-foreground" />
-          </div>
+          <CardTitle>Distribuição de Pagamentos</CardTitle>
+          <CardDescription>Proporção entre pagos e glosados</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartPieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Legend />
-              </RechartPieChart>
-            </ResponsiveContainer>
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2">Carregando dados...</span>
+            </div>
+          ) : (
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={renderCustomizedLabel}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Legend />
+                  <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, undefined]} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
