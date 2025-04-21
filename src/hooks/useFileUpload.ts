@@ -53,8 +53,8 @@ export function useFileUpload() {
   };
 
   // Handle file change by type
-  const handleFileChangeByType = async (type: FileType, fileList: FileList) => {
-    return await fileList.handleFileChangeByType(type, fileList);
+  const handleFileChangeByType = async (type: FileType, files: FileList) => {
+    return await fileList.handleFileChangeByType(type, files);
   };
 
   return {
