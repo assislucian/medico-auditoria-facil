@@ -4,6 +4,12 @@ import { toast } from 'sonner';
 import { processFiles } from '@/services/uploadService';
 import { determineProcessingMode } from '@/utils/uploadUtils';
 
+// Define the result type
+interface ProcessResult {
+  success: boolean;
+  analysisId: string | null;
+}
+
 /**
  * Custom hook for file upload service integration
  */
@@ -16,7 +22,7 @@ export function useFileUploadService() {
    * @param setProcessingMsg Processing message setter function
    * @param crmRegistrado CRM to filter by (optional)
    * @param fileTypes Lista dos tipos selecionados
-   * @returns Success status
+   * @returns Success status and analysis ID
    */
   const processUploadedFiles = async (
     files: FileWithStatus[],
@@ -25,19 +31,19 @@ export function useFileUploadService() {
     setProcessingMsg: (msg: string) => void,
     crmRegistrado: string = '',
     fileTypes: ('guia' | 'demonstrativo')[]
-  ) => {
+  ): Promise<ProcessResult> => {
     if (files.length === 0) {
       toast.error('Nenhum arquivo selecionado', {
         description: 'Por favor, selecione arquivos para processar.'
       });
-      return false;
+      return { success: false, analysisId: null };
     }
 
     if (!files.some(file => file.status === 'valid')) {
       toast.error('Arquivos inválidos', {
         description: 'Todos os arquivos selecionados são inválidos. Por favor, selecione arquivos válidos.'
       });
-      return false;
+      return { success: false, analysisId: null };
     }
 
     try {
@@ -64,7 +70,7 @@ export function useFileUploadService() {
         description: 'Por favor, tente novamente ou contate o suporte.'
       });
 
-      return false;
+      return { success: false, analysisId: null };
     }
   };
 

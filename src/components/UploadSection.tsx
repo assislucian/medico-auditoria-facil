@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import ComparisonView from './ComparisonView';
@@ -55,11 +54,17 @@ const UploadSection = () => {
     
     try {
       const result = await processUploadedFiles();
-      setShowSuccess(result.success);
-      setAnalysisId(result.analysisId);
       
-      if (!result.success) {
-        setError('Erro ao processar os arquivos.');
+      if (result && typeof result === 'object') {
+        setShowSuccess(result.success || false);
+        setAnalysisId(result.analysisId || null);
+        
+        if (!result.success) {
+          setError('Erro ao processar os arquivos.');
+        }
+      } else {
+        setError('Resultado inesperado do processamento.');
+        setShowSuccess(false);
       }
     } catch (error) {
       console.error('Erro durante o processamento:', error);

@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ExtractedData } from '@/types/upload';
+import { ExtractedData, DoctorParticipation } from '@/types/upload';
 import { toast } from 'sonner';
 
 /**
@@ -102,6 +102,15 @@ const generateMockData = (): ExtractedData => {
 };
 
 /**
+ * Set the current analysis in storage for later retrieval
+ */
+export const setCurrentAnalysis = (extractedData: ExtractedData, analysisId: string) => {
+  // Store in localStorage or state management
+  localStorage.setItem('currentAnalysisId', analysisId);
+  localStorage.setItem('currentAnalysisTimestamp', Date.now().toString());
+};
+
+/**
  * Get the extracted data from the server
  * @param analysisId Optional analysis ID to fetch specific data
  * @returns The extracted data
@@ -151,24 +160,31 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
             data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
             beneficiario: proceduresData[0]?.beneficiario || ''
           },
-          procedimentos: proceduresData.map(proc => ({
-            id: proc.id,
-            codigo: proc.codigo,
-            procedimento: proc.procedimento,
-            papel: proc.papel || '',
-            valorCBHPM: proc.valor_cbhpm,
-            valorPago: proc.valor_pago,
-            diferenca: proc.diferenca,
-            pago: proc.pago,
-            guia: proc.guia || '',
-            beneficiario: proc.beneficiario || '',
-            doctors: proc.doctors || []
-          })),
+          procedimentos: proceduresData.map(proc => {
+            // Ensure doctors field is properly typed
+            const doctors: DoctorParticipation[] = Array.isArray(proc.doctors) 
+              ? proc.doctors as DoctorParticipation[] 
+              : [];
+              
+            return {
+              id: proc.id,
+              codigo: proc.codigo,
+              procedimento: proc.procedimento,
+              papel: proc.papel || '',
+              valorCBHPM: proc.valor_cbhpm,
+              valorPago: proc.valor_pago,
+              diferenca: proc.diferenca,
+              pago: proc.pago,
+              guia: proc.guia || '',
+              beneficiario: proc.beneficiario || '',
+              doctors
+            };
+          }),
           totais: {
-            valorCBHPM: analysisData.summary?.totalCBHPM || 0,
-            valorPago: analysisData.summary?.totalPago || 0,
-            diferenca: analysisData.summary?.totalDiferenca || 0,
-            procedimentosNaoPagos: analysisData.summary?.procedimentosNaoPagos || 0
+            valorCBHPM: analysisData.summary?.totalCBHPM ? Number(analysisData.summary.totalCBHPM) : 0,
+            valorPago: analysisData.summary?.totalPago ? Number(analysisData.summary.totalPago) : 0,
+            diferenca: analysisData.summary?.totalDiferenca ? Number(analysisData.summary.totalDiferenca) : 0,
+            procedimentosNaoPagos: analysisData.summary?.procedimentosNaoPagos ? Number(analysisData.summary.procedimentosNaoPagos) : 0
           }
         };
         
