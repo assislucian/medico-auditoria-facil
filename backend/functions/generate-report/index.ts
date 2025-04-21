@@ -1,108 +1,48 @@
 
 /**
- * Edge Function to generate analysis reports
+ * Edge Function to generate analysis reports (modularized version)
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Import report generators
+// Generators
 import { generateSummaryReport } from './reports/summary.ts';
 import { generateHospitalReport } from './reports/hospital.ts';
 import { generateProcedureReport } from './reports/procedure.ts';
 import { generateMonthlyReport } from './reports/monthly.ts';
 
-// CORS headers
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-// Supabase client initialization
-const supabaseUrl = 'https://yzrovzblelpnftlegczx.supabase.co';
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// Helpers
+import { parseRequest } from './parseRequest.ts';
+import { getAuthenticatedUser } from './auth.ts';
+import { fetchAnalyses } from './fetchAnalyses.ts';
+import { buildErrorResponse, buildSuccessResponse, buildCORSResponse } from './respond.ts';
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders, status: 204 });
+    return buildCORSResponse();
   }
 
   try {
-    // Verify authentication
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization header' }), { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401 
-      });
-    }
+    // Auth
+    const authResult = await getAuthenticatedUser(req);
+    if ("error" in authResult) return buildErrorResponse(authResult.error);
+    const { user } = authResult;
 
-    // Extract token
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401
-      });
-    }
-    
-    // Get request body
-    const { reportType, startDate, endDate, filters } = await req.json();
-    
-    // Validate input
-    if (!reportType) {
-      return new Response(JSON.stringify({ error: 'Report type is required' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      });
-    }
+    // Parse body
+    const params = await parseRequest(req);
+    if ("error" in params) return buildErrorResponse(params.error);
+    const { reportType, startDate, endDate, filters } = params;
 
+    // Logging
     console.log(`Generating ${reportType} report for user ${user.id}, period: ${startDate || 'all'} to ${endDate || 'all'}`);
-    
-    // Apply date filters if provided
-    let query = supabase
-      .from('analysis_results')
-      .select('*, procedure_results(*)')
-      .eq('user_id', user.id);
-    
-    if (startDate) {
-      query = query.gte('created_at', startDate);
-    }
-    
-    if (endDate) {
-      query = query.lte('created_at', endDate);
-    }
-    
-    // Apply additional filters if provided
-    if (filters) {
-      if (filters.hospital) {
-        query = query.eq('hospital', filters.hospital);
-      }
-      
-      if (filters.status) {
-        query = query.eq('status', filters.status);
-      }
-    }
-    
+
     // Fetch data
-    const { data: analyses, error: analysesError } = await query;
-    
-    if (analysesError) {
-      return new Response(JSON.stringify({ 
-        success: false,
-        error: analysesError.message
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
-      });
-    }
-    
-    // Process data based on report type
+    const fetchResult = await fetchAnalyses(user.id, startDate, endDate, filters);
+    if ("error" in fetchResult) return buildErrorResponse(fetchResult.error);
+    const { analyses } = fetchResult;
+
+    // Generate report
     let reportData;
-    
     switch (reportType) {
       case 'summary':
         reportData = generateSummaryReport(analyses, startDate, endDate);
@@ -117,29 +57,14 @@ serve(async (req) => {
         reportData = generateMonthlyReport(analyses, startDate, endDate);
         break;
       default:
-        return new Response(JSON.stringify({ error: 'Invalid report type' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400
-        });
+        return buildErrorResponse({ message: 'Invalid report type', status: 400 });
     }
-    
-    // Return the report data
-    return new Response(JSON.stringify({ 
-      success: true,
-      reportType,
-      reportData
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200
-    });
+    return buildSuccessResponse(reportType, reportData);
+
   } catch (error) {
     console.error('Error generating report:', error);
-    
-    return new Response(JSON.stringify({ 
-      success: false,
-      error: error.message || 'An unknown error occurred while generating report'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return buildErrorResponse({
+      message: error.message || 'An unknown error occurred while generating report',
       status: 500
     });
   }
