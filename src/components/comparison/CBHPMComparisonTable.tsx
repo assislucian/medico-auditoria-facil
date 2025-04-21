@@ -258,6 +258,7 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
             toggleSort={toggleSort}
             sortField={sortField}
             getSortIcon={getSortIcon}
+            filter={filter}
           />
         </TabsContent>
         
@@ -272,6 +273,7 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
                 toggleSort={toggleSort}
                 sortField={sortField}
                 getSortIcon={getSortIcon}
+                filter={filter}
               />
             </TabsContent>
           );
@@ -288,6 +290,7 @@ interface ComparisonTableProps {
   toggleSort: (field: string) => void;
   sortField: string | null;
   getSortIcon: (field: string) => React.ReactNode;
+  filter: string;
 }
 
 const ComparisonTable: React.FC<ComparisonTableProps> = ({ 
@@ -296,7 +299,8 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({
   getRoleBadge,
   toggleSort,
   sortField,
-  getSortIcon
+  getSortIcon,
+  filter
 }) => {
   return (
     <div className="rounded-md border">
