@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { 
   Table, 
@@ -14,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, XCircle, AlertCircle, Search, Filter, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import CBHPMComparisonTableFilters from "./CBHPMComparisonTableFilters";
+import CBHPMComparisonTabs from "./CBHPMComparisonTabs";
 
 interface ComparisonDetail {
   id: string;
@@ -40,11 +41,11 @@ interface CBHPMComparisonTableProps {
 }
 
 const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, details }) => {
-  const [filter, setFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [sortField, setSortField] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [filter, setFilter] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState('all');
+  const [roleFilter, setRoleFilter] = React.useState('all');
+  const [sortField, setSortField] = React.useState<string | null>(null);
+  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
 
   // Group details by role
   const groupedByRole: Record<string, ComparisonDetail[]> = details.reduce((acc, detail) => {
@@ -60,55 +61,55 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
   const roles = Object.keys(groupedByRole);
 
   // Sort and filter logic
-  const filteredDetails = useMemo(() => {
+  const filteredDetails = React.useMemo(() => {
     let result = [...details];
-    
+
     // Apply text search filter
     if (filter) {
       const lowerFilter = filter.toLowerCase();
-      result = result.filter(detail => 
-        detail.descricao.toLowerCase().includes(lowerFilter) || 
+      result = result.filter(detail =>
+        detail.descricao.toLowerCase().includes(lowerFilter) ||
         detail.codigo.includes(filter)
       );
     }
-    
+
     // Apply status filter
     if (statusFilter !== 'all') {
       result = result.filter(detail => detail.status === statusFilter);
     }
-    
+
     // Apply role filter
     if (roleFilter !== 'all') {
       result = result.filter(detail => detail.papel === roleFilter);
     }
-    
+
     // Apply sorting
     if (sortField) {
       result.sort((a, b) => {
         let aValue = a[sortField as keyof ComparisonDetail];
         let bValue = b[sortField as keyof ComparisonDetail];
-        
+
         // Handle string comparison
         if (typeof aValue === 'string' && typeof bValue === 'string') {
-          return sortDirection === 'asc' 
+          return sortDirection === 'asc'
             ? aValue.localeCompare(bValue)
             : bValue.localeCompare(aValue);
         }
-        
+
         // Handle number comparison
         if (typeof aValue === 'number' && typeof bValue === 'number') {
           return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
         }
-        
+
         return 0;
       });
     }
-    
+
     return result;
   }, [details, filter, statusFilter, roleFilter, sortField, sortDirection]);
 
   // Calculate filtered summary
-  const filteredSummary = useMemo(() => {
+  const filteredSummary = React.useMemo(() => {
     return filteredDetails.reduce((acc, detail) => {
       acc.total++;
       if (detail.status === 'conforme') acc.conforme++;
@@ -164,8 +165,8 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
 
   const getSortIcon = (field: string) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
-    return sortDirection === 'asc' 
-      ? <ArrowUpDown className="h-3 w-3 ml-1 text-primary" /> 
+    return sortDirection === 'asc'
+      ? <ArrowUpDown className="h-3 w-3 ml-1 text-primary" />
       : <ArrowUpDown className="h-3 w-3 ml-1 text-primary rotate-180" />;
   };
 
@@ -182,206 +183,30 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por código ou descrição"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="conforme">Conforme</SelectItem>
-              <SelectItem value="abaixo">Abaixo</SelectItem>
-              <SelectItem value="acima">Acima</SelectItem>
-              <SelectItem value="não_pago">Não Pago</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-[180px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Papel" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os papéis</SelectItem>
-              {roles.map(role => (
-                <SelectItem key={role} value={role}>{role}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 text-sm">
-        <Badge variant="outline" className="bg-secondary/20">
-          Exibindo {filteredDetails.length} de {details.length} procedimentos
-        </Badge>
-        {filterActive && (
-          <Badge variant="outline" className="bg-primary/10 cursor-pointer" onClick={() => resetFilters()}>
-            Limpar filtros
-          </Badge>
-        )}
-      </div>
-
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-2 flex overflow-auto">
-          <TabsTrigger value="all">
-            Todos ({filteredSummary.total})
-          </TabsTrigger>
-          {roles.map(role => {
-            // Count filtered items for this role
-            const count = filteredDetails.filter(detail => detail.papel === role).length;
-            return (
-              <TabsTrigger key={role} value={role}>
-                {role} ({count})
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-        
-        <TabsContent value="all">
-          <ComparisonTable 
-            details={filteredDetails}
-            getStatusBadge={getStatusBadge}
-            getRoleBadge={getRoleBadge}
-            toggleSort={toggleSort}
-            sortField={sortField}
-            getSortIcon={getSortIcon}
-            filter={filter}
-          />
-        </TabsContent>
-        
-        {roles.map(role => {
-          const roleDetails = filteredDetails.filter(detail => detail.papel === role);
-          return (
-            <TabsContent key={role} value={role}>
-              <ComparisonTable 
-                details={roleDetails}
-                getStatusBadge={getStatusBadge}
-                getRoleBadge={getRoleBadge}
-                toggleSort={toggleSort}
-                sortField={sortField}
-                getSortIcon={getSortIcon}
-                filter={filter}
-              />
-            </TabsContent>
-          );
-        })}
-      </Tabs>
-    </div>
-  );
-};
-
-interface ComparisonTableProps {
-  details: ComparisonDetail[];
-  getStatusBadge: (status: string) => React.ReactNode;
-  getRoleBadge: (role: string) => React.ReactNode;
-  toggleSort: (field: string) => void;
-  sortField: string | null;
-  getSortIcon: (field: string) => React.ReactNode;
-  filter: string;
-}
-
-const ComparisonTable: React.FC<ComparisonTableProps> = ({ 
-  details, 
-  getStatusBadge, 
-  getRoleBadge,
-  toggleSort,
-  sortField,
-  getSortIcon,
-  filter
-}) => {
-  return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="cursor-pointer" onClick={() => toggleSort('codigo')}>
-              <div className="flex items-center">
-                Código {getSortIcon('codigo')}
-              </div>
-            </TableHead>
-            <TableHead className="w-[30%] cursor-pointer" onClick={() => toggleSort('descricao')}>
-              <div className="flex items-center">
-                Procedimento {getSortIcon('descricao')}
-              </div>
-            </TableHead>
-            <TableHead>Papel</TableHead>
-            <TableHead className="text-right cursor-pointer" onClick={() => toggleSort('valorCbhpm')}>
-              <div className="flex items-center justify-end">
-                Valor CBHPM {getSortIcon('valorCbhpm')}
-              </div>
-            </TableHead>
-            <TableHead className="text-right cursor-pointer" onClick={() => toggleSort('valorPago')}>
-              <div className="flex items-center justify-end">
-                Valor Pago {getSortIcon('valorPago')}
-              </div>
-            </TableHead>
-            <TableHead className="text-right cursor-pointer" onClick={() => toggleSort('diferenca')}>
-              <div className="flex items-center justify-end">
-                Diferença {getSortIcon('diferenca')}
-              </div>
-            </TableHead>
-            <TableHead className="text-center cursor-pointer" onClick={() => toggleSort('status')}>
-              <div className="flex items-center justify-center">
-                Status {getSortIcon('status')}
-              </div>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {details.length > 0 ? (
-            details.map((detail) => (
-              <TableRow key={detail.id} className={
-                detail.status === 'não_pago' ? 'bg-red-100/50 dark:bg-red-950/20' : 
-                detail.status === 'abaixo' ? 'bg-amber-100/50 dark:bg-amber-950/20' : 
-                ''
-              }>
-                <TableCell className="font-medium">{detail.codigo}</TableCell>
-                <TableCell>{detail.descricao}</TableCell>
-                <TableCell>{getRoleBadge(detail.papel)}</TableCell>
-                <TableCell className="text-right">R$ {detail.valorCbhpm.toFixed(2)}</TableCell>
-                <TableCell className="text-right">
-                  {detail.status === 'não_pago' 
-                    ? '-' 
-                    : `R$ ${detail.valorPago.toFixed(2)}`
-                  }
-                </TableCell>
-                <TableCell className="text-right">
-                  {detail.status === 'não_pago' 
-                    ? '-' 
-                    : detail.status === 'conforme' 
-                      ? '0,00'
-                      : <span className={detail.status === 'abaixo' ? 'text-red-500' : 'text-blue-500'}>
-                          {detail.status === 'abaixo' ? '-' : '+'} R$ {Math.abs(detail.diferenca).toFixed(2)}
-                        </span>
-                  }
-                </TableCell>
-                <TableCell className="text-center">
-                  {getStatusBadge(detail.status)}
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center">
-                Nenhum procedimento encontrado com os filtros atuais.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+      <CBHPMComparisonTableFilters
+        filter={filter}
+        setFilter={setFilter}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        roleFilter={roleFilter}
+        setRoleFilter={setRoleFilter}
+        roles={roles}
+        filterActive={filterActive}
+        resetFilters={resetFilters}
+        detailsLength={details.length}
+        filteredLength={filteredDetails.length}
+      />
+      <CBHPMComparisonTabs
+        roles={roles}
+        filteredDetails={filteredDetails}
+        getStatusBadge={getStatusBadge}
+        getRoleBadge={getRoleBadge}
+        toggleSort={toggleSort}
+        sortField={sortField}
+        getSortIcon={getSortIcon}
+        filter={filter}
+        filteredSummary={filteredSummary}
+      />
     </div>
   );
 };
