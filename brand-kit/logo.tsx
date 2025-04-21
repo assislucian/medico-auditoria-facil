@@ -3,14 +3,14 @@ import React from 'react';
 import { MEDCHECK_COLORS } from './colors';
 
 interface LogoProps {
-  variant?: 'full' | 'icon';
+  variant?: 'full' | 'icon' | 'horizontal';
   size?: number;
   color?: string;
 }
 
 export const MedCheckLogo: React.FC<LogoProps> = ({
-  variant = 'full', 
-  size = 120, 
+  variant = 'full',
+  size = 120,
   color = MEDCHECK_COLORS.primary[500]
 }) => {
   const iconOnly = (
@@ -39,16 +39,67 @@ export const MedCheckLogo: React.FC<LogoProps> = ({
       {iconOnly}
       <text 
         x="500" 
-        y="350" 
+        y="280" 
         fontFamily="Inter" 
-        fontSize="300" 
+        fontSize="200" 
         fontWeight="bold" 
         fill={color}
       >
         MedCheck
       </text>
+      <text 
+        x="500" 
+        y="350" 
+        fontFamily="Inter" 
+        fontSize="80" 
+        fontWeight="medium" 
+        fill={MEDCHECK_COLORS.neutral[500]}
+      >
+        by LIFA
+      </text>
     </svg>
   );
 
-  return variant === 'icon' ? iconOnly : fullLogo;
+  const horizontalLogo = (
+    <svg 
+      width={size * 4} 
+      height={size} 
+      viewBox="0 0 2000 500" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g transform="scale(0.8) translate(50, 50)">
+        {iconOnly}
+      </g>
+      <text 
+        x="450" 
+        y="280" 
+        fontFamily="Inter" 
+        fontSize="180" 
+        fontWeight="bold" 
+        fill={color}
+      >
+        MedCheck
+      </text>
+      <text 
+        x="450" 
+        y="350" 
+        fontFamily="Inter" 
+        fontSize="70" 
+        fontWeight="medium" 
+        fill={MEDCHECK_COLORS.neutral[500]}
+      >
+        by LIFA
+      </text>
+    </svg>
+  );
+
+  switch (variant) {
+    case 'icon':
+      return iconOnly;
+    case 'horizontal':
+      return horizontalLogo;
+    default:
+      return fullLogo;
+  }
 };

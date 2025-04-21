@@ -1,31 +1,50 @@
 
-# MedCheck Brand Style Guide
+# MedCheck by LIFA - Brand Style Guide
 
-## Color Palette
-- **Primary Blue**: #3182CE 
-- **Secondary Green**: #68C239
-- **Neutral Gray**: #718096
-- **Error Red**: #E53E3E
-- **Warning Orange**: #ED8936
+## Logo
+- O logo MedCheck possui três variantes: completo, horizontal e ícone
+- Sempre manter área de respiro de 20% do tamanho do logo
+- Não distorcer ou alterar as proporções
+- Usar preferencialmente em azul principal ou branco sobre fundos escuros
 
-## Typography
-- **Primary Font**: Inter
-- **Headings**: Bold, 1.25 line height
-- **Body Text**: Regular weight, 1.5 line height
-- **Code**: Fira Code
+## Paleta de Cores
+- **Azul Principal**: #3182CE - Cor institucional principal
+- **Verde Médico**: #68C239 - Cor secundária para elementos de ação
+- **Cinza Neutro**: #718096 - Textos e elementos neutros
+- **Cores de Status**:
+  - Erro: #E53E3E
+  - Alerta: #ED8936
+  - Sucesso: #48BB78
+  - Info: #4299E1
 
-## Logo Usage
-- Minimum clear space around logo: 20% of logo height
-- Do not stretch or distort logo
-- Acceptable variants: Full logo, Icon-only logo
+## Tipografia
+- **Fonte Principal**: Inter
+- **Títulos**: Bold, entrelinha 1.25
+- **Corpo de Texto**: Regular, entrelinha 1.5
+- **Código**: Fira Code
 
-## Design Principles
-- Clean, modern medical interface
-- Emphasis on readability and clarity
-- Professional yet approachable aesthetic
+## Tons de Voz
+- Preciso e técnico, mas acessível
+- Profissional e confiável
+- Focado em soluções
+- Suporte ao usuário
 
-## Tone of Voice
-- Precise
-- Trustworthy
-- Supportive
-- Technical but understandable
+## Aplicações
+- **Website**: Usar logo horizontal no cabeçalho
+- **App**: Ícone para favicon e app icon
+- **Documentos**: Logo completo com "by LIFA"
+- **Redes Sociais**: Adaptar logo conforme plataforma
+  - LinkedIn: Logo horizontal
+  - Instagram: Ícone quadrado
+  - Twitter: Logo completo
+
+## Identidade Visual
+- Design clean e moderno
+- Ênfase em espaços brancos
+- Elementos visuais minimalistas
+- Grid system consistente
+
+## LIFA Branding
+- Sempre mencionar "by LIFA" em materiais oficiais
+- Manter consistência com guidelines da LIFA
+- Usar fonte Inter para manter unidade visual
