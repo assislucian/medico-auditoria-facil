@@ -1,10 +1,10 @@
 
+/// <reference types="jest" />
 /// <reference types="@testing-library/jest-dom" />
 
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import UploadSection from "../../UploadSection";
-import "@testing-library/jest-dom";
 
 describe("UploadSection Modes", () => {
   it("guia-only: envia guia e chama função correta", async () => {
@@ -74,3 +74,4 @@ describe("UploadSection Modes", () => {
     });
   });
 });
+
