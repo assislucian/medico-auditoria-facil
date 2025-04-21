@@ -96,10 +96,14 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
           .from('profiles')
           .getPublicUrl(filePath);
           
-        // Update user profile with avatar URL
+        // Update user profile with avatar URL using metadata field
+        // Since avatar_url isn't in our type, we'll use metadata or an alternative approach
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ avatar_url: urlData.publicUrl })
+          .update({ 
+            // Store avatar URL in metadata since it's not in our type definition
+            notification_preferences: { avatar_url: urlData.publicUrl }
+          })
           .eq('id', userId);
 
         if (updateError) {

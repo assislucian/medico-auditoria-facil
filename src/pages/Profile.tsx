@@ -7,7 +7,6 @@ import { ProfileSidebar } from "@/components/profile/ProfileSidebar";
 import { ProfileTabs } from "@/components/profile/ProfileTabs";
 import { ActivitySummary } from "@/components/profile/ActivitySummary";
 import { useProfile } from "@/hooks/use-profile";
-import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 
 interface ProfileData {
@@ -15,7 +14,7 @@ interface ProfileData {
   specialty: string;
   crm: string;
   email: string;
-  avatar_url?: string;
+  avatarUrl?: string;
 }
 
 const Profile = () => {
@@ -35,12 +34,17 @@ const Profile = () => {
       try {
         const data = await fetchProfile();
         if (data) {
+          // Get avatar URL from notification_preferences if available
+          const avatarUrl = data.notification_preferences && data.notification_preferences.avatar_url 
+            ? data.notification_preferences.avatar_url 
+            : undefined;
+            
           setProfileData({
             name: data.name || "Usuário",
             specialty: data.specialty || "Não especificada",
             crm: data.crm || "Não informado",
             email: data.email || "",
-            avatar_url: data.avatar_url
+            avatarUrl: avatarUrl
           });
         }
       } catch (error) {
@@ -60,7 +64,7 @@ const Profile = () => {
       if (avatarUrl) {
         setProfileData(prev => ({
           ...prev,
-          avatar_url: avatarUrl
+          avatarUrl
         }));
       }
     } catch (error) {
@@ -84,7 +88,7 @@ const Profile = () => {
                   name={profileData.name}
                   specialty={profileData.specialty}
                   crm={profileData.crm}
-                  avatarUrl={profileData.avatar_url}
+                  avatarUrl={profileData.avatarUrl}
                   onUpdateAvatar={handleAvatarUpdate}
                 />
               </div>

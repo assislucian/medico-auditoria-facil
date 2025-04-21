@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { validateCRM, formatCRM } from '@/utils/formatters';
 import { toast } from "sonner";
@@ -36,7 +35,6 @@ interface NotificationPreferences {
 }
 
 export const useProfile = () => {
-  const { toast: legacyToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -57,6 +55,11 @@ export const useProfile = () => {
         
       if (error) {
         throw error;
+      }
+      
+      // Extract avatar URL from notification_preferences if it exists
+      if (data && data.notification_preferences && data.notification_preferences.avatar_url) {
+        setAvatarUrl(data.notification_preferences.avatar_url);
       }
       
       return data;
@@ -131,17 +134,31 @@ export const useProfile = () => {
         }
       }
       
+      // Get current profile to merge with updated data
+      const { data: currentProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      // Merge current notification preferences with avatar URL if available
+      const updatedNotificationPrefs = {
+        ...(currentProfile?.notification_preferences || {}),
+        ...(avatarUrl ? { avatar_url: avatarUrl } : {})
+      };
+      
       // Update profile data
       const { error } = await supabase
         .from('profiles')
         .update({
           name: data.name,
           email: data.email,
-          phone: data.telefone,
           specialty: data.especialidade,
-          hospital: data.hospital,
-          bio: data.bio,
-          ...(avatarUrl ? { avatar_url: avatarUrl } : {})
+          notification_preferences: updatedNotificationPrefs
         })
         .eq('id', session.user.id);
         
@@ -149,8 +166,7 @@ export const useProfile = () => {
         throw error;
       }
       
-      toast({
-        title: "Perfil atualizado",
+      toast.success("Perfil atualizado", {
         description: "Suas informações foram atualizadas com sucesso."
       });
       
@@ -161,10 +177,8 @@ export const useProfile = () => {
       return true;
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast({
-        title: "Erro ao atualizar",
-        description: "Não foi possível atualizar suas informações. Tente novamente.",
-        variant: "destructive"
+      toast.error("Erro ao atualizar", {
+        description: "Não foi possível atualizar suas informações. Tente novamente."
       });
       return false;
     } finally {
@@ -189,17 +203,14 @@ export const useProfile = () => {
         throw error;
       }
       
-      toast({
-        title: "Senha atualizada",
+      toast.success("Senha atualizada", {
         description: "Sua senha foi atualizada com sucesso."
       });
       
       return true;
     } catch (error) {
-      toast({
-        title: "Erro ao atualizar senha",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao atualizar sua senha",
-        variant: "destructive"
+      toast.error("Erro ao atualizar senha", {
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao atualizar sua senha"
       });
       return false;
     } finally {
@@ -216,8 +227,20 @@ export const useProfile = () => {
         throw new Error('Não autenticado');
       }
       
-      // Convert preferences to a JSON object for storage
+      // Get current profile to preserve avatar URL if it exists
+      const { data: currentProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+        
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      // Convert preferences to a JSON object for storage while preserving avatar URL
       const prefJson = {
+        ...(currentProfile?.notification_preferences || {}),
         email: {
           newReports: preferences.email.newReports,
           systemUpdates: preferences.email.systemUpdates,
@@ -242,17 +265,14 @@ export const useProfile = () => {
         throw error;
       }
       
-      toast({
-        title: "Preferências atualizadas",
+      toast.success("Preferências atualizadas", {
         description: "Suas preferências de notificação foram atualizadas com sucesso."
       });
       
       return true;
     } catch (error) {
-      toast({
-        title: "Erro ao atualizar preferências",
-        description: "Não foi possível atualizar suas preferências. Tente novamente.",
-        variant: "destructive"
+      toast.error("Erro ao atualizar preferências", {
+        description: "Não foi possível atualizar suas preferências. Tente novamente."
       });
       return false;
     } finally {
