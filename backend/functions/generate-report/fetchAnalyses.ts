@@ -1,19 +1,40 @@
 
-// Query/filter logic for analysis_results
-
 import { supabase } from './auth.ts';
 
-export async function fetchAnalyses(userId: string, startDate?: string, endDate?: string, filters?: any) {
+/**
+ * Fetch analyses filtered by crm and role, with license validation
+ */
+export async function fetchAnalyses(
+  crm: string,
+  role: string,
+  startDate?: string,
+  endDate?: string,
+  filters?: any
+) {
+  // Validate license
+  const { data: license, error: licenseError } = await supabase
+    .from('licenses')
+    .select('crm, active, expires_at')
+    .eq('crm', crm)
+    .eq('active', true)
+    .lte('expires_at', new Date().toISOString())
+    .maybeSingle();
+
+  if (!license || licenseError) {
+    return { error: { message: 'Licença inativa ou não encontrada', status: 403 } };
+  }
+
   let query = supabase
     .from('analysis_results')
     .select('*, procedure_results(*)')
-    .eq('user_id', userId);
+    .eq('crm', crm)
+    .eq('role', role);
 
   if (startDate) {
-    query = query.gte('created_at', startDate);
+    query = query.gte('competence_date', startDate);
   }
   if (endDate) {
-    query = query.lte('created_at', endDate);
+    query = query.lte('competence_date', endDate);
   }
   if (filters) {
     if (filters.hospital) {
@@ -26,13 +47,7 @@ export async function fetchAnalyses(userId: string, startDate?: string, endDate?
 
   const { data: analyses, error } = await query;
   if (error) {
-    return {
-      error: {
-        message: error.message,
-        status: 500
-      }
-    };
+    return { error: { message: error.message, status: 500 } };
   }
   return { analyses };
 }
-
