@@ -105,9 +105,29 @@ const generateMockData = (): ExtractedData => {
  * Set the current analysis in storage for later retrieval
  */
 export const setCurrentAnalysis = (extractedData: ExtractedData, analysisId: string) => {
-  // Store in localStorage or state management
+  // Store in localStorage
   localStorage.setItem('currentAnalysisId', analysisId);
   localStorage.setItem('currentAnalysisTimestamp', Date.now().toString());
+  
+  // For local analysis, store the full data too
+  if (analysisId.startsWith('local-')) {
+    localStorage.setItem(`extractedData-${analysisId}`, JSON.stringify(extractedData));
+  }
+};
+
+/**
+ * Get a local analysis from localStorage
+ */
+export const getLocalAnalysis = (analysisId: string): ExtractedData | null => {
+  try {
+    const storedData = localStorage.getItem(`extractedData-${analysisId}`);
+    if (storedData) {
+      return JSON.parse(storedData);
+    }
+  } catch (error) {
+    console.error('Error retrieving local analysis:', error);
+  }
+  return null;
 };
 
 /**
@@ -150,11 +170,21 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
   console.log('Getting extracted data with analysisId:', analysisId);
   
   try {
+    // For "local-" prefixed IDs, retrieve from localStorage
+    if (analysisId && analysisId.startsWith('local-')) {
+      console.log('Retrieving local analysis data');
+      const localData = getLocalAnalysis(analysisId);
+      if (localData) {
+        return localData;
+      }
+      // If local data not found, continue with mock data as fallback
+    }
+
     // If there's a valid analysisId, try to fetch it from the server
-    if (analysisId) {
+    if (analysisId && !analysisId.startsWith('local-')) {
       console.log('Attempting to fetch analysis from database...');
       
-      // Try to fetch the analysis from the backend
+      // First query the analysis_results table
       const { data: analysisData, error: analysisError } = await supabase
         .from('analysis_results')
         .select('*')
@@ -168,9 +198,9 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
       
       console.log('Fetched analysis:', analysisData);
       
-      // Get the procedure results
+      // Then query the related procedure_results
       const { data: proceduresData, error: proceduresError } = await supabase
-        .from('procedures')
+        .from('procedure_results')
         .select('*')
         .eq('analysis_id', analysisId);
       
@@ -181,7 +211,7 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
       
       console.log(`Fetched ${proceduresData.length} procedures`);
       
-      if (analysisData && proceduresData) {
+      if (analysisData && proceduresData && proceduresData.length > 0) {
         // Transform database data to ExtractedData format
         const extractedData: ExtractedData = {
           demonstrativoInfo: {
@@ -189,7 +219,7 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
             competencia: analysisData.competencia || '',
             hospital: analysisData.hospital || '',
             data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
-            beneficiario: proceduresData[0]?.beneficiario || ''
+            beneficiario: proceduresData[0]?.beneficiario || 'Paciente'
           },
           procedimentos: proceduresData.map(proc => {
             // Process doctors with proper type safety

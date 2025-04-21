@@ -13,6 +13,12 @@ import { ArrowUpDown } from 'lucide-react';
 import CBHPMComparisonTableFilters from "./CBHPMComparisonTableFilters";
 import CBHPMComparisonTabs from "./CBHPMComparisonTabs";
 import { toast } from 'sonner';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
 
 interface ComparisonDetail {
   id: string;
@@ -104,7 +110,8 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
       result = result.filter(detail =>
         detail.descricao.toLowerCase().includes(lowerFilter) ||
         detail.codigo.includes(filter) || 
-        (detail.guia && detail.guia.toLowerCase().includes(lowerFilter))
+        (detail.guia && detail.guia.toLowerCase().includes(lowerFilter)) ||
+        (detail.beneficiario && detail.beneficiario.toLowerCase().includes(lowerFilter))
       );
     }
 
@@ -237,6 +244,26 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
     );
   };
 
+  // Custom component to display patient info with tooltip
+  const PatientInfo = ({ patient }: { patient: string | undefined }) => {
+    if (!patient) return <span className="text-gray-400">-</span>;
+    
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="cursor-help underline decoration-dotted">
+              {patient.length > 15 ? `${patient.substring(0, 15)}...` : patient}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{patient}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
   return (
     <div className="space-y-4">
       <CBHPMComparisonTableFilters
@@ -265,6 +292,7 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
         getSortIcon={getSortIcon}
         filter={filter}
         filteredSummary={filteredSummary}
+        PatientInfo={PatientInfo} // Pass the PatientInfo component
       />
       
       {showMatchStatus && filteredSummary.naoEncontrados > 0 && (

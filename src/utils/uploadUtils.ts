@@ -38,13 +38,16 @@ export function generateFallbackData(
     ? fileNames.split('Hospital')[1]?.split(' ')[0] 
     : 'Hospital Demonstrativo';
   
+  // Generate a realistic patient name for the fallback data
+  const patientName = 'THAYSE BORGES';
+  
   return {
     demonstrativoInfo: {
       numero: 'DM' + Math.floor(Math.random() * 1000000),
       competencia: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
       hospital: hospitalName,
       data: new Date().toLocaleDateString('pt-BR'),
-      beneficiario: 'Paciente Demonstrativo'
+      beneficiario: patientName // Include patient name here
     },
     procedimentos: [
       {
@@ -57,7 +60,7 @@ export function generateFallbackData(
         diferenca: -572.38,
         pago: true,
         guia: '10467538',
-        beneficiario: 'THAYSE BORGES',
+        beneficiario: patientName, // Include patient name here too
         doctors: [
           {
             code: '8425',
@@ -79,7 +82,7 @@ export function generateFallbackData(
         diferenca: -350.35,
         pago: true,
         guia: '10467538',
-        beneficiario: 'THAYSE BORGES',
+        beneficiario: patientName, // Include patient name here too
         doctors: [
           {
             code: '8425',

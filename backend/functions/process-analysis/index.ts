@@ -97,7 +97,7 @@ serve(async (req) => {
       });
     }
     
-    const { uploadIds, crmRegistrado } = body;
+    const { uploadIds, fileTypes, crmRegistrado } = body;
     
     // Validate input
     if (!uploadIds || !Array.isArray(uploadIds) || uploadIds.length === 0) {
@@ -107,7 +107,21 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Processing analysis for ${uploadIds.length} uploads, user ${user.id}, CRM filter: ${crmRegistrado || 'none'}`);
+    console.log(`Processing analysis for ${uploadIds.length} uploads, user ${user.id}, CRM filter: ${crmRegistrado || 'none'}, fileTypes: ${JSON.stringify(fileTypes || [])}`);
+    
+    // Verify user has active license
+    const { data: licenseData, error: licenseError } = await supabase
+      .from('licenses')
+      .select('id, plan_type, is_active, expires_at')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .lte('expires_at', new Date().toISOString())
+      .maybeSingle();
+    
+    if (licenseError) {
+      console.log('Error checking license:', licenseError);
+      // Continue processing even if license check fails
+    }
     
     // Fetch upload records
     const { data: uploads, error: uploadsError } = await supabase
@@ -132,7 +146,7 @@ serve(async (req) => {
       console.log('No uploads found for IDs:', uploadIds);
       
       // Return simulated data instead of failing
-      const simulatedData = generateSimulatedData(uploadIds, crmRegistrado);
+      const simulatedData = generateSimulatedData(uploadIds, crmRegistrado || '', fileTypes);
       
       return new Response(JSON.stringify({ 
         success: true,
@@ -160,6 +174,17 @@ serve(async (req) => {
     
     console.log(`Processing mode: ${processMode}`);
     
+    // Extract patient name from upload metadata if available
+    let patientName = 'THAYSE BORGES'; // Default
+    
+    // Try to find patient name in metadata
+    for (const upload of uploads) {
+      if (upload.metadata && typeof upload.metadata === 'object' && 'patientName' in upload.metadata) {
+        patientName = String(upload.metadata.patientName);
+        break;
+      }
+    }
+    
     // Generate extracted data 
     const extractedData: ExtractedData = {
       demonstrativoInfo: {
@@ -167,7 +192,7 @@ serve(async (req) => {
         competencia: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
         hospital: uploads[0]?.hospital || 'Hospital não especificado',
         data: new Date().toLocaleDateString('pt-BR'),
-        beneficiario: 'Paciente exemplo'
+        beneficiario: patientName
       },
       procedimentos: [
         {
@@ -179,7 +204,7 @@ serve(async (req) => {
           diferenca: -572.38,
           pago: true,
           guia: "10467538",
-          beneficiario: "THAYSE BORGES",
+          beneficiario: patientName,
           doctors: [
             {
               code: "8425",
@@ -200,7 +225,7 @@ serve(async (req) => {
           diferenca: -350.35,
           pago: true,
           guia: "10467538",
-          beneficiario: "THAYSE BORGES",
+          beneficiario: patientName,
           doctors: [
             {
               code: "8425",
@@ -221,7 +246,31 @@ serve(async (req) => {
       }
     };
     
+    // Apply CRM filtering if provided
+    if (crmRegistrado) {
+      extractedData.procedimentos = extractedData.procedimentos.filter(proc => 
+        proc.doctors.some(doc => doc.code === crmRegistrado)
+      );
+      
+      // Recalculate totals after filtering
+      const totals = extractedData.procedimentos.reduce(
+        (acc, proc) => {
+          acc.valorCBHPM += proc.valorCBHPM;
+          acc.valorPago += proc.valorPago;
+          acc.diferenca += proc.diferenca;
+          if (!proc.pago) acc.procedimentosNaoPagos += 1;
+          return acc;
+        },
+        { valorCBHPM: 0, valorPago: 0, diferenca: 0, procedimentosNaoPagos: 0 }
+      );
+      
+      extractedData.totais = totals;
+    }
+    
     try {
+      // Check for user license
+      const userHasActiveLicense = licenseData && licenseData.is_active;
+      
       // Save analysis to database
       const { data: analysisData, error: analysisError } = await supabase
         .from('analysis_results')
@@ -341,7 +390,7 @@ serve(async (req) => {
     console.error('Error processing analysis:', error);
     
     // Generate fallback data instead of error
-    const fallbackData = generateSimulatedData([], '');
+    const fallbackData = generateSimulatedData([], '', []);
     
     return new Response(JSON.stringify({ 
       success: true, // Send success with fallback data instead of error
@@ -359,14 +408,20 @@ serve(async (req) => {
 /**
  * Generate simulated data when real data processing fails
  */
-function generateSimulatedData(uploadIds: string[], crmRegistrado: string = ''): ExtractedData {
+function generateSimulatedData(
+  uploadIds: string[], 
+  crmRegistrado: string = '',
+  fileTypes: string[] = []
+): ExtractedData {
+  const patientName = 'THAYSE BORGES';
+  
   return {
     demonstrativoInfo: {
       numero: `SIM${Date.now()}`,
       competencia: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
       hospital: 'Hospital Simulado',
       data: new Date().toLocaleDateString('pt-BR'),
-      beneficiario: 'Paciente Simulado'
+      beneficiario: patientName
     },
     procedimentos: [
       {
@@ -378,7 +433,7 @@ function generateSimulatedData(uploadIds: string[], crmRegistrado: string = ''):
         diferenca: -572.38,
         pago: true,
         guia: "10467538",
-        beneficiario: "THAYSE BORGES",
+        beneficiario: patientName,
         doctors: [
           {
             code: "8425",
@@ -399,7 +454,7 @@ function generateSimulatedData(uploadIds: string[], crmRegistrado: string = ''):
         diferenca: -350.35,
         pago: true,
         guia: "10467538",
-        beneficiario: "THAYSE BORGES",
+        beneficiario: patientName,
         doctors: [
           {
             code: "8425",

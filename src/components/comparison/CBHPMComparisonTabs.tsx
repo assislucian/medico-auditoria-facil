@@ -1,36 +1,38 @@
 
-import React from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ComparisonTable from "./ComparisonTable";
-
-interface ComparisonDetail {
-  id: string;
-  codigo: string;
-  descricao: string;
-  qtd: number;
-  valorCbhpm: number;
-  valorPago: number;
-  diferenca: number;
-  status: string;
-  papel: string;
-}
-interface Summary {
-  total: number;
-  conforme: number;
-  abaixo: number;
-  acima: number;
-}
+import React, { useState } from 'react';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { formatCurrency } from '@/utils/formatters';
 
 interface CBHPMComparisonTabsProps {
   roles: string[];
-  filteredDetails: ComparisonDetail[];
+  filteredDetails: any[];
   getStatusBadge: (status: string) => React.ReactNode;
   getRoleBadge: (role: string) => React.ReactNode;
   toggleSort: (field: string) => void;
   sortField: string | null;
   getSortIcon: (field: string) => React.ReactNode;
   filter: string;
-  filteredSummary: { total: number; [x: string]: number };
+  filteredSummary: {
+    total: number;
+    conforme: number;
+    abaixo: number;
+    acima: number;
+    naoEncontrados?: number;
+  };
+  PatientInfo?: React.ComponentType<{ patient: string | undefined }>;
 }
 
 const CBHPMComparisonTabs: React.FC<CBHPMComparisonTabsProps> = ({
@@ -42,50 +44,202 @@ const CBHPMComparisonTabs: React.FC<CBHPMComparisonTabsProps> = ({
   sortField,
   getSortIcon,
   filter,
-  filteredSummary
-}) => (
-  <Tabs defaultValue="all" className="w-full">
-    <TabsList className="mb-2 flex overflow-auto">
-      <TabsTrigger value="all">
-        Todos ({filteredSummary.total})
-      </TabsTrigger>
-      {roles.map(role => {
-        const count = filteredDetails.filter(d => d.papel === role).length;
-        return (
+  filteredSummary,
+  PatientInfo
+}) => {
+  const [activeTab, setActiveTab] = useState("all");
+
+  // Filter details based on active tab
+  const tabFilteredDetails = React.useMemo(() => {
+    if (activeTab === "all") return filteredDetails;
+    return filteredDetails.filter(detail => detail.papel === activeTab);
+  }, [activeTab, filteredDetails]);
+
+  // Calculate summary for the currently displayed tab
+  const tabSummary = React.useMemo(() => {
+    const summary = tabFilteredDetails.reduce((acc, detail) => {
+      acc.total++;
+      if (detail.status === 'conforme') acc.conforme++;
+      else if (detail.status === 'abaixo') acc.abaixo++;
+      else if (detail.status === 'acima') acc.acima++;
+      return acc;
+    }, { total: 0, conforme: 0, abaixo: 0, acima: 0 });
+    
+    return summary;
+  }, [tabFilteredDetails]);
+
+  return (
+    <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+      <TabsList className="mb-4">
+        <TabsTrigger value="all">
+          Todos ({filteredSummary.total})
+        </TabsTrigger>
+        {roles.map(role => (
           <TabsTrigger key={role} value={role}>
-            {role} ({count})
+            {role} ({filteredDetails.filter(d => d.papel === role).length})
           </TabsTrigger>
-        );
-      })}
-    </TabsList>
-    <TabsContent value="all">
-      <ComparisonTable
-        details={filteredDetails}
-        getStatusBadge={getStatusBadge}
-        getRoleBadge={getRoleBadge}
-        toggleSort={toggleSort}
-        sortField={sortField}
-        getSortIcon={getSortIcon}
-        filter={filter}
-      />
-    </TabsContent>
-    {roles.map(role => {
-      const roleDetails = filteredDetails.filter(detail => detail.papel === role);
-      return (
-        <TabsContent key={role} value={role}>
+        ))}
+      </TabsList>
+
+      <TabsContent value="all" className="overflow-auto">
+        <ComparisonTable
+          details={filteredDetails}
+          getStatusBadge={getStatusBadge}
+          getRoleBadge={getRoleBadge}
+          toggleSort={toggleSort}
+          sortField={sortField}
+          getSortIcon={getSortIcon}
+          PatientInfo={PatientInfo}
+        />
+      </TabsContent>
+      
+      {roles.map(role => (
+        <TabsContent key={role} value={role} className="overflow-auto">
           <ComparisonTable
-            details={roleDetails}
+            details={filteredDetails.filter(d => d.papel === role)}
             getStatusBadge={getStatusBadge}
             getRoleBadge={getRoleBadge}
             toggleSort={toggleSort}
             sortField={sortField}
             getSortIcon={getSortIcon}
-            filter={filter}
+            PatientInfo={PatientInfo}
           />
         </TabsContent>
-      );
-    })}
-  </Tabs>
-);
+      ))}
+    </Tabs>
+  );
+};
+
+interface ComparisonTableProps {
+  details: any[];
+  getStatusBadge: (status: string) => React.ReactNode;
+  getRoleBadge: (role: string) => React.ReactNode;
+  toggleSort: (field: string) => void;
+  sortField: string | null;
+  getSortIcon: (field: string) => React.ReactNode;
+  PatientInfo?: React.ComponentType<{ patient: string | undefined }>;
+}
+
+const ComparisonTable: React.FC<ComparisonTableProps> = ({
+  details,
+  getStatusBadge,
+  getRoleBadge,
+  toggleSort,
+  sortField,
+  getSortIcon,
+  PatientInfo
+}) => {
+  return (
+    <Table className="border rounded-md">
+      <TableHeader className="bg-muted/50">
+        <TableRow>
+          <TableHead 
+            className="w-24 cursor-pointer"
+            onClick={() => toggleSort('codigo')}
+          >
+            <div className="flex items-center">
+              Código {getSortIcon('codigo')}
+            </div>
+          </TableHead>
+          <TableHead 
+            className="cursor-pointer"
+            onClick={() => toggleSort('descricao')}
+          >
+            <div className="flex items-center">
+              Descrição {getSortIcon('descricao')}
+            </div>
+          </TableHead>
+          <TableHead 
+            className="cursor-pointer"
+            onClick={() => toggleSort('papel')}
+          >
+            <div className="flex items-center">
+              Papel {getSortIcon('papel')}
+            </div>
+          </TableHead>
+          {PatientInfo && (
+            <TableHead 
+              className="cursor-pointer"
+              onClick={() => toggleSort('beneficiario')}
+            >
+              <div className="flex items-center">
+                Paciente {getSortIcon('beneficiario')}
+              </div>
+            </TableHead>
+          )}
+          <TableHead 
+            className="text-right cursor-pointer"
+            onClick={() => toggleSort('valorCbhpm')}
+          >
+            <div className="flex items-center justify-end">
+              CBHPM {getSortIcon('valorCbhpm')}
+            </div>
+          </TableHead>
+          <TableHead 
+            className="text-right cursor-pointer"
+            onClick={() => toggleSort('valorPago')}
+          >
+            <div className="flex items-center justify-end">
+              Pago {getSortIcon('valorPago')}
+            </div>
+          </TableHead>
+          <TableHead 
+            className="text-right cursor-pointer"
+            onClick={() => toggleSort('diferenca')}
+          >
+            <div className="flex items-center justify-end">
+              Diferença {getSortIcon('diferenca')}
+            </div>
+          </TableHead>
+          <TableHead 
+            className="text-center cursor-pointer"
+            onClick={() => toggleSort('status')}
+          >
+            <div className="flex items-center justify-center">
+              Status {getSortIcon('status')}
+            </div>
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {details.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={PatientInfo ? 8 : 7} className="text-center py-8">
+              Nenhum procedimento encontrado
+            </TableCell>
+          </TableRow>
+        ) : (
+          details.map((detail) => (
+            <TableRow key={`${detail.id}-${detail.codigo}`}>
+              <TableCell className="font-mono">{detail.codigo}</TableCell>
+              <TableCell>{detail.descricao}</TableCell>
+              <TableCell>{getRoleBadge(detail.papel)}</TableCell>
+              {PatientInfo && (
+                <TableCell>
+                  <PatientInfo patient={detail.beneficiario} />
+                </TableCell>
+              )}
+              <TableCell className="text-right">
+                {formatCurrency(detail.valorCbhpm)}
+              </TableCell>
+              <TableCell className="text-right">
+                {formatCurrency(detail.valorPago)}
+              </TableCell>
+              <TableCell className={`text-right ${
+                detail.diferenca < 0 ? 'text-red-600' : 
+                detail.diferenca > 0 ? 'text-green-600' : ''
+              }`}>
+                {formatCurrency(detail.diferenca)}
+              </TableCell>
+              <TableCell className="text-center">
+                {getStatusBadge(detail.status)}
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  );
+};
 
 export default CBHPMComparisonTabs;
