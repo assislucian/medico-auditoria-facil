@@ -2,32 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useAuth } from '@supabase/auth-helpers-react'; // assuming auth helper is used
-
-interface ComparisonDetail {
-  id: string;
-  codigo: string;
-  descricao: string;
-  qtd: number;
-  valorCbhpm: number;
-  valorPago: number;
-  diferenca: number;
-  status: 'conforme' | 'abaixo' | 'acima' | 'não_pago';
-  papel: 'Cirurgião' | 'Primeiro Auxiliar' | 'Segundo Auxiliar';
-  guia?: string;
-  beneficiario?: string;
-  matchStatus?: 'encontrado' | 'não_encontrado';
-}
-
-interface ComparisonData {
-  summary: {
-    total: number;
-    conforme: number;
-    abaixo: number;
-    acima: number;
-  };
-  details: ComparisonDetail[];
-}
+import { useAuth } from '@/contexts/AuthContext';
 
 /**
  * Custom hook to fetch CBHPM comparison data for a specific analysis
@@ -41,7 +16,7 @@ export function useComparisonData(analysisId: string | null) {
 
   return useQuery({
     queryKey: ['cbhpm-comparison', analysisId, crm, role],
-    queryFn: async (): Promise<ComparisonData | null> => {
+    queryFn: async (): Promise<any | null> => {
       if (!analysisId || !crm || !role) return null;
 
       try {
@@ -52,7 +27,7 @@ export function useComparisonData(analysisId: string | null) {
         if (error) {
           throw new Error(error.message || 'Erro ao buscar dados de comparação');
         }
-        return data as ComparisonData;
+        return data;
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar comparativo';
         toast.error('Falha ao carregar comparativo CBHPM', {
