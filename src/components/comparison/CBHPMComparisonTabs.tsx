@@ -14,7 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCurrency } from '@/utils/formatters';
+
+// Local small currency formatter as the '@/utils/formatters' file does not exist
+const formatCurrency = (value: number) => {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
 
 interface CBHPMComparisonTabsProps {
   roles: string[];

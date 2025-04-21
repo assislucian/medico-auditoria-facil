@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { ProcessingStage, FileWithStatus, ProcessMode } from '@/types/upload';
 import { getProcessMode, getSuccessMessage, getSuccessDescription } from './messageUtils';
@@ -157,7 +156,8 @@ export async function processFiles(
       const uploadIds = uploadedFiles.map(f => f.id);
 
       setProgress(50);
-      setProcessingStage('processing');
+      // Change 'processing' to 'analyzing' here as only allowed ProcessingStage strings are allowed
+      setProcessingStage('analyzing');
       setProcessingMsg('Processando arquivos...');
 
       // Call the edge function with auth token
