@@ -24,7 +24,7 @@ export function useFileList() {
   const getFileIdsAndTypes = () => {
     const result = files
       .filter((f) => f.status === 'valid')
-      .map((f) => ({ id: f.id || `temp-${Date.now()}-${f.name}`, type: f.type })); // Added fallback for missing id
+      .map((f) => ({ id: f.id ?? `temp-${Date.now()}-${f.name}`, type: f.type })); // Use nullish coalescing operator
     return result;
   };
 
