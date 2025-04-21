@@ -20,11 +20,11 @@ export function useFileList() {
 
   const hasInvalidFiles = (): boolean => files.some((file) => file.status === 'invalid');
 
-  // Novo: função para pegar IDs dos arquivos válidos de cada tipo
+  // Função para pegar IDs dos arquivos válidos de cada tipo
   const getFileIdsAndTypes = () => {
     const result = files
       .filter((f) => f.status === 'valid')
-      .map((f) => ({ id: f.id, type: f.type }));
+      .map((f) => ({ id: f.id || `temp-${Date.now()}-${f.name}`, type: f.type })); // Added fallback for missing id
     return result;
   };
 
@@ -39,7 +39,8 @@ export function useFileList() {
   // Função para adicionar arquivos de um tipo só
   const handleFileChangeByType = async (type: FileType, fileList: FileList) => {
     if (!fileList || fileList.length === 0) return;
-    const list = Array.from(fileList).map((file) => ({
+    const list = Array.from(fileList).map((file, index) => ({
+      id: `local-${Date.now()}-${index}`, // Add id when creating files
       name: file.name,
       file,
       type,

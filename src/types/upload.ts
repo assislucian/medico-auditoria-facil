@@ -1,10 +1,10 @@
-
 export type FileType = 'guia' | 'demonstrativo';
 export type ProcessingStage = 'idle' | 'extracting' | 'analyzing' | 'comparing' | 'complete' | 'uploading' | 'error';
 export type FileStatus = 'valid' | 'invalid' | 'processing';
 export type ProcessMode = 'complete' | 'guia-only' | 'demonstrativo-only';
 
 export interface FileWithStatus {
+  id?: string;
   name: string;
   type: FileType;
   file: File;
