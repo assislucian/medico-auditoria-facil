@@ -26,6 +26,7 @@ interface ComparisonDetail {
   papel: string;
   guia?: string;
   beneficiario?: string;
+  matchStatus?: 'encontrado' | 'não_encontrado';
 }
 
 interface Summary {

@@ -13,6 +13,9 @@ interface ComparisonDetail {
   diferenca: number;
   status: 'conforme' | 'abaixo' | 'acima' | 'não_pago';
   papel: 'Cirurgião' | 'Primeiro Auxiliar' | 'Segundo Auxiliar';
+  guia?: string;
+  beneficiario?: string;
+  matchStatus?: 'encontrado' | 'não_encontrado';
 }
 
 interface ComparisonData {
