@@ -3,22 +3,130 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useState, useRef } from "react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileSidebarProps {
   name: string;
   specialty: string;
   crm: string;
+  avatarUrl?: string;
+  onUpdateAvatar?: (file: File) => Promise<void>;
 }
 
-export const ProfileSidebar = ({ name, specialty, crm }: ProfileSidebarProps) => {
+export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar }: ProfileSidebarProps) => {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle click on edit photo button
+  const handleEditPhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Handle file selection
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Formato inválido", {
+        description: "Por favor, selecione uma imagem no formato JPG ou PNG"
+      });
+      return;
+    }
+
+    // Check file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      toast.error("Arquivo grande demais", {
+        description: "A imagem deve ter no máximo 2MB"
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      if (onUpdateAvatar) {
+        await onUpdateAvatar(file);
+      } else {
+        // Direct upload implementation if no callback is provided
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          throw new Error("Usuário não autenticado");
+        }
+
+        const userId = sessionData.session.user.id;
+        const filePath = `avatars/${userId}/profile-${Date.now()}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('profiles')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        // Update user profile with avatar URL
+        const { data: urlData } = supabase.storage
+          .from('profiles')
+          .getPublicUrl(filePath);
+
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ avatar_url: urlData.publicUrl })
+          .eq('id', userId);
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        toast.success("Foto atualizada", {
+          description: "Sua foto de perfil foi atualizada com sucesso."
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast.error("Erro ao atualizar foto", {
+        description: "Não foi possível atualizar sua foto. Tente novamente."
+      });
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Generate initials from name
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
   return (
     <Card>
       <CardContent className="pt-6 text-center">
-        <div className="mb-6">
+        <div className="mb-6 relative inline-block">
           <Avatar className="w-24 h-24 mx-auto">
-            <AvatarImage src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=200" />
-            <AvatarFallback>{name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+            {avatarUrl ? (
+              <AvatarImage src={avatarUrl} />
+            ) : (
+              <AvatarFallback>{getInitials(name)}</AvatarFallback>
+            )}
           </Avatar>
+          {uploading && (
+            <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 border-4 border-t-primary border-r-transparent border-b-primary border-l-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
         </div>
         <h3 className="text-2xl font-bold">{name}</h3>
         <p className="text-muted-foreground">{specialty}</p>
@@ -44,9 +152,21 @@ export const ProfileSidebar = ({ name, specialty, crm }: ProfileSidebarProps) =>
         </div>
         
         <div className="mt-6">
-          <Button variant="outline" className="w-full">
-            Editar Foto
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={handleEditPhotoClick}
+            disabled={uploading}
+          >
+            {uploading ? "Enviando..." : "Editar Foto"}
           </Button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".jpg,.jpeg,.png"
+            className="hidden"
+          />
         </div>
       </CardContent>
     </Card>
