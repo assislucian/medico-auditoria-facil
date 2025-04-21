@@ -169,6 +169,17 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
       : <ArrowUpDown className="h-3 w-3 ml-1 text-primary rotate-180" />;
   };
 
+  // Check if any filter is active
+  const filterActive = filter !== '' || statusFilter !== 'all' || roleFilter !== 'all';
+
+  // Reset all filters
+  const resetFilters = () => {
+    setFilter('');
+    setStatusFilter('all');
+    setRoleFilter('all');
+    setSortField(null);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
@@ -268,17 +279,6 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
       </Tabs>
     </div>
   );
-};
-
-// Helper to determine if any filter is active
-const filterActive = filter !== '' || statusFilter !== 'all' || roleFilter !== 'all';
-
-// Helper to reset all filters
-const resetFilters = () => {
-  setFilter('');
-  setStatusFilter('all');
-  setRoleFilter('all');
-  setSortField(null);
 };
 
 interface ComparisonTableProps {
