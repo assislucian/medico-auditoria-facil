@@ -1,58 +1,189 @@
 
-import { ExtractedData } from '@/types/upload';
 import { supabase } from '@/integrations/supabase/client';
-
-// Store the extracted data in memory for components to access
-let currentExtractedData: ExtractedData | null = null;
-let currentAnalysisId: string | null = null;
+import { ExtractedData } from '@/types/upload';
+import { toast } from 'sonner';
 
 /**
- * Sets the current analysis data and ID
- * 
- * @param data Extracted data from analysis
- * @param id Analysis ID
+ * Generate simulated data for demonstration purposes when backend is not available
+ * @returns Mocked extracted data
  */
-export function setCurrentAnalysis(data: ExtractedData, id: string | null) {
-  currentExtractedData = data;
-  currentAnalysisId = id;
-}
-
-/**
- * Gets the extracted data from the last analysis
- * 
- * @returns Promise resolving to extracted data
- */
-export async function getExtractedData(): Promise<ExtractedData | null> {
-  // If we have data in memory, return it
-  if (currentExtractedData) {
-    return currentExtractedData;
-  }
-  
-  // If we have an analysis ID, try to fetch it from Supabase
-  if (currentAnalysisId && !currentAnalysisId.startsWith('local-')) {
-    try {
-      const { data, error } = await supabase.functions.invoke('get-analysis', {
-        body: { analysisId: currentAnalysisId }
-      });
-      
-      if (!error && data) {
-        currentExtractedData = data;
-        return data;
+const generateMockData = (): ExtractedData => {
+  return {
+    demonstrativoInfo: {
+      numero: 'DM' + Math.floor(Math.random() * 100000),
+      competencia: 'Outubro/2024',
+      hospital: 'Hospital São Lucas',
+      data: '15/10/2024',
+      beneficiario: 'Paciente Exemplo'
+    },
+    procedimentos: [
+      {
+        id: '1',
+        codigo: '30602246',
+        procedimento: 'Reconstrução Mamária Com Retalhos Cutâneos Regionais',
+        papel: 'Cirurgião',
+        valorCBHPM: 3200.50,
+        valorPago: 2800.00,
+        diferenca: -400.50,
+        pago: true,
+        guia: '10467538',
+        beneficiario: 'THAYSE BORGES',
+        doctors: [
+          {
+            code: '8425',
+            name: 'FERNANDA MABEL BATISTA DE AQUINO',
+            role: 'Cirurgião',
+            startTime: '19/08/2024 14:09',
+            endTime: '19/08/2024 15:24',
+            status: 'Fechada'
+          },
+          {
+            code: '6091',
+            name: 'MOISES DE OLIVEIRA SCHOTS',
+            role: 'Primeiro Auxiliar',
+            startTime: '19/08/2024 14:15',
+            endTime: '19/08/2024 15:17',
+            status: 'Fechada'
+          }
+        ]
+      },
+      {
+        id: '2',
+        codigo: '30602076',
+        procedimento: 'Exérese De Lesão Da Mama Por Marcação Estereotáxica Ou Roll',
+        papel: 'Cirurgião',
+        valorCBHPM: 1800.75,
+        valorPago: 0,
+        diferenca: -1800.75,
+        pago: false,
+        guia: '10467538',
+        beneficiario: 'THAYSE BORGES',
+        doctors: [
+          {
+            code: '8425',
+            name: 'FERNANDA MABEL BATISTA DE AQUINO',
+            role: 'Cirurgião',
+            startTime: '19/08/2024 14:09',
+            endTime: '19/08/2024 15:24',
+            status: 'Fechada'
+          }
+        ]
+      },
+      {
+        id: '3',
+        codigo: '31602096',
+        procedimento: 'Consulta em Cirurgia Plástica',
+        papel: 'Cirurgião',
+        valorCBHPM: 200.00,
+        valorPago: 200.00,
+        diferenca: 0,
+        pago: true,
+        guia: '10467539',
+        beneficiario: 'THAYSE BORGES',
+        doctors: [
+          {
+            code: '8425',
+            name: 'FERNANDA MABEL BATISTA DE AQUINO',
+            role: 'Cirurgião',
+            startTime: '19/08/2024 13:00',
+            endTime: '19/08/2024 13:15',
+            status: 'Fechada'
+          }
+        ]
       }
-    } catch (error) {
-      console.error('Error fetching analysis data:', error);
+    ],
+    totais: {
+      valorCBHPM: 5201.25,
+      valorPago: 3000.00,
+      diferenca: -2201.25,
+      procedimentosNaoPagos: 1
     }
-  }
-  
-  // No data available
-  return null;
-}
+  };
+};
 
 /**
- * Gets the current analysis ID
- * 
- * @returns Current analysis ID or null
+ * Get the extracted data from the server
+ * @param analysisId Optional analysis ID to fetch specific data
+ * @returns The extracted data
  */
-export function getCurrentAnalysisId(): string | null {
-  return currentAnalysisId;
-}
+export const getExtractedData = async (analysisId?: string | null): Promise<ExtractedData> => {
+  console.log('Getting extracted data with analysisId:', analysisId);
+  
+  try {
+    // If there's a valid analysisId, try to fetch it from the server
+    if (analysisId) {
+      console.log('Attempting to fetch analysis from database...');
+      
+      // Try to fetch the analysis from the backend
+      const { data: analysisData, error: analysisError } = await supabase
+        .from('analysis_results')
+        .select('*')
+        .eq('id', analysisId)
+        .single();
+      
+      if (analysisError) {
+        console.error('Error fetching analysis:', analysisError);
+        throw new Error('Failed to fetch analysis data');
+      }
+      
+      console.log('Fetched analysis:', analysisData);
+      
+      // Get the procedure results
+      const { data: proceduresData, error: proceduresError } = await supabase
+        .from('procedures')
+        .select('*')
+        .eq('analysis_id', analysisId);
+      
+      if (proceduresError) {
+        console.error('Error fetching procedures:', proceduresError);
+        throw new Error('Failed to fetch procedure data');
+      }
+      
+      console.log(`Fetched ${proceduresData.length} procedures`);
+      
+      if (analysisData && proceduresData) {
+        // Transform database data to ExtractedData format
+        const extractedData: ExtractedData = {
+          demonstrativoInfo: {
+            numero: analysisData.numero || '',
+            competencia: analysisData.competencia || '',
+            hospital: analysisData.hospital || '',
+            data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
+            beneficiario: proceduresData[0]?.beneficiario || ''
+          },
+          procedimentos: proceduresData.map(proc => ({
+            id: proc.id,
+            codigo: proc.codigo,
+            procedimento: proc.procedimento,
+            papel: proc.papel || '',
+            valorCBHPM: proc.valor_cbhpm,
+            valorPago: proc.valor_pago,
+            diferenca: proc.diferenca,
+            pago: proc.pago,
+            guia: proc.guia || '',
+            beneficiario: proc.beneficiario || '',
+            doctors: proc.doctors || []
+          })),
+          totais: {
+            valorCBHPM: analysisData.summary?.totalCBHPM || 0,
+            valorPago: analysisData.summary?.totalPago || 0,
+            diferenca: analysisData.summary?.totalDiferenca || 0,
+            procedimentosNaoPagos: analysisData.summary?.procedimentosNaoPagos || 0
+          }
+        };
+        
+        console.log('Successfully transformed data:', extractedData);
+        return extractedData;
+      }
+    }
+    
+    console.log('Generating mock data as fallback');
+    return generateMockData();
+  } catch (error) {
+    console.error('Error in getExtractedData:', error);
+    toast.error('Erro ao carregar dados da análise', {
+      description: 'Usando dados de demonstração.',
+    });
+    return generateMockData();
+  }
+};

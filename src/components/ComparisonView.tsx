@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProceduresTable } from './comparison/ProceduresTable';
@@ -9,20 +10,24 @@ import { ExtractedData } from '@/types/upload';
 import { Procedure } from '@/types/medical';
 import { Skeleton } from '@/components/ui/skeleton';
 
+interface ComparisonViewProps {
+  analysisId?: string | null;
+}
+
 /**
  * ComparisonView Component
  * 
  * Exibe os resultados da comparação entre as guias e demonstrativos,
  * mostrando valores CBHPM x valores pagos e destacando diferenças.
  */
-const ComparisonView = () => {
+const ComparisonView = ({ analysisId }: ComparisonViewProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<ExtractedData | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const extractedData = await getExtractedData();
+        const extractedData = await getExtractedData(analysisId);
         setData(extractedData);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -32,7 +37,7 @@ const ComparisonView = () => {
     };
     
     loadData();
-  }, []);
+  }, [analysisId]);
 
   if (isLoading) {
     return (

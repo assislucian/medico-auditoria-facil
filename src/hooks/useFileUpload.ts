@@ -17,6 +17,7 @@ export function useFileUpload() {
   /**
    * Process the uploaded files
    * @param crmRegistrado CRM to filter by (optional)
+   * @returns Object with success status and analysisId
    */
   const processUploadedFiles = async (crmRegistrado: string = '') => {
     processingStatus.setUploading(true);
@@ -38,9 +39,9 @@ export function useFileUpload() {
     );
 
     processingStatus.setUploading(false);
-    processingStatus.setUploadSuccess(result);
+    processingStatus.setUploadSuccess(result.success);
 
-    if (result) {
+    if (result.success) {
       processingStatus.setShowComparison(true);
     }
 

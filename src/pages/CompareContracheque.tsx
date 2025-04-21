@@ -18,6 +18,9 @@ const CompareContracheque = () => {
   const analysisId = searchParams.get('analysisId');
   const navigate = useNavigate();
   
+  // Log the analysisId for debugging
+  console.log('Current analysisId from URL params:', analysisId);
+  
   const { data, isLoading, isError } = useComparisonData(analysisId);
   const [guiaDetails, setGuiaDetails] = useState(null);
   const [isLoadingGuias, setIsLoadingGuias] = useState(false);
@@ -25,20 +28,29 @@ const CompareContracheque = () => {
   // Buscar dados das guias relacionadas
   useEffect(() => {
     const fetchGuiaDetails = async () => {
-      if (!analysisId) return;
+      if (!analysisId) {
+        console.log('No analysisId available, skipping fetch');
+        return;
+      }
+      
       setIsLoadingGuias(true);
+      console.log('Fetching guia details for analysisId:', analysisId);
+      
       try {
-        const { data, error } = await supabase
+        const { data: proceduresData, error } = await supabase
           .from('procedures')
           .select('*')
           .eq('analysis_id', analysisId);
         
         if (error) {
+          console.error('Error fetching procedures:', error);
           throw error;
         }
         
+        console.log('Fetched procedures data:', proceduresData);
+        
         // Filtrar apenas procedimentos da guia
-        const guiaProcedures = data.filter(proc => proc.guia && proc.codigo);
+        const guiaProcedures = proceduresData?.filter(proc => proc.guia && proc.codigo) || [];
         setGuiaDetails(guiaProcedures);
         
         // Mostrar informação sobre guias encontradas
@@ -49,6 +61,7 @@ const CompareContracheque = () => {
         }
       } catch (error) {
         console.error('Erro ao buscar guias:', error);
+        toast.error('Erro ao buscar detalhes das guias');
       } finally {
         setIsLoadingGuias(false);
       }
@@ -64,6 +77,18 @@ const CompareContracheque = () => {
   const navigateToUpload = () => {
     navigate('/uploads');
   };
+
+  // For debugging - log the current state
+  useEffect(() => {
+    console.log('Current comparison data state:', { 
+      analysisId, 
+      isLoading, 
+      isError, 
+      hasData: !!data,
+      isLoadingGuias,
+      hasGuiaDetails: !!guiaDetails
+    });
+  }, [analysisId, data, isLoading, isError, guiaDetails, isLoadingGuias]);
 
   return (
     <>
@@ -113,6 +138,10 @@ const CompareContracheque = () => {
                 <h2 className="text-2xl font-bold mb-2">Análise não encontrada</h2>
                 <p className="text-muted-foreground mb-6">
                   Não foi possível carregar a análise solicitada ou você não tem acesso a ela.
+                  <br />
+                  <span className="text-sm">
+                    (ID da análise: {analysisId || 'não informado'})
+                  </span>
                 </p>
                 <Button onClick={navigateToUpload}>Fazer novo Upload</Button>
               </CardContent>
