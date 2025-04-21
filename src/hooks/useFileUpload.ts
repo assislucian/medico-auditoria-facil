@@ -11,12 +11,10 @@ import { FileWithStatus } from '@/types/upload';
  */
 export function useFileUpload() {
   const { user } = useAuth();
-  
-  // Use smaller, focused hooks
   const fileList = useFileList();
   const processingStatus = useProcessingStatus();
   const fileUploadService = useFileUploadService();
-  
+
   /**
    * Process the uploaded files
    * @param crmRegistrado CRM to filter by (optional)
@@ -24,52 +22,42 @@ export function useFileUpload() {
   const processUploadedFiles = async (crmRegistrado: string = '') => {
     processingStatus.setUploading(true);
     processingStatus.setShowComparison(false);
-    
-    // Save CRM if provided
-    if (crmRegistrado) {
-      processingStatus.setCrmRegistrado(crmRegistrado);
-    }
-    
+
+    if (crmRegistrado) processingStatus.setCrmRegistrado(crmRegistrado);
+
+    // IDs/tipos dos arquivos válidos
+    const fileTypes = fileList.getTypesPresent();
+
     // Process the files
     const result = await fileUploadService.processUploadedFiles(
       fileList.files,
       processingStatus.setProgress,
       processingStatus.setProcessingStage,
       processingStatus.setProcessingMsg,
-      crmRegistrado || processingStatus.crmRegistrado
+      crmRegistrado || processingStatus.crmRegistrado,
+      fileTypes,
     );
-    
+
     processingStatus.setUploading(false);
     processingStatus.setUploadSuccess(result);
-    
+
     if (result) {
       processingStatus.setShowComparison(true);
     }
-    
+
     return result;
   };
-  
-  /**
-   * Reset files and status
-   */
+
   const resetFiles = () => {
     fileList.clearFiles();
     processingStatus.resetStatus();
   };
-  
-  // Combine all the exports from other hooks plus this hook's functions
+
   return {
-    // From fileList
     ...fileList,
-    
-    // From processingStatus
     ...processingStatus,
-    
-    // From fileUploadService
     determineProcessingMode: () => fileUploadService.determineProcessingMode(fileList.files),
-    
-    // This hook's functions
     processUploadedFiles,
-    resetFiles
+    resetFiles,
   };
 }

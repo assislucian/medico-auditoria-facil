@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { FileUp, AlertCircle, FileText, Info } from 'lucide-react';
 import {
@@ -11,7 +10,7 @@ import { FileType } from '@/types/upload';
 
 type FileDropZoneProps = {
   type: FileType;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>, type: FileType) => Promise<void>;
+  onDropFiles: (type: FileType, files: FileList) => Promise<void>;
   disabled: boolean;
   hasFiles?: boolean;
 };
@@ -27,25 +26,25 @@ type FileDropZoneProps = {
  * @param disabled - Se o componente está desativado (ex: durante uploads)
  * @param hasFiles - Se arquivos deste tipo já foram adicionados
  */
-const FileDropZone = ({ type, onFileChange, disabled, hasFiles = false }: FileDropZoneProps) => {
+const FileDropZone = ({ type, onDropFiles, disabled, hasFiles = false }: FileDropZoneProps) => {
   const isGuia = type === 'guia';
   const inputId = `${type}PdfInput`;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFileChange(e, type);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    onDropFiles(type, e.target.files);
   };
 
   return (
-    <div 
-      className={`flex flex-col items-center p-4 border border-dashed rounded-lg 
+    <div
+      className={
+        `flex flex-col items-center p-4 border border-dashed rounded-lg 
       ${disabled ? 'bg-muted/30 border-muted cursor-not-allowed' : 'hover:border-primary/50 transition-colors border-border cursor-pointer'} 
       ${isGuia ? 'hover:bg-medblue-600/5' : 'hover:bg-green-600/5'}
-      ${hasFiles ? (isGuia ? 'bg-medblue-600/10' : 'bg-green-600/10') : ''}
-      `}
+      ${hasFiles ? (isGuia ? 'bg-medblue-600/10' : 'bg-green-600/10') : ''}`
+      }
       onClick={() => {
-        if (!disabled) {
-          document.getElementById(inputId)?.click();
-        }
+        if (!disabled) document.getElementById(inputId)?.click();
       }}
     >
       <input
@@ -54,7 +53,7 @@ const FileDropZone = ({ type, onFileChange, disabled, hasFiles = false }: FileDr
         className="hidden"
         accept=".pdf"
         multiple
-        onChange={handleFileChange}
+        onChange={handleInputChange}
         disabled={disabled}
         aria-label={isGuia ? "Selecionar guias médicas em PDF" : "Selecionar demonstrativos em PDF"}
       />

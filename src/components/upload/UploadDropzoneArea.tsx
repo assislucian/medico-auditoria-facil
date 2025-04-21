@@ -4,27 +4,27 @@ import FileDropZone from './FileDropZone';
 import { FileType } from '@/types/upload';
 
 interface UploadDropzoneAreaProps {
-  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>, type: FileType) => Promise<void>;
+  handleFileChangeByType: (type: FileType, files: FileList) => Promise<void>;
   isUploading: boolean;
   hasFile: (type: FileType) => boolean;
 }
 
-const UploadDropzoneArea = ({ 
-  handleFileChange, 
-  isUploading, 
-  hasFile 
+const UploadDropzoneArea = ({
+  handleFileChangeByType,
+  isUploading,
+  hasFile,
 }: UploadDropzoneAreaProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FileDropZone
         type="guia"
-        onFileChange={handleFileChange}
+        onDropFiles={handleFileChangeByType}
         disabled={isUploading}
         hasFiles={hasFile('guia')}
       />
       <FileDropZone
         type="demonstrativo"
-        onFileChange={handleFileChange}
+        onDropFiles={handleFileChangeByType}
         disabled={isUploading}
         hasFiles={hasFile('demonstrativo')}
       />
@@ -33,3 +33,4 @@ const UploadDropzoneArea = ({
 };
 
 export default UploadDropzoneArea;
+

@@ -4,118 +4,72 @@ import { FileWithStatus, FileType } from '@/types/upload';
 import { toast } from 'sonner';
 import { validateFiles } from '@/utils/fileValidation';
 
-/**
- * Custom hook for managing file list operations
- */
 export function useFileList() {
   const [files, setFiles] = useState<FileWithStatus[]>([]);
 
-  /**
-   * Check if we have files of a specific type
-   */
-  const hasFile = (type: FileType): boolean => {
-    return files.some(file => file.type === type && file.status !== 'invalid');
-  };
-  
-  /**
-   * Check if we have both guia and demonstrativo files
-   */
-  const hasGuiaDemonstrativoPair = (): boolean => {
-    return hasFile('guia') && hasFile('demonstrativo');
-  };
-  
-  /**
-   * Check if we have any valid files for processing
-   */
-  const hasValidFilesForProcessing = (): boolean => {
-    return files.some(file => file.status !== 'invalid');
-  };
-  
-  /**
-   * Check if we have any invalid files
-   */
-  const hasInvalidFiles = (): boolean => {
-    return files.some(file => file.status === 'invalid');
+  // Mantém os arquivos separados por tipo
+  const filesByType = (type: FileType): FileWithStatus[] =>
+    files.filter((file) => file.type === type && file.status !== 'invalid');
+
+  const hasFile = (type: FileType): boolean => filesByType(type).length > 0;
+
+  const hasGuiaDemonstrativoPair = (): boolean => hasFile('guia') && hasFile('demonstrativo');
+
+  const hasValidFilesForProcessing = (): boolean =>
+    files.some((file) => file.status !== 'invalid');
+
+  const hasInvalidFiles = (): boolean => files.some((file) => file.status === 'invalid');
+
+  // Novo: função para pegar IDs dos arquivos válidos de cada tipo
+  const getFileIdsAndTypes = () => {
+    const result = files
+      .filter((f) => f.status === 'valid')
+      .map((f) => ({ id: f.id, type: f.type }));
+    return result;
   };
 
-  /**
-   * Handle file selection from input
-   * @param event File input change event
-   */
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length === 0) {
-      return;
-    }
-    
-    const newFiles = Array.from(event.target.files).map(file => ({
+  // Pega os tipos presentes
+  const getTypesPresent = (): FileType[] => {
+    const types: Set<FileType> = new Set(
+      files.filter(f => f.status === 'valid').map(f => f.type)
+    );
+    return Array.from(types);
+  };
+
+  // Função para adicionar arquivos de um tipo só
+  const handleFileChangeByType = async (type: FileType, fileList: FileList) => {
+    if (!fileList || fileList.length === 0) return;
+    const list = Array.from(fileList).map((file) => ({
       name: file.name,
       file,
-      type: detectFileType(file.name),
+      type,
       status: 'processing' as const,
     }));
-    
-    // Validate the files
-    const validatedFiles = await validateFiles(newFiles);
-    
-    setFiles(prev => [...prev, ...validatedFiles]);
+    const validatedFiles = await validateFiles(list);
+    setFiles((prev) => [...prev, ...validatedFiles]);
   };
 
-  /**
-   * Handle file type-specific selection from input
-   * @param event File input change event
-   * @param type File type
-   */
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, type: FileType) => {
-    return handleFileSelect(event);
-  };
-  
   /**
    * Remove a file from the list
-   * @param index Index of the file to remove
    */
   const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  };
-  
-  /**
-   * Clear all files from the list
-   */
-  const clearFiles = () => {
-    setFiles([]);
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  /**
-   * Determine the type of file based on its name
-   * @param fileName Name of the file
-   * @returns Type of the file
-   */
-  const detectFileType = (fileName: string): FileType => {
-    const lowercaseName = fileName.toLowerCase();
-    
-    // Check for demonstrativo file
-    if (
-      lowercaseName.includes('demonstrativo') || 
-      lowercaseName.includes('pagamento') || 
-      lowercaseName.includes('recebiveis')
-    ) {
-      return 'demonstrativo';
-    }
-    
-    // Default to guia
-    return 'guia';
-  };
+  const clearFiles = () => setFiles([]);
 
   return {
     files,
-    selectedFiles: files, // Alias for selectedFiles to match UploadSection
+    filesByType,
     hasFile,
     hasGuiaDemonstrativoPair,
     hasValidFilesForProcessing,
     hasInvalidFiles,
-    handleFileSelect,
-    handleFileChange,
+    handleFileChangeByType,
     removeFile,
     clearFiles,
-    resetFiles: clearFiles, // Alias for clearFiles to match UploadSection
+    resetFiles: clearFiles,
+    getFileIdsAndTypes,
+    getTypesPresent,
   };
 }

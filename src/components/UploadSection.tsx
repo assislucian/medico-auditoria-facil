@@ -10,63 +10,50 @@ import UploadInstructions from './upload/UploadInstructions';
 import UploadDropzoneArea from './upload/UploadDropzoneArea';
 import UploadActionButtons from './upload/UploadActionButtons';
 import UploadContextAlerts from './upload/UploadContextAlerts';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
-/**
- * UploadSection Component
- * 
- * Componente principal para gestão de uploads, processamento e exibição de resultados.
- * Gerencia todo o fluxo desde a seleção de arquivos até a exibição dos resultados de comparação.
- */
 const UploadSection = () => {
   const {
     isUploading,
     progress,
     files,
-    showComparison,
-    processingStage,
-    processingMsg,
     hasFile,
     hasGuiaDemonstrativoPair,
     hasValidFilesForProcessing,
     hasInvalidFiles,
-    handleFileChange,
     removeFile,
     resetFiles,
     processUploadedFiles,
-    setShowComparison
+    showComparison,
+    processingStage,
+    processingMsg,
   } = useFileUpload();
 
-  /**
-   * Função principal de processamento para analisar os arquivos enviados
-   * Processa os dados dos PDFs e salva no Supabase
-   */
-  const processFilesHandler = async () => {
-    if (files.length === 0) {
-      toast.error('Selecione pelo menos um arquivo para upload');
+  const [error, setError] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Handler para os dropzones
+  const handleFileChangeByType = async (type, fileList) => {
+    setError(null);
+    await useFileUpload().handleFileChangeByType(type, fileList);
+  };
+
+  const handleProcess = async () => {
+    setError(null);
+
+    if (!hasFile('guia') && !hasFile('demonstrativo')) {
+      setError('Selecione pelo menos um tipo de arquivo antes de processar.');
+      toast.error('Selecione pelo menos um tipo de documento');
       return;
     }
-
-    if (!hasValidFilesForProcessing()) {
-      toast.error('Não há arquivos válidos para processar');
-      return;
-    }
-
-    // Verificar se há arquivos inválidos
-    const invalidFiles = files.filter(f => f.status === 'invalid');
-    if (invalidFiles.length > 0) {
-      toast.warning('Existem arquivos inválidos que serão ignorados na análise');
-    }
-
-    setShowComparison(false);
-    
-    const success = await processUploadedFiles();
-    
-    if (!success) {
-      toast.error('Ocorreu um erro durante o processamento');
+    const ok = await processUploadedFiles();
+    setShowSuccess(ok);
+    if (!ok) {
+      setError('Erro ao processar os arquivos.');
     }
   };
 
-  // Determinar se deve mostrar alertas explicando o processo
   const showGuideAlert = !hasFile('guia') && hasFile('demonstrativo');
   const showDemonstrativoAlert = hasFile('guia') && !hasFile('demonstrativo');
 
@@ -80,32 +67,32 @@ const UploadSection = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {error && (
+            <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+              {error}
+            </div>
+          )}
           <UploadInstructions />
-          
-          <UploadDropzoneArea 
-            handleFileChange={handleFileChange}
+          <UploadDropzoneArea
+            handleFileChangeByType={handleFileChangeByType}
             isUploading={isUploading}
             hasFile={hasFile}
           />
-          
-          <UploadContextAlerts 
+
+          <UploadContextAlerts
             showGuideAlert={showGuideAlert}
             showDemonstrativoAlert={showDemonstrativoAlert}
           />
-          
-          <FileList
-            files={files}
-            onRemove={removeFile}
-            disabled={isUploading}
-          />
-          
+
+          <FileList files={files} onRemove={removeFile} disabled={isUploading} />
+
           <ProcessingSection
             uploading={isUploading}
             progress={progress}
             processingStage={processingStage}
             processingMsg={processingMsg}
           />
-          
+
           <UploadAlerts
             hasGuiaDemonstrativoPair={hasGuiaDemonstrativoPair()}
             hasInvalidFiles={hasInvalidFiles()}
@@ -114,17 +101,22 @@ const UploadSection = () => {
           />
         </CardContent>
         <CardFooter>
-          <UploadActionButtons 
+          <UploadActionButtons
             isUploading={isUploading}
             filesLength={files.length}
             hasGuiaDemonstrativoPair={hasGuiaDemonstrativoPair()}
             hasValidFilesForProcessing={hasValidFilesForProcessing()}
-            onProcess={processFilesHandler}
+            onProcess={handleProcess}
             onReset={resetFiles}
           />
         </CardFooter>
       </Card>
-
+      {showSuccess && (
+        <div className="mt-4 rounded border border-green-300 bg-green-50 text-green-800 px-4 py-3 text-sm flex flex-col gap-2">
+          <span>Processamento concluído com sucesso.</span>
+          <Link to="/compare" className="underline font-medium text-green-800">Ver Comparativo</Link>
+        </div>
+      )}
       {showComparison && <ComparisonView />}
     </div>
   );
