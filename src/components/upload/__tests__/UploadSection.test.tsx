@@ -1,8 +1,10 @@
 
+/// <reference types="@testing-library/jest-dom" />
+
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import UploadSection from "../../UploadSection"; // Fixed import path
-import "@testing-library/jest-dom/extend-expect"; // Explicitly import for extended matchers
+import UploadSection from "../../UploadSection";
+import "@testing-library/jest-dom";
 
 describe("UploadSection Modes", () => {
   it("guia-only: envia guia e chama função correta", async () => {
