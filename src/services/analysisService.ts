@@ -199,14 +199,26 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
               if (isDoctorParticipationArray(proc.doctors)) {
                 doctors = proc.doctors;
               } else if (Array.isArray(proc.doctors)) {
-                // Try to convert each item to the expected format
-                doctors = proc.doctors.filter((d): d is DoctorParticipation => 
-                  typeof d === 'object' && 
-                  d !== null &&
-                  'code' in d && 
-                  'name' in d && 
-                  'role' in d
-                ) as DoctorParticipation[];
+                // Convert each item to the expected format with explicit type casting
+                doctors = (proc.doctors as any[])
+                  .filter(d => 
+                    typeof d === 'object' && 
+                    d !== null &&
+                    'code' in d && 
+                    'name' in d && 
+                    'role' in d &&
+                    'startTime' in d &&
+                    'endTime' in d &&
+                    'status' in d
+                  )
+                  .map(d => ({
+                    code: String(d.code || ''),
+                    name: String(d.name || ''),
+                    role: String(d.role || ''),
+                    startTime: String(d.startTime || ''),
+                    endTime: String(d.endTime || ''),
+                    status: String(d.status || '')
+                  }));
               }
             }
               
