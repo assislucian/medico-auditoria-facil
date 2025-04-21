@@ -35,9 +35,12 @@ const Profile = () => {
         const data = await fetchProfile();
         if (data) {
           // Get avatar URL from notification_preferences if available
-          const avatarUrl = data.notification_preferences && data.notification_preferences.avatar_url 
-            ? data.notification_preferences.avatar_url 
-            : undefined;
+          let avatarUrl;
+          if (data.notification_preferences && 
+              typeof data.notification_preferences === 'object' && 
+              'avatar_url' in data.notification_preferences) {
+            avatarUrl = data.notification_preferences.avatar_url;
+          }
             
           setProfileData({
             name: data.name || "Usuário",

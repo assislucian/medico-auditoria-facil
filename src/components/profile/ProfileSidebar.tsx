@@ -97,12 +97,24 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
           .getPublicUrl(filePath);
           
         // Update user profile with avatar URL using metadata field
-        // Since avatar_url isn't in our type, we'll use metadata or an alternative approach
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('notification_preferences')
+          .eq('id', userId)
+          .single();
+          
+        // Ensure we have an object to work with
+        const currentPreferences = typeof currentProfile?.notification_preferences === 'object' 
+          ? currentProfile?.notification_preferences || {}
+          : {};
+          
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
-            // Store avatar URL in metadata since it's not in our type definition
-            notification_preferences: { avatar_url: urlData.publicUrl }
+            notification_preferences: {
+              ...currentPreferences,
+              avatar_url: urlData.publicUrl
+            }
           })
           .eq('id', userId);
 

@@ -58,8 +58,10 @@ export const useProfile = () => {
       }
       
       // Extract avatar URL from notification_preferences if it exists
-      if (data && data.notification_preferences && data.notification_preferences.avatar_url) {
-        setAvatarUrl(data.notification_preferences.avatar_url);
+      if (data && data.notification_preferences && 
+          typeof data.notification_preferences === 'object' && 
+          'avatar_url' in data.notification_preferences) {
+        setAvatarUrl(data.notification_preferences.avatar_url as string);
       }
       
       return data;
@@ -145,9 +147,14 @@ export const useProfile = () => {
         throw fetchError;
       }
       
+      // Ensure notification_preferences is an object before spreading
+      const currentNotificationPrefs = typeof currentProfile?.notification_preferences === 'object' 
+        ? currentProfile?.notification_preferences || {} 
+        : {};
+      
       // Merge current notification preferences with avatar URL if available
       const updatedNotificationPrefs = {
-        ...(currentProfile?.notification_preferences || {}),
+        ...currentNotificationPrefs,
         ...(avatarUrl ? { avatar_url: avatarUrl } : {})
       };
       
@@ -238,9 +245,14 @@ export const useProfile = () => {
         throw fetchError;
       }
       
+      // Ensure notification_preferences is an object before spreading
+      const currentNotificationPrefs = typeof currentProfile?.notification_preferences === 'object' 
+        ? currentProfile?.notification_preferences || {} 
+        : {};
+      
       // Convert preferences to a JSON object for storage while preserving avatar URL
       const prefJson = {
-        ...(currentProfile?.notification_preferences || {}),
+        ...currentNotificationPrefs,
         email: {
           newReports: preferences.email.newReports,
           systemUpdates: preferences.email.systemUpdates,
