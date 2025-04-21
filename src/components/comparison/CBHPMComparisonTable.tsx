@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { 
   Table, 
@@ -8,13 +9,10 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, XCircle, AlertCircle, Search, Filter, ArrowUpDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowUpDown } from 'lucide-react';
 import CBHPMComparisonTableFilters from "./CBHPMComparisonTableFilters";
 import CBHPMComparisonTabs from "./CBHPMComparisonTabs";
+import { toast } from 'sonner';
 
 interface ComparisonDetail {
   id: string;
@@ -26,6 +24,8 @@ interface ComparisonDetail {
   diferenca: number;
   status: 'conforme' | 'abaixo' | 'acima' | 'não_pago';
   papel: string;
+  guia?: string;
+  beneficiario?: string;
 }
 
 interface Summary {
@@ -33,19 +33,22 @@ interface Summary {
   conforme: number;
   abaixo: number;
   acima: number;
+  naoEncontrados?: number;
 }
 
 interface CBHPMComparisonTableProps {
   summary: Summary;
   details: ComparisonDetail[];
+  guiaDetails?: any[];
 }
 
-const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, details }) => {
+const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, details, guiaDetails = [] }) => {
   const [filter, setFilter] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('all');
   const [roleFilter, setRoleFilter] = React.useState('all');
   const [sortField, setSortField] = React.useState<string | null>(null);
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
+  const [showMatchStatus, setShowMatchStatus] = React.useState(false);
 
   // Group details by role
   const groupedByRole: Record<string, ComparisonDetail[]> = details.reduce((acc, detail) => {
@@ -60,16 +63,47 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
   // Get unique roles
   const roles = Object.keys(groupedByRole);
 
+  // Verificar correspondência entre demonstrativo e guia
+  const verifiedDetails = useMemo(() => {
+    if (!guiaDetails || guiaDetails.length === 0 || !showMatchStatus) {
+      return details; // Se não temos guias para comparar, retorne os detalhes originais
+    }
+
+    return details.map(detail => {
+      // Procurar por esse procedimento nas guias
+      const matchingGuiaProcedure = guiaDetails.find(
+        guiaProcedure => guiaProcedure.codigo === detail.codigo
+      );
+
+      if (!matchingGuiaProcedure) {
+        // Se não encontrou correspondência na guia, marque com status especial
+        return {
+          ...detail,
+          matchStatus: 'não_encontrado',
+          guia: detail.guia || 'Não encontrado'
+        };
+      }
+
+      // Procedimento encontrado, verificar se o valor cobrado corresponde ao valor da guia
+      return {
+        ...detail,
+        matchStatus: 'encontrado',
+        guia: matchingGuiaProcedure.guia || detail.guia
+      };
+    });
+  }, [details, guiaDetails, showMatchStatus]);
+
   // Sort and filter logic
   const filteredDetails = React.useMemo(() => {
-    let result = [...details];
+    let result = showMatchStatus ? [...verifiedDetails] : [...details];
 
     // Apply text search filter
     if (filter) {
       const lowerFilter = filter.toLowerCase();
       result = result.filter(detail =>
         detail.descricao.toLowerCase().includes(lowerFilter) ||
-        detail.codigo.includes(filter)
+        detail.codigo.includes(filter) || 
+        (detail.guia && detail.guia.toLowerCase().includes(lowerFilter))
       );
     }
 
@@ -106,17 +140,25 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
     }
 
     return result;
-  }, [details, filter, statusFilter, roleFilter, sortField, sortDirection]);
+  }, [details, verifiedDetails, filter, statusFilter, roleFilter, sortField, sortDirection, showMatchStatus]);
 
   // Calculate filtered summary
   const filteredSummary = React.useMemo(() => {
-    return filteredDetails.reduce((acc, detail) => {
+    const summary = filteredDetails.reduce((acc, detail) => {
       acc.total++;
       if (detail.status === 'conforme') acc.conforme++;
       else if (detail.status === 'abaixo') acc.abaixo++;
       else if (detail.status === 'acima') acc.acima++;
+      
+      // Contar procedimentos não encontrados na guia
+      if (detail.matchStatus === 'não_encontrado') {
+        acc.naoEncontrados = (acc.naoEncontrados || 0) + 1;
+      }
+      
       return acc;
-    }, { total: 0, conforme: 0, abaixo: 0, acima: 0 });
+    }, { total: 0, conforme: 0, abaixo: 0, acima: 0, naoEncontrados: 0 });
+    
+    return summary;
   }, [filteredDetails]);
 
   // Handler for sort toggling
@@ -132,21 +174,13 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'conforme':
-        return <Badge variant="outline" className="bg-green-500/10 text-green-500 flex gap-1 items-center">
-          <CheckCircle className="h-3 w-3" />Conforme
-        </Badge>;
+        return <Badge variant="outline" className="bg-green-500/10 text-green-500">Conforme</Badge>;
       case 'abaixo':
-        return <Badge variant="outline" className="bg-red-500/10 text-red-500 flex gap-1 items-center">
-          <XCircle className="h-3 w-3" />Abaixo
-        </Badge>;
+        return <Badge variant="outline" className="bg-red-500/10 text-red-500">Abaixo</Badge>;
       case 'acima':
-        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 flex gap-1 items-center">
-          <AlertCircle className="h-3 w-3" />Acima
-        </Badge>;
+        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500">Acima</Badge>;
       default:
-        return <Badge variant="outline" className="bg-gray-500/10 text-gray-500 flex gap-1 items-center">
-          <XCircle className="h-3 w-3" />Não Pago
-        </Badge>;
+        return <Badge variant="outline" className="bg-gray-500/10 text-gray-500">Não Pago</Badge>;
     }
   };
 
@@ -181,6 +215,27 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
     setSortField(null);
   };
 
+  // Toggle validação contra guia
+  const toggleMatchValidation = () => {
+    if (!guiaDetails || guiaDetails.length === 0) {
+      toast.warning("Não há guias disponíveis para validação", {
+        description: "Faça upload de guias para habilitar essa funcionalidade."
+      });
+      return;
+    }
+    
+    setShowMatchStatus(!showMatchStatus);
+    toast.success(
+      showMatchStatus 
+        ? "Validação contra guia desativada" 
+        : "Validação contra guia ativada",
+      { description: showMatchStatus 
+          ? "Mostrando apenas dados do demonstrativo." 
+          : `Validando ${details.length} procedimentos contra as guias disponíveis.`
+      }
+    );
+  };
+
   return (
     <div className="space-y-4">
       <CBHPMComparisonTableFilters
@@ -195,6 +250,9 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
         resetFilters={resetFilters}
         detailsLength={details.length}
         filteredLength={filteredDetails.length}
+        toggleMatchValidation={toggleMatchValidation}
+        showMatchStatus={showMatchStatus}
+        hasGuiaData={!!guiaDetails?.length}
       />
       <CBHPMComparisonTabs
         roles={roles}
@@ -207,6 +265,15 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
         filter={filter}
         filteredSummary={filteredSummary}
       />
+      
+      {showMatchStatus && filteredSummary.naoEncontrados > 0 && (
+        <div className="p-4 bg-orange-100 dark:bg-orange-900/20 rounded-md mt-4">
+          <p className="text-orange-700 dark:text-orange-400">
+            <strong>Atenção:</strong> {filteredSummary.naoEncontrados} procedimentos do demonstrativo não 
+            foram encontrados nas guias disponíveis. Verifique se todas as guias foram carregadas.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

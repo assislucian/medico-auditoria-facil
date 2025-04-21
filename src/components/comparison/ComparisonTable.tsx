@@ -8,6 +8,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { AlertTriangle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ComparisonDetail {
   id: string;
@@ -19,7 +27,11 @@ interface ComparisonDetail {
   diferenca: number;
   status: string;
   papel: string;
+  guia?: string;
+  matchStatus?: string;
+  beneficiario?: string;
 }
+
 interface ComparisonTableProps {
   details: ComparisonDetail[];
   getStatusBadge: (status: string) => React.ReactNode;
@@ -29,6 +41,7 @@ interface ComparisonTableProps {
   getSortIcon: (field: string) => React.ReactNode;
   filter: string;
 }
+
 const ComparisonTable: React.FC<ComparisonTableProps> = ({
   details,
   getStatusBadge,
@@ -54,6 +67,11 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({
               </div>
             </TableHead>
             <TableHead>Papel</TableHead>
+            <TableHead className="cursor-pointer" onClick={() => toggleSort('guia')}>
+              <div className="flex items-center">
+                Guia {getSortIcon('guia')}
+              </div>
+            </TableHead>
             <TableHead className="text-right cursor-pointer" onClick={() => toggleSort('valorCbhpm')}>
               <div className="flex items-center justify-end">
                 Valor CBHPM {getSortIcon('valorCbhpm')}
@@ -80,6 +98,7 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({
           {details.length > 0 ? (
             details.map((detail) => (
               <TableRow key={detail.id} className={
+                detail.matchStatus === 'não_encontrado' ? 'bg-orange-100/50 dark:bg-orange-950/20' :
                 detail.status === 'não_pago' ? 'bg-red-100/50 dark:bg-red-950/20' :
                 detail.status === 'abaixo' ? 'bg-amber-100/50 dark:bg-amber-950/20' :
                 ''
@@ -87,6 +106,27 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({
                 <TableCell className="font-medium">{detail.codigo}</TableCell>
                 <TableCell>{detail.descricao}</TableCell>
                 <TableCell>{getRoleBadge(detail.papel)}</TableCell>
+                <TableCell>
+                  {detail.matchStatus === 'não_encontrado' ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center">
+                            <Badge variant="outline" className="bg-orange-500/10 text-orange-500">
+                              Não encontrado
+                            </Badge>
+                            <AlertTriangle className="h-4 w-4 text-orange-500 ml-1" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Procedimento não encontrado nas guias carregadas</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    detail.guia || '-'
+                  )}
+                </TableCell>
                 <TableCell className="text-right">R$ {detail.valorCbhpm.toFixed(2)}</TableCell>
                 <TableCell className="text-right">
                   {detail.status === 'não_pago'
@@ -111,7 +151,7 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center">
+              <TableCell colSpan={8} className="h-24 text-center">
                 Nenhum procedimento encontrado com os filtros atuais.
               </TableCell>
             </TableRow>

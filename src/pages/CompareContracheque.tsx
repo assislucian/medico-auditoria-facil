@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,9 @@ import Navbar from '@/components/Navbar';
 import CBHPMSummaryCards from '@/components/comparison/CBHPMSummaryCards';
 import CBHPMComparisonTable from '@/components/comparison/CBHPMComparisonTable';
 import { useComparisonData } from '@/hooks/useComparisonData';
+import { supabase } from '@/integrations/supabase/client';
 import { ChevronLeft, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 
 const CompareContracheque = () => {
   const [searchParams] = useSearchParams();
@@ -17,6 +19,43 @@ const CompareContracheque = () => {
   const navigate = useNavigate();
   
   const { data, isLoading, isError } = useComparisonData(analysisId);
+  const [guiaDetails, setGuiaDetails] = useState(null);
+  const [isLoadingGuias, setIsLoadingGuias] = useState(false);
+
+  // Buscar dados das guias relacionadas
+  useEffect(() => {
+    const fetchGuiaDetails = async () => {
+      if (!analysisId) return;
+      setIsLoadingGuias(true);
+      try {
+        const { data, error } = await supabase
+          .from('procedures')
+          .select('*')
+          .eq('analysis_id', analysisId);
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Filtrar apenas procedimentos da guia
+        const guiaProcedures = data.filter(proc => proc.guia && proc.codigo);
+        setGuiaDetails(guiaProcedures);
+        
+        // Mostrar informação sobre guias encontradas
+        if (guiaProcedures.length > 0) {
+          toast.info(`${guiaProcedures.length} procedimentos de guia encontrados para comparação`, {
+            duration: 3000
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao buscar guias:', error);
+      } finally {
+        setIsLoadingGuias(false);
+      }
+    };
+
+    fetchGuiaDetails();
+  }, [analysisId]);
   
   const handleBack = () => {
     navigate(-1);
@@ -41,7 +80,7 @@ const CompareContracheque = () => {
             <h1 className="text-3xl font-bold">Comparativo Contracheque CBHPM</h1>
           </div>
 
-          {isLoading ? (
+          {isLoading || isLoadingGuias ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 {[...Array(4)].map((_, i) => (
@@ -90,6 +129,7 @@ const CompareContracheque = () => {
               <CBHPMComparisonTable 
                 summary={data.summary}
                 details={data.details}
+                guiaDetails={guiaDetails}
               />
             </>
           )}
