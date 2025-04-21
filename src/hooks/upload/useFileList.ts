@@ -37,9 +37,9 @@ export function useFileList() {
   };
 
   // Função para adicionar arquivos de um tipo só
-  const handleFileChangeByType = async (type: FileType, fileList: FileList) => {
-    if (!fileList || fileList.length === 0) return;
-    const list = Array.from(fileList).map((file, index) => ({
+  const handleFileChangeByType = async (type: FileType, fileListInput: FileList) => {
+    if (!fileListInput || fileListInput.length === 0) return;
+    const list = Array.from(fileListInput).map((file, index) => ({
       id: `local-${Date.now()}-${index}`, // Add id when creating files
       name: file.name,
       file,

@@ -3,14 +3,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFileList } from './upload/useFileList';
 import { useProcessingStatus } from './upload/useProcessingStatus';
 import { useFileUploadService } from './upload/useFileUploadService';
-import { FileWithStatus } from '@/types/upload';
+import { FileWithStatus, FileType } from '@/types/upload';
 
 /**
  * Custom hook for handling file uploads
  * Combines multiple smaller hooks to provide full upload functionality
  */
 export function useFileUpload() {
-  const { user } = useAuth();
   const fileList = useFileList();
   const processingStatus = useProcessingStatus();
   const fileUploadService = useFileUploadService();
@@ -53,11 +52,17 @@ export function useFileUpload() {
     processingStatus.resetStatus();
   };
 
+  // Handle file change by type
+  const handleFileChangeByType = async (type: FileType, fileList: FileList) => {
+    return await fileList.handleFileChangeByType(type, fileList);
+  };
+
   return {
     ...fileList,
     ...processingStatus,
     determineProcessingMode: () => fileUploadService.determineProcessingMode(fileList.files),
     processUploadedFiles,
+    handleFileChangeByType,
     resetFiles,
   };
 }

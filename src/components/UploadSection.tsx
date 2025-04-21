@@ -12,8 +12,10 @@ import UploadActionButtons from './upload/UploadActionButtons';
 import UploadContextAlerts from './upload/UploadContextAlerts';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FileType } from '@/types/upload';
 
 const UploadSection = () => {
+  const fileUpload = useFileUpload();
   const {
     isUploading,
     progress,
@@ -28,15 +30,16 @@ const UploadSection = () => {
     showComparison,
     processingStage,
     processingMsg,
-  } = useFileUpload();
+    handleFileChangeByType
+  } = fileUpload;
 
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Handler para os dropzones
-  const handleFileChangeByType = async (type, fileList) => {
+  const onDropFiles = async (type: FileType, fileList: FileList) => {
     setError(null);
-    await useFileUpload().handleFileChangeByType(type, fileList);
+    await handleFileChangeByType(type, fileList);
   };
 
   const handleProcess = async () => {
@@ -74,7 +77,7 @@ const UploadSection = () => {
           )}
           <UploadInstructions />
           <UploadDropzoneArea
-            handleFileChangeByType={handleFileChangeByType}
+            handleFileChangeByType={onDropFiles}
             isUploading={isUploading}
             hasFile={hasFile}
           />
