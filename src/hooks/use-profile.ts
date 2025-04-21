@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { validateCRM } from '@/utils/formatters';
+import { validateCRM, formatCRM } from '@/utils/formatters';
+import { toast } from "sonner";
 
 interface ProfileData {
   name: string;
@@ -35,7 +36,7 @@ interface NotificationPreferences {
 }
 
 export const useProfile = () => {
-  const { toast } = useToast();
+  const { toast: legacyToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -215,10 +216,25 @@ export const useProfile = () => {
         throw new Error('Não autenticado');
       }
       
+      // Convert preferences to a JSON object for storage
+      const prefJson = {
+        email: {
+          newReports: preferences.email.newReports,
+          systemUpdates: preferences.email.systemUpdates,
+          tips: preferences.email.tips,
+          newsletter: preferences.email.newsletter
+        },
+        sms: {
+          criticalAlerts: preferences.sms.criticalAlerts,
+          paymentRecovery: preferences.sms.paymentRecovery,
+          invoiceReminders: preferences.sms.invoiceReminders
+        }
+      };
+      
       const { error } = await supabase
         .from('profiles')
         .update({
-          notification_preferences: preferences
+          notification_preferences: prefJson
         })
         .eq('id', session.user.id);
         

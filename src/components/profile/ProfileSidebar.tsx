@@ -53,6 +53,9 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
     try {
       if (onUpdateAvatar) {
         await onUpdateAvatar(file);
+        toast.success("Foto atualizada", {
+          description: "Sua foto de perfil foi atualizada com sucesso."
+        });
       } else {
         // Direct upload implementation if no callback is provided
         const { data: sessionData } = await supabase.auth.getSession();
@@ -62,6 +65,20 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
 
         const userId = sessionData.session.user.id;
         const filePath = `avatars/${userId}/profile-${Date.now()}`;
+        
+        // Create profiles bucket if it doesn't exist
+        try {
+          const { data: buckets } = await supabase.storage.listBuckets();
+          const profilesBucketExists = buckets?.some(b => b.name === 'profiles');
+          
+          if (!profilesBucketExists) {
+            await supabase.storage.createBucket('profiles', {
+              public: true
+            });
+          }
+        } catch (bucketError) {
+          console.error("Error checking/creating bucket:", bucketError);
+        }
         
         const { error: uploadError } = await supabase.storage
           .from('profiles')
@@ -74,11 +91,12 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
           throw uploadError;
         }
 
-        // Update user profile with avatar URL
+        // Get the public URL
         const { data: urlData } = supabase.storage
           .from('profiles')
           .getPublicUrl(filePath);
-
+          
+        // Update user profile with avatar URL
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ avatar_url: urlData.publicUrl })

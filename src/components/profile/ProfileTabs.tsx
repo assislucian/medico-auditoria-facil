@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useProfile } from "@/hooks/use-profile";
-import { validateCRM } from "@/utils/formatters";
+import { validateCRM, formatCRM } from "@/utils/formatters";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { X, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -81,19 +81,19 @@ export const ProfileTabs = () => {
   // Handle profile update
   const onSubmit = async (data: ProfileFormValues) => {
     try {
-      // Add the image to the form data if available
-      const formData = new FormData();
-      if (selectedImage) {
-        formData.append('avatar', selectedImage);
-      }
+      // Ensure required fields are filled
+      const profileData = {
+        name: data.name,
+        email: data.email,
+        telefone: data.telefone,
+        crm: data.crm,
+        especialidade: data.especialidade,
+        hospital: data.hospital,
+        bio: data.bio
+      };
       
-      // Add other form data
-      Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-
       // Call the API to update the profile
-      const success = await updateProfile(data, selectedImage);
+      const success = await updateProfile(profileData, selectedImage);
       
       if (success) {
         // Update original values for reset
