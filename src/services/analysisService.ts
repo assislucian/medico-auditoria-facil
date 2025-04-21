@@ -111,6 +111,37 @@ export const setCurrentAnalysis = (extractedData: ExtractedData, analysisId: str
 };
 
 /**
+ * Type guard to check if the value is a valid DoctorParticipation array
+ */
+const isDoctorParticipationArray = (value: any): value is DoctorParticipation[] => {
+  if (!Array.isArray(value)) return false;
+  
+  return value.every(item => 
+    typeof item === 'object' && 
+    item !== null &&
+    'code' in item && 
+    'name' in item && 
+    'role' in item && 
+    'startTime' in item &&
+    'endTime' in item &&
+    'status' in item
+  );
+};
+
+/**
+ * Helper function to safely extract numeric values from JSON summary
+ */
+const getSafeNumericValue = (summary: any, key: string): number => {
+  if (!summary || typeof summary !== 'object') return 0;
+  
+  const value = summary[key];
+  if (value === undefined || value === null) return 0;
+  
+  const num = Number(value);
+  return isNaN(num) ? 0 : num;
+};
+
+/**
  * Get the extracted data from the server
  * @param analysisId Optional analysis ID to fetch specific data
  * @returns The extracted data
@@ -161,30 +192,43 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
             beneficiario: proceduresData[0]?.beneficiario || ''
           },
           procedimentos: proceduresData.map(proc => {
-            // Ensure doctors field is properly typed
-            const doctors: DoctorParticipation[] = Array.isArray(proc.doctors) 
-              ? proc.doctors as DoctorParticipation[] 
-              : [];
+            // Process doctors with proper type safety
+            let doctors: DoctorParticipation[] = [];
+            
+            if (proc.doctors) {
+              if (isDoctorParticipationArray(proc.doctors)) {
+                doctors = proc.doctors;
+              } else if (Array.isArray(proc.doctors)) {
+                // Try to convert each item to the expected format
+                doctors = proc.doctors.filter((d): d is DoctorParticipation => 
+                  typeof d === 'object' && 
+                  d !== null &&
+                  'code' in d && 
+                  'name' in d && 
+                  'role' in d
+                ) as DoctorParticipation[];
+              }
+            }
               
             return {
               id: proc.id,
               codigo: proc.codigo,
               procedimento: proc.procedimento,
               papel: proc.papel || '',
-              valorCBHPM: proc.valor_cbhpm,
-              valorPago: proc.valor_pago,
-              diferenca: proc.diferenca,
-              pago: proc.pago,
+              valorCBHPM: proc.valor_cbhpm || 0,
+              valorPago: proc.valor_pago || 0,
+              diferenca: proc.diferenca || 0,
+              pago: !!proc.pago,
               guia: proc.guia || '',
               beneficiario: proc.beneficiario || '',
               doctors
             };
           }),
           totais: {
-            valorCBHPM: analysisData.summary?.totalCBHPM ? Number(analysisData.summary.totalCBHPM) : 0,
-            valorPago: analysisData.summary?.totalPago ? Number(analysisData.summary.totalPago) : 0,
-            diferenca: analysisData.summary?.totalDiferenca ? Number(analysisData.summary.totalDiferenca) : 0,
-            procedimentosNaoPagos: analysisData.summary?.procedimentosNaoPagos ? Number(analysisData.summary.procedimentosNaoPagos) : 0
+            valorCBHPM: getSafeNumericValue(analysisData.summary, 'totalCBHPM'),
+            valorPago: getSafeNumericValue(analysisData.summary, 'totalPago'),
+            diferenca: getSafeNumericValue(analysisData.summary, 'totalDiferenca'),
+            procedimentosNaoPagos: getSafeNumericValue(analysisData.summary, 'procedimentosNaoPagos')
           }
         };
         
