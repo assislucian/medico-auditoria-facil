@@ -5,7 +5,8 @@ import { ReferenceTable } from './types';
 
 interface TablesListProps {
   tables: ReferenceTable[];
-  onToggle: (id: string) => void;
+  selectedTables: string[];
+  onToggle: (id: string, selected: boolean) => void;
   disabled: boolean;
 }
 
@@ -17,10 +18,11 @@ interface TablesListProps {
  * and toggle controls.
  * 
  * @param tables - Array of reference tables with their status
+ * @param selectedTables - List of selected table IDs
  * @param onToggle - Function to handle toggling a table's status
  * @param disabled - Whether the switches are disabled (during saving operations)
  */
-export const TablesList = ({ tables, onToggle, disabled }: TablesListProps) => {
+export const TablesList = ({ tables, selectedTables, onToggle, disabled }: TablesListProps) => {
   return (
     <div>
       {tables.length === 0 ? (
@@ -45,8 +47,8 @@ export const TablesList = ({ tables, onToggle, disabled }: TablesListProps) => {
                 <TableCell className="hidden md:table-cell">{table.description || "-"}</TableCell>
                 <TableCell className="text-right">
                   <Switch 
-                    checked={table.checked} 
-                    onCheckedChange={() => onToggle(table.id)}
+                    checked={selectedTables.includes(table.id)} 
+                    onCheckedChange={(checked) => onToggle(table.id, checked)}
                     disabled={disabled}
                     aria-label={`Ativar ou desativar tabela ${table.name}`}
                   />

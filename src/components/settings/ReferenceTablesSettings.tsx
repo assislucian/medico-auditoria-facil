@@ -1,14 +1,13 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { medicalReferenceTables, medicalRoles } from "@/data/referenceTables";
 import { RolesList } from './reference-tables/RolesList';
 import { TablesList } from './reference-tables/TablesList';
-import { referenceTables } from "@/data/referenceTables";
-import { Json } from '@/integrations/supabase/types';
-import { ProfileWithUUID } from '@/types';
 import { 
   ReferenceTablesPreferences, 
   defaultReferenceTablesPreferences,
@@ -27,8 +26,16 @@ export const ReferenceTablesSettings = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [tables, setTables] = useState<string[]>(defaultReferenceTablesPreferences.tables);
-  const [roles, setRoles] = useState<string[]>(defaultReferenceTablesPreferences.roles);
+  const [tables, setTables] = useState<string[]>(
+    medicalReferenceTables
+      .filter(table => table.checked)
+      .map(table => table.id)
+  );
+  const [roles, setRoles] = useState<string[]>(
+    medicalRoles
+      .filter(role => role.checked)
+      .map(role => role.id)
+  );
 
   // Fetch user's reference tables preferences on component mount
   useEffect(() => {
@@ -48,8 +55,8 @@ export const ReferenceTablesSettings = () => {
         // Parse and set reference tables preferences using helper function
         if (data?.reference_tables_preferences) {
           const prefs = parseReferenceTablesPreferences(data.reference_tables_preferences);
-          setTables(prefs.tables);
-          setRoles(prefs.roles);
+          setTables(prefs.tables.map(table => table.id));
+          setRoles(prefs.roles.map(role => role.id));
         }
       } catch (error) {
         console.error('Error fetching reference tables preferences:', error);
@@ -86,9 +93,13 @@ export const ReferenceTablesSettings = () => {
     
     setSaving(true);
     try {
-      const preferences: ReferenceTablesPreferences = { tables, roles };
+      const preferences: ReferenceTablesPreferences = { 
+        tables: medicalReferenceTables.filter(table => tables.includes(table.id)),
+        roles: medicalRoles.filter(role => roles.includes(role.id))
+      };
+      
       const updateData = {
-        reference_tables_preferences: referenceTablesPreferencesToJson(preferences) as Json,
+        reference_tables_preferences: referenceTablesPreferencesToJson(preferences),
         updated_at: new Date().toISOString()
       };
       
@@ -125,7 +136,7 @@ export const ReferenceTablesSettings = () => {
           Selecione as tabelas de preços que você deseja usar como referência para análises de pagamentos.
         </p>
         <TablesList 
-          tables={referenceTables.pricingTables}
+          tables={medicalReferenceTables}
           selectedTables={tables}
           onToggle={handleTableToggle}
           disabled={saving}
@@ -138,7 +149,7 @@ export const ReferenceTablesSettings = () => {
           Selecione as funções que você deseja usar como referência para análises de pagamentos.
         </p>
         <RolesList 
-          roles={referenceTables.roles}
+          roles={medicalRoles}
           selectedRoles={roles}
           onToggle={handleRoleToggle}
           disabled={saving}

@@ -4,7 +4,8 @@ import { ReferenceTable } from './types';
 
 interface RolesListProps {
   roles: ReferenceTable[];
-  onToggle: (id: string) => void;
+  selectedRoles: string[];
+  onToggle: (id: string, selected: boolean) => void;
   disabled: boolean;
 }
 
@@ -15,10 +16,11 @@ interface RolesListProps {
  * payment analysis calculations. Each role has a name, description, and toggle switch.
  * 
  * @param roles - Array of medical roles with their status (enabled/disabled)
+ * @param selectedRoles - List of selected role IDs
  * @param onToggle - Function to handle toggling a role's status
  * @param disabled - Whether the switches are disabled (during saving operations)
  */
-export const RolesList = ({ roles, onToggle, disabled }: RolesListProps) => {
+export const RolesList = ({ roles, selectedRoles, onToggle, disabled }: RolesListProps) => {
   return (
     <div className="space-y-4">
       {roles.map(role => (
@@ -30,8 +32,8 @@ export const RolesList = ({ roles, onToggle, disabled }: RolesListProps) => {
             )}
           </div>
           <Switch 
-            checked={role.checked} 
-            onCheckedChange={() => onToggle(role.id)}
+            checked={selectedRoles.includes(role.id)} 
+            onCheckedChange={(checked) => onToggle(role.id, checked)}
             disabled={disabled}
             aria-label={`Toggle ${role.name} role`}
           />
