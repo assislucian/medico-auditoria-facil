@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +17,7 @@ interface AuthContextProps {
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   getProfile: () => Promise<Profile | null>;
   resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -42,7 +42,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(session?.user || null);
 
         if (session?.user) {
-          // Fetch profile data using our helper function
           const profileData = await getProfile(supabase, session.user.id);
           
           if (profileData) {
@@ -61,7 +60,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user || null);
-      loadSession(); // Reload session on auth state change
+      loadSession();
     });
   }, []);
 
@@ -113,14 +112,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       if (!user) throw new Error('Usuário não autenticado');
       
-      // Use our helper function
       const success = await updateProfile(supabase, user.id, data as any);
       
       if (!success) {
         throw new Error('Erro ao atualizar o perfil');
       }
       
-      // Update the local profile state
       setProfile(prev => prev ? { ...prev, ...data } : null);
       
       toast.success('Perfil atualizado com sucesso!');
@@ -133,12 +130,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       if (!user) throw new Error('Usuário não autenticado');
       
-      // Use our helper function
       const profileData = await getProfile(supabase, user.id);
       return profileData as Profile | null;
     } catch (error: any) {
       console.error("Erro ao buscar perfil:", error);
       return null;
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+      
+      if (error) throw error;
+      toast.success('Senha atualizada com sucesso!');
+    } catch (error: any) {
+      toast.error(error.error_description || error.message);
+      throw error;
     }
   };
 
@@ -152,7 +162,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     signUp,
     updateProfile: updateUserProfile,
     getProfile: getUserProfile,
-    resetPassword
+    resetPassword,
+    updatePassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

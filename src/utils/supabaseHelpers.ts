@@ -1,4 +1,3 @@
-
 import { PostgrestError, PostgrestSingleResponse } from '@supabase/supabase-js';
 import { Json } from '@/integrations/supabase/types';
 import { Database } from '@/integrations/supabase/types';
@@ -393,4 +392,3 @@ export async function fetchAnalysisById(supabase: any, analysisId: string) {
     return null;
   }
 }
-
