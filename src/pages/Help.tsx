@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
@@ -15,8 +14,8 @@ import { VideosList } from '@/components/help/VideosList';
 import type { HelpArticle } from '@/types/help';
 import { guides, videos } from '@/data/helpGuides';
 import { supabase } from "@/integrations/supabase/client";
+import { fetchHelpArticles } from "@/utils/supabaseHelpers";
 
-// Move these to a separate file if they grow larger
 const faqItems = [
   {
     id: "item-1",
@@ -54,18 +53,13 @@ const Help = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchHelpArticles();
+    fetchArticles();
   }, []);
 
-  const fetchHelpArticles = async () => {
+  const fetchArticles = async () => {
     try {
-      const { data, error } = await supabase
-        .from('help_articles')
-        .select('*')
-        .eq('published', true);
-
-      if (error) throw error;
-      setHelpArticles(data || []);
+      const articles = await fetchHelpArticles(supabase);
+      setHelpArticles(articles);
     } catch (error) {
       console.error('Erro ao buscar artigos de ajuda:', error);
     }
@@ -164,4 +158,3 @@ const Help = () => {
 };
 
 export default Help;
-

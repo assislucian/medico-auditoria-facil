@@ -3,6 +3,7 @@ import { PostgrestError, PostgrestSingleResponse } from '@supabase/supabase-js';
 import { Json } from '@/integrations/supabase/types';
 import { Database } from '@/integrations/supabase/types';
 import { Ticket, Message, TicketCategory, TicketPriority, TicketStatus } from '@/components/support/types';
+import { HelpArticle } from '@/types/help';
 
 /**
  * Type guard to check if a response contains error
@@ -317,3 +318,79 @@ export async function sendTicketMessage(
     };
   }
 }
+
+/**
+ * Helper function to fetch procedures by analysis ID
+ * @param supabase - Supabase client instance
+ * @param analysisId - Analysis ID
+ * @returns Array of procedures or empty array if error occurred
+ */
+export async function fetchProceduresByAnalysisId(supabase: any, analysisId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('procedures')
+      .select('*')
+      .eq('analysis_id', analysisId);
+      
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching procedures:', error);
+    return [];
+  }
+}
+
+/**
+ * Helper function to fetch help articles
+ * @param supabase - Supabase client instance
+ * @param options - Query options
+ * @returns Array of help articles or empty array if error occurred
+ */
+export async function fetchHelpArticles(
+  supabase: any, 
+  options: {published?: boolean} = {published: true}
+): Promise<HelpArticle[]> {
+  try {
+    let query = supabase
+      .from('help_articles')
+      .select('*');
+    
+    if (options.published !== undefined) {
+      query = query.eq('published', options.published);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    
+    return (data || []) as HelpArticle[];
+  } catch (error) {
+    console.error('Error fetching help articles:', error);
+    return [];
+  }
+}
+
+/**
+ * Helper function to fetch analysis by ID
+ * @param supabase - Supabase client instance
+ * @param analysisId - Analysis ID
+ * @returns Analysis data or null if error occurred
+ */
+export async function fetchAnalysisById(supabase: any, analysisId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('analysis_results')
+      .select('*')
+      .eq('id', analysisId)
+      .single();
+      
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching analysis:', error);
+    return null;
+  }
+}
+

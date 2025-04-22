@@ -15,9 +15,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    // Atualizando o redirectTo para usar window.location.origin
-    // Isso garante que a URL base do aplicativo seja usada corretamente
-    redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined
   },
   global: {
     headers: {

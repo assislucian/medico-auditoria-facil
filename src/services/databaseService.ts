@@ -1,6 +1,7 @@
 
 import { FileWithStatus, ProcessMode } from '@/types/upload';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchAnalysisById, fetchProceduresByAnalysisId } from '@/utils/supabaseHelpers';
 
 /**
  * Salva os resultados da análise no banco de dados
@@ -53,10 +54,12 @@ export async function saveAnalysisToDatabase(
       return {success: false, analysisId: null};
     }
     
+    const analysisId = analysisData.id;
+    
     // 2. Inserir procedimentos relacionados
     if (extractedData.procedimentos && extractedData.procedimentos.length > 0) {
       const proceduresForInsert = extractedData.procedimentos.map((proc: any) => ({
-        analysis_id: analysisData.id,
+        analysis_id: analysisId,
         user_id: user.id,  // Adicionando user_id para facilitar consultas
         codigo: proc.codigo,
         procedimento: proc.procedimento,
@@ -113,31 +116,13 @@ export async function saveAnalysisToDatabase(
  */
 export async function getAnalysisById(analysisId: string) {
   try {
-    // Buscar o registro de análise
-    const { data: analysisData, error: analysisError } = await supabase
-      .from('analysis_results')
-      .select('*')
-      .eq('id', analysisId)
-      .single();
-    
-    if (analysisError || !analysisData) {
-      console.error('Erro ao buscar análise:', analysisError);
+    // Use our helper functions
+    const analysisData = await fetchAnalysisById(supabase, analysisId);
+    if (!analysisData) {
       return null;
     }
     
-    // Buscar os procedimentos relacionados
-    const { data: proceduresData, error: proceduresError } = await supabase
-      .from('procedures')
-      .select('*')
-      .eq('analysis_id', analysisId);
-    
-    if (proceduresError) {
-      console.error('Erro ao buscar procedimentos:', proceduresError);
-      return null;
-    }
-
-    // Acesso seguro ao objeto summary
-    const summary = typeof analysisData.summary === 'object' ? analysisData.summary as Record<string, any> : {};
+    const proceduresData = await fetchProceduresByAnalysisId(supabase, analysisId);
     
     // Formatar os dados no formato esperado pelo frontend
     return {
@@ -162,10 +147,10 @@ export async function getAnalysisById(analysisId: string) {
         doctors: proc.doctors || []
       })),
       totais: {
-        valorCBHPM: summary.totalCBHPM || 0,
-        valorPago: summary.totalPago || 0,
-        diferenca: summary.totalDiferenca || 0,
-        procedimentosNaoPagos: summary.procedimentosNaoPagos || 0
+        valorCBHPM: analysisData.summary?.totalCBHPM || 0,
+        valorPago: analysisData.summary?.totalPago || 0,
+        diferenca: analysisData.summary?.totalDiferenca || 0,
+        procedimentosNaoPagos: analysisData.summary?.procedimentosNaoPagos || 0
       }
     };
   } catch (error) {
