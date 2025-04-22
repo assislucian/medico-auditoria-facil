@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Json } from '@/integrations/supabase/types';
 import { ProfileWithUUID } from '@/types';
-import { getProfile, updateProfile } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile, toJson } from "@/utils/supabaseHelpers";
 
 interface NotificationPreferences {
   email: {
@@ -86,7 +87,7 @@ export const NotificationsSettings = () => {
     setSaving(true);
     try {
       const success = await updateProfile(supabase, user.id, {
-        notification_preferences: notifications as Json,
+        notification_preferences: toJson(notifications),
         updated_at: new Date().toISOString()
       });
 

@@ -16,7 +16,7 @@ import {
   notificationPreferencesToJson
 } from "./types";
 import { ProfileWithUUID } from '@/types';
-import { getProfile, updateProfile } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile, toJson } from "@/utils/supabaseHelpers";
 
 /**
  * NotificationsSettings Component
@@ -73,8 +73,11 @@ export const NotificationSettings = () => {
     
     setSaving(true);
     try {
+      // Convert notification preferences to JSON format
+      const preferencesJson = notificationPreferencesToJson(notifications);
+      
       const success = await updateProfile(supabase, user.id, {
-        notification_preferences: notificationPreferencesToJson(notifications) as Json,
+        notification_preferences: toJson(preferencesJson),
         updated_at: new Date().toISOString()
       });
 

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Ticket, Message, TicketCategory, TicketPriority, TicketStatus } from '@/components/support/types';
+import { Json } from '@/integrations/supabase/types';
 
 interface CreateTicketData {
   title: string;
@@ -43,12 +44,14 @@ export const useTickets = (userId: string | undefined) => {
       if (error) throw error;
       
       // Ensure correct typing for the tickets data
-      const typedTickets: Ticket[] = (data || []).map(ticket => ({
-        ...ticket,
-        status: ticket.status as TicketStatus,
-        priority: ticket.priority as TicketPriority,
-        category: ticket.category as TicketCategory
-      }));
+      const typedTickets: Ticket[] = Array.isArray(data) 
+        ? data.map(ticket => ({
+            ...ticket,
+            status: ticket.status as TicketStatus,
+            priority: ticket.priority as TicketPriority,
+            category: ticket.category as TicketCategory
+          }))
+        : [];
       
       setTickets(typedTickets);
     } catch (error) {
@@ -71,7 +74,13 @@ export const useTickets = (userId: string | undefined) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data as Message[]);
+      
+      // Ensure correct typing for messages
+      const typedMessages: Message[] = Array.isArray(data)
+        ? data as Message[]
+        : [];
+        
+      setMessages(typedMessages);
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast.error('Não foi possível carregar as mensagens');
@@ -88,28 +97,36 @@ export const useTickets = (userId: string | undefined) => {
     setSubmitting(true);
     
     try {
+      // Explicitly define the insert payload type
+      const ticketData = {
+        title: formData.title,
+        description: formData.description,
+        user_id: userId,
+        status: 'aberto' as TicketStatus,
+        category: formData.category,
+        priority: formData.priority
+      };
+      
       const { data, error } = await supabase
         .from('support_tickets')
-        .insert([{
-          title: formData.title,
-          description: formData.description,
-          user_id: userId,
-          status: 'aberto' as TicketStatus,
-          category: formData.category,
-          priority: formData.priority
-        }])
+        .insert([ticketData])
         .select()
         .single();
 
       if (error) throw error;
 
-      await supabase.from('activity_logs').insert([{
+      // Explicitly define the activity log payload type
+      const activityData = {
         user_id: userId,
         action_type: 'ticket_created',
         description: `Criou um ticket de suporte: ${formData.title}`,
         entity_type: 'support_ticket',
         entity_id: data.id
-      }]);
+      };
+      
+      await supabase
+        .from('activity_logs')
+        .insert([activityData]);
       
       toast.success('Ticket criado com sucesso');
       
@@ -141,26 +158,35 @@ export const useTickets = (userId: string | undefined) => {
     if (!selectedTicket || !userId) return;
     
     try {
+      // Explicitly define the message payload type
+      const messageData = {
+        ticket_id: selectedTicket.id,
+        content,
+        sent_by_user: true
+      };
+      
       const { data, error } = await supabase
         .from('support_messages')
-        .insert([{
-          ticket_id: selectedTicket.id,
-          content,
-          sent_by_user: true
-        }])
+        .insert([messageData])
         .select()
         .single();
 
       if (error) throw error;
       
-      await supabase.from('activity_logs').insert([{
+      // Explicitly define the activity log payload type
+      const activityData = {
         user_id: userId,
         action_type: 'message_sent',
         description: `Enviou uma mensagem em ticket de suporte`,
         entity_type: 'support_message',
         entity_id: data.id
-      }]);
+      };
       
+      await supabase
+        .from('activity_logs')
+        .insert([activityData]);
+      
+      // Type assertion for message data
       setMessages(prev => [...prev, data as Message]);
       
       // Update ticket status if needed

@@ -16,7 +16,7 @@ import {
   ensureCheckedProperty,
   ReferenceTable as ReferenceTableType
 } from './reference-tables/types';
-import { getProfile, updateProfile } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile, toJson } from "@/utils/supabaseHelpers";
 import { Json } from '@/integrations/supabase/types';
 
 /**
@@ -106,10 +106,8 @@ export const ReferenceTablesSettings = () => {
       };
       
       // Convert preferences to JSON before passing to updateProfile
-      const preferencesJson = JSON.parse(JSON.stringify(preferences));
-      
       const success = await updateProfile(supabase, user.id, {
-        reference_tables_preferences: preferencesJson as Json,
+        reference_tables_preferences: toJson(preferences),
         updated_at: new Date().toISOString()
       });
 

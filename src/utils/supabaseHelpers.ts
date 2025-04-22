@@ -36,6 +36,15 @@ export function extractData<T>(response: PostgrestSingleResponse<T>): T | null {
 }
 
 /**
+ * Convert any object to Json type safely
+ * @param data - Object to convert to Json
+ * @returns The object as Json type
+ */
+export function toJson(data: any): Json {
+  return data as unknown as Json;
+}
+
+/**
  * Type for a profile update payload
  */
 export type ProfileUpdatePayload = {
