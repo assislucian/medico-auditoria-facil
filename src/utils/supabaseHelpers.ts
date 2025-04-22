@@ -1,4 +1,3 @@
-
 import { PostgrestError, PostgrestSingleResponse } from '@supabase/supabase-js';
 import { Json } from '@/integrations/supabase/types';
 import { Database } from '@/integrations/supabase/types';
@@ -29,16 +28,12 @@ export function hasData<T>(
  * @returns The data or null if an error occurred
  */
 export function extractData<T>(response: PostgrestSingleResponse<T>): T | null {
-  if (hasError(response)) {
+  if (response.error !== null) {
     console.error("Database error:", response.error);
     return null;
   }
   
-  // The type narrowing wasn't working correctly; explicitly check first
-  if (response.data === null) {
-    return null;
-  }
-  
+  // Since we've verified there's no error, we can safely access data
   return response.data;
 }
 
