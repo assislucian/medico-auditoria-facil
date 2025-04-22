@@ -59,3 +59,15 @@ export function parseReferenceTablesPreferences(data: Json | null): ReferenceTab
 export function referenceTablesPreferencesToJson(prefs: ReferenceTablesPreferences): Json {
   return prefs as unknown as Json;
 }
+
+/**
+ * Helper function to ensure tables from data source have the required 'checked' property
+ * @param tables - Tables from data source
+ * @returns Tables with ensured checked property
+ */
+export function ensureCheckedProperty(tables: any[]): ReferenceTable[] {
+  return tables.map(table => ({
+    ...table,
+    checked: typeof table.checked === 'boolean' ? table.checked : false
+  }));
+}

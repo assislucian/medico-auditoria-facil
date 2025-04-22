@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import {
   notificationPreferencesToJson
 } from "./types";
 import { ProfileWithUUID } from '@/types';
+import { hasData, hasError, toUUID, toJson } from "@/utils/supabaseHelpers";
 
 /**
  * NotificationsSettings Component
@@ -36,17 +38,19 @@ export const NotificationSettings = () => {
       
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        const response = await supabase
           .from('profiles')
           .select('notification_preferences')
-          .eq('id', user.id)
+          .eq('id', toUUID(user.id))
           .maybeSingle();
 
-        if (error) throw error;
+        if (hasError(response)) {
+          throw response.error;
+        }
         
         // Parse and set notification preferences using helper function
-        if (data?.notification_preferences) {
-          const prefs = parseNotificationPreferences(data.notification_preferences);
+        if (hasData(response) && response.data?.notification_preferences) {
+          const prefs = parseNotificationPreferences(response.data.notification_preferences);
           setNotifications(prefs);
         }
       } catch (error) {
@@ -78,14 +82,14 @@ export const NotificationSettings = () => {
     setSaving(true);
     try {
       const updateData = {
-        notification_preferences: notificationPreferencesToJson(notifications) as Json,
+        notification_preferences: toJson(notificationPreferencesToJson(notifications)),
         updated_at: new Date().toISOString()
       };
 
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', user.id);
+        .eq('id', toUUID(user.id));
 
       if (error) throw error;
       

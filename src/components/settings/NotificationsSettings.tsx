@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Json } from '@/integrations/supabase/types';
 import { ProfileWithUUID } from '@/types';
+import { hasData, hasError, toUUID, toJson } from "@/utils/supabaseHelpers";
 
 interface NotificationPreferences {
   email: {
@@ -50,17 +51,19 @@ export const NotificationsSettings = () => {
       
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        const response = await supabase
           .from('profiles')
           .select('notification_preferences')
-          .eq('id', user.id)
+          .eq('id', toUUID(user.id))
           .maybeSingle();
 
-        if (error) throw error;
+        if (hasError(response)) {
+          throw response.error;
+        }
         
-        if (data?.notification_preferences) {
+        if (hasData(response) && response.data?.notification_preferences) {
           // Type assertion to fix the type error
-          const prefs = data.notification_preferences as any;
+          const prefs = response.data.notification_preferences as any;
           if (prefs.email && prefs.sms) {
             setNotifications(prefs as NotificationPreferences);
           }
@@ -92,14 +95,14 @@ export const NotificationsSettings = () => {
     setSaving(true);
     try {
       const updateData = {
-        notification_preferences: notifications as unknown as Json,
+        notification_preferences: toJson(notifications),
         updated_at: new Date().toISOString()
       };
       
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', user.id);
+        .eq('id', toUUID(user.id));
 
       if (error) throw error;
       

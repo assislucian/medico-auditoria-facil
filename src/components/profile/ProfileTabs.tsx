@@ -84,7 +84,7 @@ export const ProfileTabs = () => {
         bio: data.bio
       };
       
-      const success = await updateProfile(profileData, selectedImage);
+      const success = await updateProfile(profileData);
       
       if (success) {
         setOriginalValues(data);

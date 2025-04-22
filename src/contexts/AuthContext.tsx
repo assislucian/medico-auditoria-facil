@@ -4,6 +4,7 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, ProfileWithUUID } from '@/types';
 import { toast } from "sonner";
+import { hasData, hasError, toUUID, toJson } from "@/utils/supabaseHelpers";
 
 interface AuthContextProps {
   session: Session | null;
@@ -40,18 +41,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         if (session?.user) {
           // Fetch profile data here
-          const { data: profileData, error } = await supabase
+          const response = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', session.user.id)
+            .eq('id', toUUID(session.user.id))
             .maybeSingle();
 
-          if (error) {
-            console.error("Erro ao buscar perfil:", error);
+          if (hasError(response)) {
+            console.error("Erro ao buscar perfil:", response.error);
           }
 
-          if (profileData) {
-            setProfile(profileData as Profile);
+          if (hasData(response) && response.data) {
+            setProfile(response.data as Profile);
           }
         }
       } catch (error) {
@@ -119,7 +120,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', user.id);
+        .eq('id', toUUID(user.id));
         
       if (error) throw error;
       
@@ -132,22 +133,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
   
-  const getProfile = async () => {
+  const getProfile = async (): Promise<Profile | null> => {
     try {
       if (!user) throw new Error('Usuário não autenticado');
       
-      const { data: profileData, error } = await supabase
+      const response = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', toUUID(user.id))
         .maybeSingle();
         
-      if (error) {
-        console.error("Erro ao buscar perfil:", error);
+      if (hasError(response)) {
+        console.error("Erro ao buscar perfil:", response.error);
         return null;
       }
       
-      return profileData as Profile || null;
+      return hasData(response) && response.data ? (response.data as Profile) : null;
     } catch (error: any) {
       console.error("Erro ao buscar perfil:", error);
       return null;

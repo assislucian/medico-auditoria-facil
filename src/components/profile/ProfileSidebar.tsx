@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
 import { ProfileWithUUID } from "@/types";
+import { hasData, hasError, toUUID, toJson } from "@/utils/supabaseHelpers";
 
 interface ProfileSidebarProps {
   name: string;
@@ -98,31 +100,33 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
           .getPublicUrl(filePath);
           
         // Update user profile with avatar URL
-        const { data: currentProfile, error: fetchError } = await supabase
+        const response = await supabase
           .from('profiles')
           .select('notification_preferences')
-          .eq('id', userId)
+          .eq('id', toUUID(userId))
           .maybeSingle();
           
-        if (fetchError) {
-          throw fetchError;
+        if (hasError(response)) {
+          throw response.error;
         }
         
         // Ensure we have an object to work with
-        const currentPreferences = currentProfile?.notification_preferences || {};
+        const currentPreferences = hasData(response) && response.data?.notification_preferences 
+          ? response.data.notification_preferences 
+          : {};
         
         // Update the profile with new avatar_url
         const updateData = {
-          notification_preferences: {
+          notification_preferences: toJson({
             ...(currentPreferences as object),
             avatar_url: urlData.publicUrl
-          } as Json
+          })
         };
         
         const { error: updateError } = await supabase
           .from('profiles')
           .update(updateData)
-          .eq('id', userId);
+          .eq('id', toUUID(userId));
 
         if (updateError) {
           throw updateError;

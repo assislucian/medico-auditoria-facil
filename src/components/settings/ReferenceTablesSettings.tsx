@@ -12,8 +12,10 @@ import {
   ReferenceTablesPreferences, 
   defaultReferenceTablesPreferences,
   parseReferenceTablesPreferences,
-  referenceTablesPreferencesToJson 
+  referenceTablesPreferencesToJson,
+  ensureCheckedProperty
 } from './reference-tables/types';
+import { hasData, hasError, toUUID, toJson } from "@/utils/supabaseHelpers";
 
 /**
  * ReferenceTablesSettings Component
@@ -44,17 +46,19 @@ export const ReferenceTablesSettings = () => {
       
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        const response = await supabase
           .from('profiles')
           .select('reference_tables_preferences')
-          .eq('id', user.id)
+          .eq('id', toUUID(user.id))
           .maybeSingle();
 
-        if (error) throw error;
+        if (hasError(response)) {
+          throw response.error;
+        }
         
         // Parse and set reference tables preferences using helper function
-        if (data?.reference_tables_preferences) {
-          const prefs = parseReferenceTablesPreferences(data.reference_tables_preferences);
+        if (hasData(response) && response.data?.reference_tables_preferences) {
+          const prefs = parseReferenceTablesPreferences(response.data.reference_tables_preferences);
           setTables(prefs.tables.map(table => table.id));
           setRoles(prefs.roles.map(role => role.id));
         }
@@ -93,20 +97,28 @@ export const ReferenceTablesSettings = () => {
     
     setSaving(true);
     try {
+      // Ensure tables and roles have the required checked property
+      const selectedTables = ensureCheckedProperty(
+        medicalReferenceTables.filter(table => tables.includes(table.id))
+      );
+      const selectedRoles = ensureCheckedProperty(
+        medicalRoles.filter(role => roles.includes(role.id))
+      );
+      
       const preferences: ReferenceTablesPreferences = { 
-        tables: medicalReferenceTables.filter(table => tables.includes(table.id)),
-        roles: medicalRoles.filter(role => roles.includes(role.id))
+        tables: selectedTables,
+        roles: selectedRoles
       };
       
       const updateData = {
-        reference_tables_preferences: referenceTablesPreferencesToJson(preferences),
+        reference_tables_preferences: toJson(preferences),
         updated_at: new Date().toISOString()
       };
       
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', user.id);
+        .eq('id', toUUID(user.id));
 
       if (error) throw error;
       
@@ -128,6 +140,10 @@ export const ReferenceTablesSettings = () => {
     );
   }
 
+  // Ensure tables and roles have checked property for component props
+  const tablesWithCheckedProp = ensureCheckedProperty(medicalReferenceTables);
+  const rolesWithCheckedProp = ensureCheckedProperty(medicalRoles);
+
   return (
     <div className="space-y-6">
       <div>
@@ -136,7 +152,7 @@ export const ReferenceTablesSettings = () => {
           Selecione as tabelas de preços que você deseja usar como referência para análises de pagamentos.
         </p>
         <TablesList 
-          tables={medicalReferenceTables}
+          tables={tablesWithCheckedProp}
           selectedTables={tables}
           onToggle={handleTableToggle}
           disabled={saving}
@@ -149,7 +165,7 @@ export const ReferenceTablesSettings = () => {
           Selecione as funções que você deseja usar como referência para análises de pagamentos.
         </p>
         <RolesList 
-          roles={medicalRoles}
+          roles={rolesWithCheckedProp}
           selectedRoles={roles}
           onToggle={handleRoleToggle}
           disabled={saving}
