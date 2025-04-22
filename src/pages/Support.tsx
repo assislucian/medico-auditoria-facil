@@ -5,7 +5,8 @@ import { TicketList } from '@/components/support/TicketList';
 import { TicketDetail } from '@/components/support/TicketDetail';
 import { NewTicketForm } from '@/components/support/NewTicketForm';
 import { useTickets } from '@/hooks/useTickets';
-import { Ticket, TicketCategory, TicketPriority } from '@/components/support/types';
+import { TicketCategory, TicketPriority } from '@/components/support/types';
+import { TicketData } from '@/utils/supabaseHelpers';
 
 /**
  * Support Page
@@ -40,12 +41,7 @@ const Support = () => {
    * Wrapper for createTicket that ensures it returns void
    * to match the NewTicketForm component's expected prop type
    */
-  const handleCreateTicket = async (data: {
-    title: string;
-    description: string;
-    category: TicketCategory;
-    priority: TicketPriority;
-  }) => {
+  const handleCreateTicket = async (data: TicketData) => {
     await createTicket(data);
     // Return void to satisfy the Promise<void> return type
   };

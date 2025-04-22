@@ -2,6 +2,7 @@
 import { PostgrestError, PostgrestSingleResponse } from '@supabase/supabase-js';
 import { Json } from '@/integrations/supabase/types';
 import { Database } from '@/integrations/supabase/types';
+import { Ticket, Message, TicketCategory, TicketPriority, TicketStatus } from '@/components/support/types';
 
 /**
  * Type guard to check if a response contains error
@@ -41,7 +42,7 @@ export function extractData<T>(response: PostgrestSingleResponse<T>): T | null {
  * @returns The object as Json type
  */
 export function toJson(data: any): Json {
-  return data as unknown as Json;
+  return data as Json;
 }
 
 /**
@@ -98,5 +99,221 @@ export async function getProfile(supabase: any, userId: string) {
   } catch (error) {
     console.error("Error getting profile:", error);
     return null;
+  }
+}
+
+/**
+ * Type for ticket creation data
+ */
+export interface TicketData {
+  title: string;
+  description: string;
+  category: TicketCategory;
+  priority: TicketPriority;
+}
+
+/**
+ * Type for activity log entry
+ */
+export interface ActivityLogData {
+  user_id: string;
+  action_type: string;
+  description: string;
+  entity_type: string;
+  entity_id: string;
+}
+
+/**
+ * Helper function to fetch tickets for a user
+ * @param supabase - Supabase client instance
+ * @param userId - User ID
+ * @returns An array of tickets or empty array if error occurred
+ */
+export async function fetchUserTickets(supabase: any, userId: string): Promise<Ticket[]> {
+  try {
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    // Ensure correct typing for the tickets data
+    return Array.isArray(data) 
+      ? data.map(ticket => ({
+          ...ticket,
+          status: ticket.status as TicketStatus,
+          priority: ticket.priority as TicketPriority,
+          category: ticket.category as TicketCategory
+        }))
+      : [];
+  } catch (error) {
+    console.error('Error fetching support tickets:', error);
+    return [];
+  }
+}
+
+/**
+ * Helper function to fetch messages for a ticket
+ * @param supabase - Supabase client instance 
+ * @param ticketId - Ticket ID
+ * @returns An array of messages or empty array if error occurred
+ */
+export async function fetchTicketMessages(supabase: any, ticketId: string): Promise<Message[]> {
+  try {
+    const { data, error } = await supabase
+      .from('support_messages')
+      .select('*')
+      .eq('ticket_id', ticketId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    
+    return Array.isArray(data) ? data as Message[] : [];
+  } catch (error) {
+    console.error('Error fetching ticket messages:', error);
+    return [];
+  }
+}
+
+/**
+ * Helper function to create a new support ticket
+ * @param supabase - Supabase client instance
+ * @param userId - User ID
+ * @param ticketData - Ticket creation data
+ * @returns The created ticket or null if error occurred
+ */
+export async function createSupportTicket(
+  supabase: any, 
+  userId: string, 
+  ticketData: TicketData
+): Promise<Ticket | null> {
+  try {
+    // Create the ticket data with proper typing
+    const data = {
+      title: ticketData.title,
+      description: ticketData.description,
+      user_id: userId,
+      status: 'aberto' as TicketStatus,
+      category: ticketData.category,
+      priority: ticketData.priority
+    };
+    
+    const result = await supabase
+      .from('support_tickets')
+      .insert(data)
+      .select()
+      .single();
+
+    if (result.error) throw result.error;
+
+    // Log the activity
+    const activityData = {
+      user_id: userId,
+      action_type: 'ticket_created',
+      description: `Criou um ticket de suporte: ${ticketData.title}`,
+      entity_type: 'support_ticket',
+      entity_id: result.data.id
+    };
+    
+    await supabase
+      .from('activity_logs')
+      .insert(activityData);
+    
+    // Return the created ticket with proper typing
+    return {
+      ...result.data,
+      status: result.data.status as TicketStatus,
+      priority: result.data.priority as TicketPriority,
+      category: result.data.category as TicketCategory
+    };
+  } catch (error) {
+    console.error('Error creating ticket:', error);
+    return null;
+  }
+}
+
+/**
+ * Helper function to send a message in a ticket
+ * @param supabase - Supabase client instance
+ * @param ticketId - Ticket ID
+ * @param userId - User ID
+ * @param content - Message content
+ * @returns The created message or null if error occurred
+ */
+export async function sendTicketMessage(
+  supabase: any,
+  ticketId: string,
+  userId: string,
+  content: string
+): Promise<{message: Message | null, updatedTicket: Ticket | null}> {
+  try {
+    // Create the message
+    const messageData = {
+      ticket_id: ticketId,
+      content,
+      sent_by_user: true
+    };
+    
+    const result = await supabase
+      .from('support_messages')
+      .insert(messageData)
+      .select()
+      .single();
+
+    if (result.error) throw result.error;
+    
+    // Log the activity
+    const activityData = {
+      user_id: userId,
+      action_type: 'message_sent',
+      description: `Enviou uma mensagem em ticket de suporte`,
+      entity_type: 'support_message',
+      entity_id: result.data.id
+    };
+    
+    await supabase
+      .from('activity_logs')
+      .insert(activityData);
+    
+    let updatedTicket: Ticket | null = null;
+    
+    // Get the ticket to check status
+    const ticketResult = await supabase
+      .from('support_tickets')
+      .select('*')
+      .eq('id', ticketId)
+      .single();
+    
+    if (!ticketResult.error && ticketResult.data.status === 'aberto') {
+      // Update ticket status if it's open
+      const updateResult = await supabase
+        .from('support_tickets')
+        .update({ status: 'em_andamento' as TicketStatus })
+        .eq('id', ticketId)
+        .select()
+        .single();
+      
+      if (!updateResult.error) {
+        updatedTicket = {
+          ...updateResult.data,
+          status: updateResult.data.status as TicketStatus,
+          priority: updateResult.data.priority as TicketPriority,
+          category: updateResult.data.category as TicketCategory
+        };
+      }
+    }
+    
+    return {
+      message: result.data as Message,
+      updatedTicket
+    };
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return {
+      message: null,
+      updatedTicket: null
+    };
   }
 }

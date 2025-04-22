@@ -3,14 +3,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Ticket, Message, TicketCategory, TicketPriority, TicketStatus } from '@/components/support/types';
-import { Json } from '@/integrations/supabase/types';
-
-interface CreateTicketData {
-  title: string;
-  description: string;
-  category: TicketCategory;
-  priority: TicketPriority;
-}
+import { 
+  fetchUserTickets, 
+  fetchTicketMessages, 
+  createSupportTicket, 
+  sendTicketMessage,
+  TicketData 
+} from '@/utils/supabaseHelpers';
 
 /**
  * Custom hook for managing support tickets
@@ -34,28 +33,12 @@ export const useTickets = (userId: string | undefined) => {
   const fetchTickets = useCallback(async () => {
     if (!userId) return;
     
+    setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Ensure correct typing for the tickets data
-      const typedTickets: Ticket[] = Array.isArray(data) 
-        ? data.map(ticket => ({
-            ...ticket,
-            status: ticket.status as TicketStatus,
-            priority: ticket.priority as TicketPriority,
-            category: ticket.category as TicketCategory
-          }))
-        : [];
-      
-      setTickets(typedTickets);
+      const userTickets = await fetchUserTickets(supabase, userId);
+      setTickets(userTickets);
     } catch (error) {
-      console.error('Error fetching support tickets:', error);
+      console.error('Error in fetchTickets:', error);
       toast.error('Não foi possível carregar seus tickets de suporte');
     } finally {
       setLoading(false);
@@ -67,22 +50,10 @@ export const useTickets = (userId: string | undefined) => {
    */
   const fetchMessages = useCallback(async (ticketId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('support_messages')
-        .select('*')
-        .eq('ticket_id', ticketId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      
-      // Ensure correct typing for messages
-      const typedMessages: Message[] = Array.isArray(data)
-        ? data as Message[]
-        : [];
-        
-      setMessages(typedMessages);
+      const ticketMessages = await fetchTicketMessages(supabase, ticketId);
+      setMessages(ticketMessages);
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error('Error in fetchMessages:', error);
       toast.error('Não foi possível carregar as mensagens');
     }
   }, []);
@@ -91,59 +62,26 @@ export const useTickets = (userId: string | undefined) => {
    * Creates a new support ticket
    * @returns The newly created ticket
    */
-  const createTicket = useCallback(async (formData: CreateTicketData): Promise<Ticket> => {
+  const createTicket = useCallback(async (formData: TicketData): Promise<Ticket> => {
     if (!userId) throw new Error('Usuário não autenticado');
     
     setSubmitting(true);
     
     try {
-      // Explicitly define the insert payload type
-      const ticketData = {
-        title: formData.title,
-        description: formData.description,
-        user_id: userId,
-        status: 'aberto' as TicketStatus,
-        category: formData.category,
-        priority: formData.priority
-      };
+      const newTicket = await createSupportTicket(supabase, userId, formData);
       
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .insert([ticketData])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Explicitly define the activity log payload type
-      const activityData = {
-        user_id: userId,
-        action_type: 'ticket_created',
-        description: `Criou um ticket de suporte: ${formData.title}`,
-        entity_type: 'support_ticket',
-        entity_id: data.id
-      };
-      
-      await supabase
-        .from('activity_logs')
-        .insert([activityData]);
+      if (!newTicket) {
+        throw new Error('Não foi possível criar o ticket');
+      }
       
       toast.success('Ticket criado com sucesso');
       
-      // Ensure correct typing for the new ticket
-      const typedTicket: Ticket = {
-        ...data,
-        status: data.status as TicketStatus,
-        priority: data.priority as TicketPriority,
-        category: data.category as TicketCategory
-      };
-      
-      setTickets(prev => [typedTicket, ...prev]);
+      setTickets(prev => [newTicket, ...prev]);
       setActiveTab('my-tickets');
       
-      return typedTicket;
+      return newTicket;
     } catch (error) {
-      console.error('Error creating ticket:', error);
+      console.error('Error in createTicket:', error);
       toast.error('Não foi possível criar o ticket');
       throw error;
     } finally {
@@ -158,57 +96,21 @@ export const useTickets = (userId: string | undefined) => {
     if (!selectedTicket || !userId) return;
     
     try {
-      // Explicitly define the message payload type
-      const messageData = {
-        ticket_id: selectedTicket.id,
-        content,
-        sent_by_user: true
-      };
+      const result = await sendTicketMessage(supabase, selectedTicket.id, userId, content);
       
-      const { data, error } = await supabase
-        .from('support_messages')
-        .insert([messageData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      // Explicitly define the activity log payload type
-      const activityData = {
-        user_id: userId,
-        action_type: 'message_sent',
-        description: `Enviou uma mensagem em ticket de suporte`,
-        entity_type: 'support_message',
-        entity_id: data.id
-      };
-      
-      await supabase
-        .from('activity_logs')
-        .insert([activityData]);
-      
-      // Type assertion for message data
-      setMessages(prev => [...prev, data as Message]);
+      if (result.message) {
+        setMessages(prev => [...prev, result.message!]);
+      }
       
       // Update ticket status if needed
-      if (selectedTicket.status === 'aberto') {
-        const { error: updateError } = await supabase
-          .from('support_tickets')
-          .update({ status: 'em_andamento' as TicketStatus })
-          .eq('id', selectedTicket.id);
-          
-        if (!updateError) {
-          const updatedTicket = {
-            ...selectedTicket, 
-            status: 'em_andamento' as TicketStatus
-          };
-          setSelectedTicket(updatedTicket);
-          setTickets(prev => 
-            prev.map(t => t.id === selectedTicket.id ? updatedTicket : t)
-          );
-        }
+      if (result.updatedTicket) {
+        setSelectedTicket(result.updatedTicket);
+        setTickets(prev => 
+          prev.map(t => t.id === selectedTicket.id ? result.updatedTicket! : t)
+        );
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error in sendMessage:', error);
       toast.error('Não foi possível enviar a mensagem');
     }
   }, [selectedTicket, userId]);
