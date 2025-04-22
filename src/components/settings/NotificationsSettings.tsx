@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Json } from '@/integrations/supabase/types';
 import { ProfileWithUUID } from '@/types';
-import { hasData, hasError, toUUID, toJson } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile } from "@/utils/supabaseHelpers";
 
 interface NotificationPreferences {
   email: {
@@ -51,19 +50,11 @@ export const NotificationsSettings = () => {
       
       setLoading(true);
       try {
-        const response = await supabase
-          .from('profiles')
-          .select('notification_preferences')
-          .eq('id', toUUID(user.id))
-          .maybeSingle();
-
-        if (hasError(response)) {
-          throw response.error;
-        }
+        const profileData = await getProfile(supabase, user.id);
         
-        if (hasData(response) && response.data?.notification_preferences) {
+        if (profileData && profileData.notification_preferences) {
           // Type assertion to fix the type error
-          const prefs = response.data.notification_preferences as any;
+          const prefs = profileData.notification_preferences as any;
           if (prefs.email && prefs.sms) {
             setNotifications(prefs as NotificationPreferences);
           }
@@ -94,17 +85,12 @@ export const NotificationsSettings = () => {
     
     setSaving(true);
     try {
-      const updateData = {
-        notification_preferences: toJson(notifications),
+      const success = await updateProfile(supabase, user.id, {
+        notification_preferences: notifications as Json,
         updated_at: new Date().toISOString()
-      };
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', toUUID(user.id));
+      });
 
-      if (error) throw error;
+      if (!success) throw new Error("Erro ao atualizar o perfil");
       
       toast.success('Preferências de notificação atualizadas');
     } catch (error) {

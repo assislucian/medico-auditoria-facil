@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -104,8 +105,11 @@ export const ReferenceTablesSettings = () => {
         roles: selectedRolesWithChecked
       };
       
+      // Convert preferences to JSON before passing to updateProfile
+      const preferencesJson = JSON.parse(JSON.stringify(preferences));
+      
       const success = await updateProfile(supabase, user.id, {
-        reference_tables_preferences: preferences as Json,
+        reference_tables_preferences: preferencesJson as Json,
         updated_at: new Date().toISOString()
       });
 
@@ -132,8 +136,13 @@ export const ReferenceTablesSettings = () => {
   }
 
   // Ensure proper type compatibility for components
-  const tablesWithCheckedProp: ReferenceTableType[] = ensureCheckedProperty(medicalReferenceTables) as ReferenceTableType[];
-  const rolesWithCheckedProp: ReferenceTableType[] = ensureCheckedProperty(medicalRoles) as ReferenceTableType[];
+  const tablesWithCheckedProp = ensureCheckedProperty(
+    medicalReferenceTables
+  ) as ReferenceTableType[];
+  
+  const rolesWithCheckedProp = ensureCheckedProperty(
+    medicalRoles
+  ) as ReferenceTableType[];
 
   return (
     <div className="space-y-6">
