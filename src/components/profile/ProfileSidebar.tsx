@@ -101,7 +101,7 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
           .from('profiles')
           .select('notification_preferences')
           .eq('id', userId)
-          .maybeSingle();
+          .single();  // Use single() instead of maybeSingle() when expecting the record to exist
           
         if (fetchError) {
           throw fetchError;
@@ -118,7 +118,7 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
               ...currentPreferences,
               avatar_url: urlData.publicUrl
             }
-          } as any)
+          })
           .eq('id', userId);
 
         if (updateError) {

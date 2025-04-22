@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { validateCRM, formatCRM } from '@/utils/formatters';
 import { toast } from "sonner";
 import { Json } from '@/integrations/supabase/types';
+import { Profile } from '@/types';
 
 interface ProfileData {
   name: string;
@@ -52,7 +52,7 @@ export const useProfile = () => {
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
-        .maybeSingle();
+        .single(); // Use single() when expecting the record to exist
         
       if (error) {
         throw error;
@@ -67,7 +67,7 @@ export const useProfile = () => {
         }
       }
       
-      return data;
+      return data as Profile;
     } catch (error) {
       console.error('Error fetching profile:', error);
       return null;
@@ -144,7 +144,7 @@ export const useProfile = () => {
         .from('profiles')
         .select('notification_preferences')
         .eq('id', session.user.id)
-        .maybeSingle();
+        .single(); // Use single() when expecting the record to exist
       
       if (fetchError) {
         throw fetchError;
@@ -170,7 +170,7 @@ export const useProfile = () => {
           email: data.email,
           specialty: data.especialidade,
           notification_preferences: updatedNotificationPrefs as Json
-        } as any)
+        })
         .eq('id', session.user.id);
         
       if (error) {
@@ -243,7 +243,7 @@ export const useProfile = () => {
         .from('profiles')
         .select('notification_preferences')
         .eq('id', session.user.id)
-        .maybeSingle();
+        .single(); // Use single() when expecting the record to exist
         
       if (fetchError) {
         throw fetchError;
@@ -275,7 +275,7 @@ export const useProfile = () => {
         .from('profiles')
         .update({
           notification_preferences: prefJson as Json
-        } as any)
+        })
         .eq('id', session.user.id);
         
       if (error) {
@@ -303,7 +303,7 @@ export const useProfile = () => {
     fetchProfile,
     uploadAvatar,
     updateProfile,
-    updateSecurity,
-    updateNotificationPreferences
+    updateSecurity: async () => false,
+    updateNotificationPreferences: async () => false
   };
 };

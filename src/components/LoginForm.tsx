@@ -51,8 +51,9 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
-      await signIn(email, password);
-      toast.success('Login realizado com sucesso!');
+      // Fix: Pass just email as per the updated AuthContext interface
+      await signIn(email); 
+      toast.success('Verifique seu email para o link de login mágico!');
     } catch (error: any) {
       console.error('Erro ao fazer login:', error);
       

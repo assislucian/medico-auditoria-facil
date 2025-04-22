@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +39,7 @@ export const NotificationSettings = () => {
           .from('profiles')
           .select('notification_preferences')
           .eq('id', user.id)
-          .maybeSingle();
+          .single(); // Use single() when expecting the record to exist
 
         if (error) throw error;
         
@@ -82,7 +81,7 @@ export const NotificationSettings = () => {
         .update({ 
           notification_preferences: notificationPreferencesToJson(notifications) as Json,
           updated_at: new Date().toISOString()
-        } as any)
+        })
         .eq('id', user.id);
 
       if (error) throw error;

@@ -53,7 +53,7 @@ export const NotificationsSettings = () => {
           .from('profiles')
           .select('notification_preferences')
           .eq('id', user.id)
-          .maybeSingle();
+          .single(); // Use single() instead of maybeSingle() when expecting the record to exist
 
         if (error) throw error;
         
@@ -95,7 +95,7 @@ export const NotificationsSettings = () => {
         .update({ 
           notification_preferences: notifications as unknown as Json,
           updated_at: new Date().toISOString()
-        } as any)
+        })
         .eq('id', user.id);
 
       if (error) throw error;

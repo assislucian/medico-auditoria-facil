@@ -55,10 +55,12 @@ const RegisterForm = () => {
     setIsLoading(true);
     
     try {
-      await signUp(data.email, data.password, {
-        name: data.name,
-        crm: data.crm
-      });
+      // Fix: Only pass email and password as per the updated AuthContext interface
+      await signUp(data.email, data.password);
+      
+      // You can handle additional user data via the profiles table later
+      // For example via a trigger function that captures raw_user_meta_data
+      
       toast.success('Cadastro realizado com sucesso! Verifique seu email para confirmar sua conta.');
       navigate('/login');
     } catch (error: any) {

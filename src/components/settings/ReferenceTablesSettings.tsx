@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -48,7 +47,7 @@ export const ReferenceTablesSettings = () => {
           .from('profiles')
           .select('reference_tables_preferences')
           .eq('id', user.id)
-          .maybeSingle();
+          .single();
 
         if (error) throw error;
         
@@ -131,7 +130,7 @@ export const ReferenceTablesSettings = () => {
         .update({ 
           reference_tables_preferences: referenceTablesPreferencesToJson(preferences) as Json,
           updated_at: new Date().toISOString()
-        } as any)
+        })
         .eq('id', user.id);
 
       if (error) throw error;

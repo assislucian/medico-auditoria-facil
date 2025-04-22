@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +9,7 @@ interface AuthContextProps {
   session: Session | null;
   user: Session['user'] | null;
   profile: Profile | null;
-  isLoading: boolean;
+  loading: boolean; // Changed from isLoading to loading
   signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
@@ -26,11 +27,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<Session['user'] | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadSession = async () => {
-      setIsLoading(true);
+      setLoading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
@@ -54,7 +55,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } catch (error) {
         console.error("Erro ao carregar sessão:", error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
@@ -104,10 +105,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (!user) throw new Error('Usuário não autenticado');
       const { error } = await supabase
         .from('profiles')
-        .upsert({
+        .update({
           id: user.id,
           ...data,
-        }, { onConflict: 'id' });
+        })
+        .eq('id', user.id);
       if (error) throw error;
       setProfile(data);
       toast.success('Perfil atualizado com sucesso!');
@@ -142,7 +144,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     session,
     user,
     profile,
-    isLoading,
+    loading, // Changed from isLoading to loading
     signIn,
     signOut,
     signUp,
