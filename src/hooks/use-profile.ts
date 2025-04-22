@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { validateCRM, formatCRM } from '@/utils/formatters';
@@ -52,15 +53,14 @@ export const useProfile = () => {
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
-        .single(); // Use single() when expecting the record to exist
+        .maybeSingle();
         
       if (error) {
         throw error;
       }
       
       // Extract avatar URL from notification_preferences if it exists
-      if (data && data.notification_preferences && 
-          typeof data.notification_preferences === 'object') {
+      if (data && data.notification_preferences) {
         const prefs = data.notification_preferences as any;
         if (prefs.avatar_url) {
           setAvatarUrl(prefs.avatar_url);
@@ -144,7 +144,7 @@ export const useProfile = () => {
         .from('profiles')
         .select('notification_preferences')
         .eq('id', session.user.id)
-        .single(); // Use single() when expecting the record to exist
+        .maybeSingle();
       
       if (fetchError) {
         throw fetchError;
@@ -152,8 +152,8 @@ export const useProfile = () => {
       
       // Ensure notification_preferences is an object before spreading
       const currentNotificationPrefs = currentProfile && 
-        typeof currentProfile.notification_preferences === 'object' 
-        ? currentProfile.notification_preferences || {} 
+        currentProfile.notification_preferences 
+        ? currentProfile.notification_preferences
         : {};
       
       // Merge current notification preferences with avatar URL if available
@@ -163,14 +163,16 @@ export const useProfile = () => {
       };
       
       // Update profile data
+      const updateData = {
+        name: data.name,
+        email: data.email,
+        specialty: data.especialidade,
+        notification_preferences: updatedNotificationPrefs
+      };
+      
       const { error } = await supabase
         .from('profiles')
-        .update({
-          name: data.name,
-          email: data.email,
-          specialty: data.especialidade,
-          notification_preferences: updatedNotificationPrefs as Json
-        })
+        .update(updateData)
         .eq('id', session.user.id);
         
       if (error) {
@@ -243,7 +245,7 @@ export const useProfile = () => {
         .from('profiles')
         .select('notification_preferences')
         .eq('id', session.user.id)
-        .single(); // Use single() when expecting the record to exist
+        .maybeSingle();
         
       if (fetchError) {
         throw fetchError;
@@ -251,8 +253,8 @@ export const useProfile = () => {
       
       // Ensure notification_preferences is an object before spreading
       const currentNotificationPrefs = currentProfile && 
-        typeof currentProfile.notification_preferences === 'object' 
-        ? currentProfile.notification_preferences || {} 
+        currentProfile.notification_preferences
+        ? currentProfile.notification_preferences 
         : {};
       
       // Convert preferences to a JSON object for storage while preserving avatar URL
@@ -271,11 +273,13 @@ export const useProfile = () => {
         }
       };
       
+      const updateData = {
+        notification_preferences: prefJson as Json
+      };
+      
       const { error } = await supabase
         .from('profiles')
-        .update({
-          notification_preferences: prefJson as Json
-        })
+        .update(updateData)
         .eq('id', session.user.id);
         
       if (error) {
@@ -303,7 +307,7 @@ export const useProfile = () => {
     fetchProfile,
     uploadAvatar,
     updateProfile,
-    updateSecurity: async () => false,
-    updateNotificationPreferences: async () => false
+    updateSecurity,
+    updateNotificationPreferences
   };
 };

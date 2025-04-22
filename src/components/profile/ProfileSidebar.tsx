@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from '@/integrations/supabase/types';
 
 interface ProfileSidebarProps {
   name: string;
@@ -101,7 +102,7 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
           .from('profiles')
           .select('notification_preferences')
           .eq('id', userId)
-          .single();  // Use single() instead of maybeSingle() when expecting the record to exist
+          .maybeSingle();
           
         if (fetchError) {
           throw fetchError;
@@ -110,15 +111,17 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
         // Ensure we have an object to work with
         const currentPreferences = currentProfile?.notification_preferences || {};
         
-        // Update the profile with new metadata that includes avatar_url
+        // Update the profile with new avatar_url
+        const updateData = {
+          notification_preferences: {
+            ...(currentPreferences as object),
+            avatar_url: urlData.publicUrl
+          }
+        };
+        
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ 
-            notification_preferences: {
-              ...currentPreferences,
-              avatar_url: urlData.publicUrl
-            }
-          })
+          .update(updateData)
           .eq('id', userId);
 
         if (updateError) {

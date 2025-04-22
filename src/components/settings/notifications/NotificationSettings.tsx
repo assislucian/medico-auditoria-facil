@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,7 +40,7 @@ export const NotificationSettings = () => {
           .from('profiles')
           .select('notification_preferences')
           .eq('id', user.id)
-          .single(); // Use single() when expecting the record to exist
+          .maybeSingle();
 
         if (error) throw error;
         
@@ -76,12 +77,14 @@ export const NotificationSettings = () => {
     
     setSaving(true);
     try {
+      const updateData = {
+        notification_preferences: notificationPreferencesToJson(notifications),
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          notification_preferences: notificationPreferencesToJson(notifications) as Json,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (error) throw error;

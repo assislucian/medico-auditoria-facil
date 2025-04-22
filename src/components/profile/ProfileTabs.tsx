@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -37,7 +36,6 @@ export const ProfileTabs = () => {
     confirmPassword: "",
   });
 
-  // Get the form hook with validation
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -51,16 +49,13 @@ export const ProfileTabs = () => {
     }
   });
 
-  // Store the original values for reset
   const [originalValues, setOriginalValues] = useState(form.getValues());
 
-  // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     const file = files[0];
-    // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
       toast.error("Formato inválido", {
@@ -69,7 +64,6 @@ export const ProfileTabs = () => {
       return;
     }
 
-    // Create preview
     setSelectedImage(file);
     const reader = new FileReader();
     reader.onload = () => {
@@ -78,10 +72,8 @@ export const ProfileTabs = () => {
     reader.readAsDataURL(file);
   };
 
-  // Handle profile update
   const onSubmit = async (data: ProfileFormValues) => {
     try {
-      // Ensure required fields are filled
       const profileData = {
         name: data.name,
         email: data.email,
@@ -92,13 +84,10 @@ export const ProfileTabs = () => {
         bio: data.bio
       };
       
-      // Call the API to update the profile
       const success = await updateProfile(profileData, selectedImage);
       
       if (success) {
-        // Update original values for reset
         setOriginalValues(data);
-        // Clear image selection
         setSelectedImage(null);
         toast.success("Perfil atualizado", {
           description: "Suas informações foram atualizadas com sucesso."
@@ -111,12 +100,10 @@ export const ProfileTabs = () => {
     }
   };
 
-  // Handle security update
   const handleSecuritySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { currentPassword, newPassword, confirmPassword } = securityForm;
 
-    // Validate passwords match
     if (newPassword !== confirmPassword) {
       toast.error("As senhas não conferem", {
         description: "A nova senha e a confirmação devem ser iguais."
@@ -148,7 +135,6 @@ export const ProfileTabs = () => {
     }
   };
 
-  // Cancel changes and restore original values
   const handleCancel = () => {
     form.reset(originalValues);
     setSelectedImage(null);
@@ -158,7 +144,6 @@ export const ProfileTabs = () => {
     });
   };
 
-  // Handle security form changes
   const handleSecurityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSecurityForm(prev => ({

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -47,7 +48,7 @@ export const ReferenceTablesSettings = () => {
           .from('profiles')
           .select('reference_tables_preferences')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         
@@ -124,13 +125,14 @@ export const ReferenceTablesSettings = () => {
     setSaving(true);
     try {
       const preferences: ReferenceTablesPreferences = { tables, roles };
+      const updateData = {
+        reference_tables_preferences: referenceTablesPreferencesToJson(preferences),
+        updated_at: new Date().toISOString()
+      };
       
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          reference_tables_preferences: referenceTablesPreferencesToJson(preferences) as Json,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (error) throw error;

@@ -2,18 +2,18 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Profile } from '@/types';
+import { Profile, ProfileWithUUID } from '@/types';
 import { toast } from "sonner";
 
 interface AuthContextProps {
   session: Session | null;
   user: Session['user'] | null;
   profile: Profile | null;
-  loading: boolean; // Changed from isLoading to loading
+  loading: boolean;
   signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
-  updateProfile: (data: Profile) => Promise<void>;
+  updateProfile: (data: Partial<Profile>) => Promise<void>;
   getProfile: () => Promise<Profile | null>;
 }
 
@@ -100,18 +100,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const updateProfile = async (data: Profile) => {
+  const updateProfile = async (data: Partial<Profile>) => {
     try {
       if (!user) throw new Error('Usuário não autenticado');
+      
+      // Create a profile update object with typed fields
+      const updateData: any = {
+        ...data
+      };
+      
+      // Remove id from update data if present
+      if ('id' in updateData) {
+        delete updateData.id;
+      }
+      
       const { error } = await supabase
         .from('profiles')
-        .update({
-          id: user.id,
-          ...data,
-        })
+        .update(updateData)
         .eq('id', user.id);
+        
       if (error) throw error;
-      setProfile(data);
+      
+      // Update the local profile state
+      setProfile(prev => prev ? { ...prev, ...data } : null);
+      
       toast.success('Perfil atualizado com sucesso!');
     } catch (error: any) {
       toast.error(error.error_description || error.message);
@@ -144,7 +156,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     session,
     user,
     profile,
-    loading, // Changed from isLoading to loading
+    loading,
     signIn,
     signOut,
     signUp,
