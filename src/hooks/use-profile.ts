@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { validateCRM, formatCRM } from '@/utils/formatters';
 import { toast } from "sonner";
 import { Json } from '@/integrations/supabase/types';
-import { Profile } from '@/types';
+import { Profile, ProfileWithUUID } from '@/types';
 
 interface ProfileData {
   name: string;
@@ -163,11 +163,11 @@ export const useProfile = () => {
       };
       
       // Update profile data
-      const updateData = {
+      const updateData: Partial<ProfileWithUUID> = {
         name: data.name,
         email: data.email,
         specialty: data.especialidade,
-        notification_preferences: updatedNotificationPrefs
+        notification_preferences: updatedNotificationPrefs as Json
       };
       
       const { error } = await supabase
@@ -273,7 +273,7 @@ export const useProfile = () => {
         }
       };
       
-      const updateData = {
+      const updateData: Partial<ProfileWithUUID> = {
         notification_preferences: prefJson as Json
       };
       

@@ -7,6 +7,7 @@ import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
+import { ProfileWithUUID } from "@/types";
 
 interface ProfileSidebarProps {
   name: string;
@@ -112,11 +113,11 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
         const currentPreferences = currentProfile?.notification_preferences || {};
         
         // Update the profile with new avatar_url
-        const updateData = {
+        const updateData: Partial<ProfileWithUUID> = {
           notification_preferences: {
             ...(currentPreferences as object),
             avatar_url: urlData.publicUrl
-          }
+          } as Json
         };
         
         const { error: updateError } = await supabase

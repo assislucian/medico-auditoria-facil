@@ -15,6 +15,7 @@ import {
   parseNotificationPreferences,
   notificationPreferencesToJson
 } from "./types";
+import { ProfileWithUUID } from '@/types';
 
 /**
  * NotificationsSettings Component
@@ -77,8 +78,8 @@ export const NotificationSettings = () => {
     
     setSaving(true);
     try {
-      const updateData = {
-        notification_preferences: notificationPreferencesToJson(notifications),
+      const updateData: Partial<ProfileWithUUID> = {
+        notification_preferences: notificationPreferencesToJson(notifications) as Json,
         updated_at: new Date().toISOString()
       };
 

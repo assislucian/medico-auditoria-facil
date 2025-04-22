@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Json } from '@/integrations/supabase/types';
+import { ProfileWithUUID } from '@/types';
 
 interface NotificationPreferences {
   email: {
@@ -53,7 +54,7 @@ export const NotificationsSettings = () => {
           .from('profiles')
           .select('notification_preferences')
           .eq('id', user.id)
-          .single(); // Use single() instead of maybeSingle() when expecting the record to exist
+          .maybeSingle();
 
         if (error) throw error;
         
@@ -90,12 +91,14 @@ export const NotificationsSettings = () => {
     
     setSaving(true);
     try {
+      const updateData: Partial<ProfileWithUUID> = {
+        notification_preferences: notifications as unknown as Json,
+        updated_at: new Date().toISOString()
+      };
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          notification_preferences: notifications as unknown as Json,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (error) throw error;

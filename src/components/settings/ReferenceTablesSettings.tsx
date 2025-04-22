@@ -18,6 +18,7 @@ import {
   referenceTablesPreferencesToJson 
 } from './reference-tables/types';
 import { Json } from '@/integrations/supabase/types';
+import { ProfileWithUUID } from '@/types';
 
 /**
  * ReferenceTablesSettings Component
@@ -125,8 +126,8 @@ export const ReferenceTablesSettings = () => {
     setSaving(true);
     try {
       const preferences: ReferenceTablesPreferences = { tables, roles };
-      const updateData = {
-        reference_tables_preferences: referenceTablesPreferencesToJson(preferences),
+      const updateData: Partial<ProfileWithUUID> = {
+        reference_tables_preferences: referenceTablesPreferencesToJson(preferences) as Json,
         updated_at: new Date().toISOString()
       };
       
