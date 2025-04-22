@@ -17,6 +17,7 @@ import {
   parseReferenceTablesPreferences,
   referenceTablesPreferencesToJson 
 } from './reference-tables/types';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * ReferenceTablesSettings Component
@@ -128,9 +129,9 @@ export const ReferenceTablesSettings = () => {
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          reference_tables_preferences: referenceTablesPreferencesToJson(preferences),
+          reference_tables_preferences: referenceTablesPreferencesToJson(preferences) as Json,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', user.id);
 
       if (error) throw error;

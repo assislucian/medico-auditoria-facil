@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { validateCRM, formatCRM } from '@/utils/formatters';
 import { toast } from "sonner";
+import { Json } from '@/integrations/supabase/types';
 
 interface ProfileData {
   name: string;
@@ -150,8 +151,9 @@ export const useProfile = () => {
       }
       
       // Ensure notification_preferences is an object before spreading
-      const currentNotificationPrefs = typeof currentProfile?.notification_preferences === 'object' 
-        ? currentProfile?.notification_preferences || {} 
+      const currentNotificationPrefs = currentProfile && 
+        typeof currentProfile.notification_preferences === 'object' 
+        ? currentProfile.notification_preferences || {} 
         : {};
       
       // Merge current notification preferences with avatar URL if available
@@ -167,8 +169,8 @@ export const useProfile = () => {
           name: data.name,
           email: data.email,
           specialty: data.especialidade,
-          notification_preferences: updatedNotificationPrefs
-        })
+          notification_preferences: updatedNotificationPrefs as Json
+        } as any)
         .eq('id', session.user.id);
         
       if (error) {
@@ -248,8 +250,9 @@ export const useProfile = () => {
       }
       
       // Ensure notification_preferences is an object before spreading
-      const currentNotificationPrefs = typeof currentProfile?.notification_preferences === 'object' 
-        ? currentProfile?.notification_preferences || {} 
+      const currentNotificationPrefs = currentProfile && 
+        typeof currentProfile.notification_preferences === 'object' 
+        ? currentProfile.notification_preferences || {} 
         : {};
       
       // Convert preferences to a JSON object for storage while preserving avatar URL
@@ -271,8 +274,8 @@ export const useProfile = () => {
       const { error } = await supabase
         .from('profiles')
         .update({
-          notification_preferences: prefJson
-        })
+          notification_preferences: prefJson as Json
+        } as any)
         .eq('id', session.user.id);
         
       if (error) {

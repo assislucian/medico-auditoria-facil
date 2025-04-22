@@ -80,9 +80,9 @@ export const NotificationSettings = () => {
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          notification_preferences: notificationPreferencesToJson(notifications),
+          notification_preferences: notificationPreferencesToJson(notifications) as Json,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', user.id);
 
       if (error) throw error;

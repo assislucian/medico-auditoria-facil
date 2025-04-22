@@ -96,17 +96,21 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
           .from('profiles')
           .getPublicUrl(filePath);
           
-        // Update user profile with avatar URL using metadata field
-        const { data: currentProfile } = await supabase
+        // Update user profile with avatar URL
+        const { data: currentProfile, error: fetchError } = await supabase
           .from('profiles')
           .select('notification_preferences')
           .eq('id', userId)
           .maybeSingle();
           
+        if (fetchError) {
+          throw fetchError;
+        }
+        
         // Ensure we have an object to work with
         const currentPreferences = currentProfile?.notification_preferences || {};
-          
-        // Update the profile
+        
+        // Update the profile with new metadata that includes avatar_url
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
@@ -114,7 +118,7 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
               ...currentPreferences,
               avatar_url: urlData.publicUrl
             }
-          })
+          } as any)
           .eq('id', userId);
 
         if (updateError) {

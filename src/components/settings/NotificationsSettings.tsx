@@ -95,7 +95,7 @@ export const NotificationsSettings = () => {
         .update({ 
           notification_preferences: notifications as unknown as Json,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', user.id);
 
       if (error) throw error;
