@@ -91,7 +91,7 @@ export const NotificationsSettings = () => {
     
     setSaving(true);
     try {
-      const updateData: Partial<ProfileWithUUID> = {
+      const updateData = {
         notification_preferences: notifications as unknown as Json,
         updated_at: new Date().toISOString()
       };

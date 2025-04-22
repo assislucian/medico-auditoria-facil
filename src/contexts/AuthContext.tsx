@@ -50,7 +50,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             console.error("Erro ao buscar perfil:", error);
           }
 
-          setProfile(profileData as Profile || null);
+          if (profileData) {
+            setProfile(profileData as Profile);
+          }
         }
       } catch (error) {
         console.error("Erro ao carregar sessão:", error);

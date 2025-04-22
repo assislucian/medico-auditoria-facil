@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,7 +77,7 @@ export const NotificationSettings = () => {
     
     setSaving(true);
     try {
-      const updateData: Partial<ProfileWithUUID> = {
+      const updateData = {
         notification_preferences: notificationPreferencesToJson(notifications) as Json,
         updated_at: new Date().toISOString()
       };

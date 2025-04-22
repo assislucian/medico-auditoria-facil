@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -113,7 +112,7 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
         const currentPreferences = currentProfile?.notification_preferences || {};
         
         // Update the profile with new avatar_url
-        const updateData: Partial<ProfileWithUUID> = {
+        const updateData = {
           notification_preferences: {
             ...(currentPreferences as object),
             avatar_url: urlData.publicUrl
