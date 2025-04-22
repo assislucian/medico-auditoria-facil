@@ -53,15 +53,15 @@ export const NotificationsSettings = () => {
           .from('profiles')
           .select('notification_preferences')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         
         if (data?.notification_preferences) {
           // Type assertion to fix the type error
-          const prefs = data.notification_preferences as unknown as NotificationPreferences;
+          const prefs = data.notification_preferences as any;
           if (prefs.email && prefs.sms) {
-            setNotifications(prefs);
+            setNotifications(prefs as NotificationPreferences);
           }
         }
       } catch (error) {

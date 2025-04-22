@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
-import { Json } from "@/integrations/supabase/types";
+import { Json } from '@/integrations/supabase/types';
 import { EmailSettings } from './EmailSettings';
 import { SmsSettings } from './SmsSettings';
 import { 
@@ -23,7 +23,7 @@ import {
  * for both email and SMS channels. It fetches current preferences from
  * the database and handles updates via the Supabase client.
  */
-export const NotificationsSettings = () => {
+export const NotificationSettings = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -40,7 +40,7 @@ export const NotificationsSettings = () => {
           .from('profiles')
           .select('notification_preferences')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         

@@ -51,7 +51,7 @@ export const useProfile = () => {
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
         
       if (error) {
         throw error;
@@ -59,9 +59,11 @@ export const useProfile = () => {
       
       // Extract avatar URL from notification_preferences if it exists
       if (data && data.notification_preferences && 
-          typeof data.notification_preferences === 'object' && 
-          'avatar_url' in data.notification_preferences) {
-        setAvatarUrl(data.notification_preferences.avatar_url as string);
+          typeof data.notification_preferences === 'object') {
+        const prefs = data.notification_preferences as any;
+        if (prefs.avatar_url) {
+          setAvatarUrl(prefs.avatar_url);
+        }
       }
       
       return data;
@@ -139,9 +141,9 @@ export const useProfile = () => {
       // Get current profile to merge with updated data
       const { data: currentProfile, error: fetchError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('notification_preferences')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
       
       if (fetchError) {
         throw fetchError;
@@ -237,9 +239,9 @@ export const useProfile = () => {
       // Get current profile to preserve avatar URL if it exists
       const { data: currentProfile, error: fetchError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('notification_preferences')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
         
       if (fetchError) {
         throw fetchError;

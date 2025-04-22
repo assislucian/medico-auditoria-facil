@@ -47,7 +47,7 @@ export const ReferenceTablesSettings = () => {
           .from('profiles')
           .select('reference_tables_preferences')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         

@@ -66,7 +66,7 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
         const userId = sessionData.session.user.id;
         const filePath = `avatars/${userId}/profile-${Date.now()}`;
         
-        // Create profiles bucket if it doesn't exist
+        // Check if the storage bucket exists and create it if needed
         try {
           const { data: buckets } = await supabase.storage.listBuckets();
           const profilesBucketExists = buckets?.some(b => b.name === 'profiles');
@@ -101,13 +101,12 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
           .from('profiles')
           .select('notification_preferences')
           .eq('id', userId)
-          .single();
+          .maybeSingle();
           
         // Ensure we have an object to work with
-        const currentPreferences = typeof currentProfile?.notification_preferences === 'object' 
-          ? currentProfile?.notification_preferences || {}
-          : {};
+        const currentPreferences = currentProfile?.notification_preferences || {};
           
+        // Update the profile
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
