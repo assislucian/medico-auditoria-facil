@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
 import { ProfileWithUUID } from "@/types";
-import { hasData, hasError, toUUID, toJson } from "@/utils/supabaseHelpers";
+import { hasData, hasError, toUUID, toJson, extractData, ProfileUpdatePayload } from "@/utils/supabaseHelpers";
 
 interface ProfileSidebarProps {
   name: string;
@@ -103,20 +103,22 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
         const response = await supabase
           .from('profiles')
           .select('notification_preferences')
-          .eq('id', toUUID(userId))
+          .eq('id', userId)
           .maybeSingle();
           
         if (hasError(response)) {
           throw response.error;
         }
         
+        const profileData = extractData(response);
+        
         // Ensure we have an object to work with
-        const currentPreferences = hasData(response) && response.data?.notification_preferences 
-          ? response.data.notification_preferences 
+        const currentPreferences = profileData?.notification_preferences 
+          ? profileData.notification_preferences 
           : {};
         
         // Update the profile with new avatar_url
-        const updateData = {
+        const updateData: ProfileUpdatePayload = {
           notification_preferences: toJson({
             ...(currentPreferences as object),
             avatar_url: urlData.publicUrl
@@ -126,7 +128,7 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
         const { error: updateError } = await supabase
           .from('profiles')
           .update(updateData)
-          .eq('id', toUUID(userId));
+          .eq('id', userId);
 
         if (updateError) {
           throw updateError;

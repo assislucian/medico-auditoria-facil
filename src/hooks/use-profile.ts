@@ -1,9 +1,11 @@
+
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { validateCRM, formatCRM } from '@/utils/formatters';
 import { toast } from "sonner";
 import { Json } from '@/integrations/supabase/types';
-import { Profile, ProfileWithUUID } from '@/types';
+import { Profile } from '@/types';
+import { hasData, hasError, toJson, extractData, ProfileUpdatePayload } from "@/utils/supabaseHelpers";
 
 interface ProfileData {
   name: string;
@@ -48,25 +50,27 @@ export const useProfile = () => {
         throw new Error('Não autenticado');
       }
       
-      const { data, error } = await supabase
+      const response = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .maybeSingle();
         
-      if (error) {
-        throw error;
+      if (hasError(response)) {
+        throw response.error;
       }
       
+      const profileData = extractData(response);
+      
       // Extract avatar URL from notification_preferences if it exists
-      if (data && data.notification_preferences) {
-        const prefs = data.notification_preferences as any;
+      if (profileData && profileData.notification_preferences) {
+        const prefs = profileData.notification_preferences as any;
         if (prefs.avatar_url) {
           setAvatarUrl(prefs.avatar_url);
         }
       }
       
-      return data as Profile;
+      return profileData as Profile;
     } catch (error) {
       console.error('Error fetching profile:', error);
       return null;
@@ -139,20 +143,22 @@ export const useProfile = () => {
       }
       
       // Get current profile to merge with updated data
-      const { data: currentProfile, error: fetchError } = await supabase
+      const response = await supabase
         .from('profiles')
         .select('notification_preferences')
         .eq('id', session.user.id)
         .maybeSingle();
       
-      if (fetchError) {
-        throw fetchError;
+      if (hasError(response)) {
+        throw response.error;
       }
       
+      const profileData = extractData(response);
+      
       // Ensure notification_preferences is an object before spreading
-      const currentNotificationPrefs = currentProfile && 
-        currentProfile.notification_preferences 
-        ? currentProfile.notification_preferences
+      const currentNotificationPrefs = profileData && 
+        profileData.notification_preferences 
+        ? profileData.notification_preferences
         : {};
       
       // Merge current notification preferences with avatar URL if available
@@ -162,11 +168,11 @@ export const useProfile = () => {
       };
       
       // Update profile data
-      const updateData = {
+      const updateData: ProfileUpdatePayload = {
         name: data.name,
         email: data.email,
         specialty: data.especialidade,
-        notification_preferences: updatedNotificationPrefs as Json
+        notification_preferences: toJson(updatedNotificationPrefs)
       };
       
       const { error } = await supabase
@@ -240,20 +246,22 @@ export const useProfile = () => {
       }
       
       // Get current profile to preserve avatar URL if it exists
-      const { data: currentProfile, error: fetchError } = await supabase
+      const response = await supabase
         .from('profiles')
         .select('notification_preferences')
         .eq('id', session.user.id)
         .maybeSingle();
         
-      if (fetchError) {
-        throw fetchError;
+      if (hasError(response)) {
+        throw response.error;
       }
       
+      const profileData = extractData(response);
+      
       // Ensure notification_preferences is an object before spreading
-      const currentNotificationPrefs = currentProfile && 
-        currentProfile.notification_preferences
-        ? currentProfile.notification_preferences 
+      const currentNotificationPrefs = profileData && 
+        profileData.notification_preferences
+        ? profileData.notification_preferences 
         : {};
       
       // Convert preferences to a JSON object for storage while preserving avatar URL
@@ -272,8 +280,8 @@ export const useProfile = () => {
         }
       };
       
-      const updateData: Partial<ProfileWithUUID> = {
-        notification_preferences: prefJson as Json
+      const updateData: ProfileUpdatePayload = {
+        notification_preferences: toJson(prefJson)
       };
       
       const { error } = await supabase
@@ -306,7 +314,7 @@ export const useProfile = () => {
     fetchProfile,
     uploadAvatar,
     updateProfile,
-    updateSecurity: async () => false, // Stubbed implementation to fix errors
-    updateNotificationPreferences: async () => false // Stubbed implementation to fix errors
+    updateSecurity,
+    updateNotificationPreferences
   };
 };

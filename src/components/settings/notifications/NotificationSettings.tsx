@@ -16,7 +16,7 @@ import {
   notificationPreferencesToJson
 } from "./types";
 import { ProfileWithUUID } from '@/types';
-import { hasData, hasError, toUUID, toJson } from "@/utils/supabaseHelpers";
+import { hasData, hasError, toJson, extractData, ProfileUpdatePayload } from "@/utils/supabaseHelpers";
 
 /**
  * NotificationsSettings Component
@@ -41,16 +41,18 @@ export const NotificationSettings = () => {
         const response = await supabase
           .from('profiles')
           .select('notification_preferences')
-          .eq('id', toUUID(user.id))
+          .eq('id', user.id)
           .maybeSingle();
 
         if (hasError(response)) {
           throw response.error;
         }
         
+        const profileData = extractData(response);
+        
         // Parse and set notification preferences using helper function
-        if (hasData(response) && response.data?.notification_preferences) {
-          const prefs = parseNotificationPreferences(response.data.notification_preferences);
+        if (profileData?.notification_preferences) {
+          const prefs = parseNotificationPreferences(profileData.notification_preferences);
           setNotifications(prefs);
         }
       } catch (error) {
@@ -81,7 +83,7 @@ export const NotificationSettings = () => {
     
     setSaving(true);
     try {
-      const updateData = {
+      const updateData: ProfileUpdatePayload = {
         notification_preferences: toJson(notificationPreferencesToJson(notifications)),
         updated_at: new Date().toISOString()
       };
@@ -89,7 +91,7 @@ export const NotificationSettings = () => {
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', toUUID(user.id));
+        .eq('id', user.id);
 
       if (error) throw error;
       

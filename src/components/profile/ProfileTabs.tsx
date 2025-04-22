@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -84,11 +85,12 @@ export const ProfileTabs = () => {
         bio: data.bio
       };
       
-      const success = await updateProfile(profileData);
+      const success = await updateProfile(profileData, selectedImage);
       
       if (success) {
         setOriginalValues(data);
         setSelectedImage(null);
+        setImagePreview(null);
         toast.success("Perfil atualizado", {
           description: "Suas informações foram atualizadas com sucesso."
         });

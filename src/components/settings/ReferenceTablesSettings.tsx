@@ -13,9 +13,10 @@ import {
   defaultReferenceTablesPreferences,
   parseReferenceTablesPreferences,
   referenceTablesPreferencesToJson,
-  ensureCheckedProperty
+  ensureCheckedProperty,
+  ReferenceTable as ReferenceTableType
 } from './reference-tables/types';
-import { hasData, hasError, toUUID, toJson } from "@/utils/supabaseHelpers";
+import { hasData, hasError, toJson, extractData, ProfileUpdatePayload } from "@/utils/supabaseHelpers";
 
 /**
  * ReferenceTablesSettings Component
@@ -49,16 +50,18 @@ export const ReferenceTablesSettings = () => {
         const response = await supabase
           .from('profiles')
           .select('reference_tables_preferences')
-          .eq('id', toUUID(user.id))
+          .eq('id', user.id)
           .maybeSingle();
 
         if (hasError(response)) {
           throw response.error;
         }
         
+        const profileData = extractData(response);
+        
         // Parse and set reference tables preferences using helper function
-        if (hasData(response) && response.data?.reference_tables_preferences) {
-          const prefs = parseReferenceTablesPreferences(response.data.reference_tables_preferences);
+        if (profileData?.reference_tables_preferences) {
+          const prefs = parseReferenceTablesPreferences(profileData.reference_tables_preferences);
           setTables(prefs.tables.map(table => table.id));
           setRoles(prefs.roles.map(role => role.id));
         }
@@ -98,19 +101,20 @@ export const ReferenceTablesSettings = () => {
     setSaving(true);
     try {
       // Ensure tables and roles have the required checked property
-      const selectedTables = ensureCheckedProperty(
+      const selectedTablesWithChecked = ensureCheckedProperty(
         medicalReferenceTables.filter(table => tables.includes(table.id))
-      );
-      const selectedRoles = ensureCheckedProperty(
+      ) as ReferenceTableType[];
+      
+      const selectedRolesWithChecked = ensureCheckedProperty(
         medicalRoles.filter(role => roles.includes(role.id))
-      );
+      ) as ReferenceTableType[];
       
       const preferences: ReferenceTablesPreferences = { 
-        tables: selectedTables,
-        roles: selectedRoles
+        tables: selectedTablesWithChecked,
+        roles: selectedRolesWithChecked
       };
       
-      const updateData = {
+      const updateData: ProfileUpdatePayload = {
         reference_tables_preferences: toJson(preferences),
         updated_at: new Date().toISOString()
       };
@@ -118,7 +122,7 @@ export const ReferenceTablesSettings = () => {
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', toUUID(user.id));
+        .eq('id', user.id);
 
       if (error) throw error;
       

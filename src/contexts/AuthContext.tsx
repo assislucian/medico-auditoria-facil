@@ -4,7 +4,7 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, ProfileWithUUID } from '@/types';
 import { toast } from "sonner";
-import { hasData, hasError, toUUID, toJson } from "@/utils/supabaseHelpers";
+import { hasData, hasError, toJson, extractData, ProfileUpdatePayload } from "@/utils/supabaseHelpers";
 
 interface AuthContextProps {
   session: Session | null;
@@ -16,6 +16,7 @@ interface AuthContextProps {
   signUp: (email: string, password: string) => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   getProfile: () => Promise<Profile | null>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -44,14 +45,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           const response = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', toUUID(session.user.id))
+            .eq('id', session.user.id)
             .maybeSingle();
 
           if (hasError(response)) {
             console.error("Erro ao buscar perfil:", response.error);
-          }
-
-          if (hasData(response) && response.data) {
+          } else if (hasData(response) && response.data) {
             setProfile(response.data as Profile);
           }
         }
@@ -94,6 +93,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success('Email com instruções para redefinir senha enviado!');
+    } catch (error: any) {
+      toast.error(error.error_description || error.message);
+    }
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -108,7 +119,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (!user) throw new Error('Usuário não autenticado');
       
       // Create a profile update object with typed fields
-      const updateData: any = {
+      const updateData: ProfileUpdatePayload = {
         ...data
       };
       
@@ -120,7 +131,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', toUUID(user.id));
+        .eq('id', user.id);
         
       if (error) throw error;
       
@@ -140,7 +151,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const response = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', toUUID(user.id))
+        .eq('id', user.id)
         .maybeSingle();
         
       if (hasError(response)) {
@@ -148,7 +159,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return null;
       }
       
-      return hasData(response) && response.data ? (response.data as Profile) : null;
+      const profileData = extractData(response);
+      return profileData as Profile | null;
     } catch (error: any) {
       console.error("Erro ao buscar perfil:", error);
       return null;
@@ -164,7 +176,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     signOut,
     signUp,
     updateProfile,
-    getProfile
+    getProfile,
+    resetPassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
