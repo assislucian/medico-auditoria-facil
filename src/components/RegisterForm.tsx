@@ -59,10 +59,16 @@ const RegisterForm = () => {
         name: data.name,
         crm: data.crm
       });
-      toast.success('Cadastro realizado com sucesso! Verifique seu email.');
+      toast.success('Cadastro realizado com sucesso! Verifique seu email para confirmar sua conta.');
       navigate('/login');
-    } catch (error) {
-      toast.error('Erro ao realizar cadastro. Tente novamente.');
+    } catch (error: any) {
+      console.error('Erro ao realizar cadastro:', error);
+      
+      if (error.message.includes('User already registered')) {
+        toast.error('Email já cadastrado. Tente fazer login ou recuperar sua senha.');
+      } else {
+        toast.error('Erro ao realizar cadastro. Tente novamente mais tarde.');
+      }
     } finally {
       setIsLoading(false);
     }

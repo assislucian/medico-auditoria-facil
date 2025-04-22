@@ -12,7 +12,7 @@ import {
   HelpCircle,
   User,
   Bell,
-  FileBarChart // Added for Compare page
+  FileBarChart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 interface SideNavProps {
   className?: string;
@@ -29,7 +30,38 @@ interface SideNavProps {
 export function SideNav({ className }: SideNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, user } = useAuth();
+  const { signOut, user, getProfile } = useAuth();
+  const [profileData, setProfileData] = useState({
+    name: "Carregando...",
+    specialty: "",
+    crm: "",
+    avatarUrl: ""
+  });
+  
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (user) {
+        const profile = await getProfile();
+        if (profile) {
+          let avatarUrl;
+          if (profile.notification_preferences && 
+              typeof profile.notification_preferences === 'object' && 
+              'avatar_url' in profile.notification_preferences) {
+            avatarUrl = profile.notification_preferences.avatar_url;
+          }
+          
+          setProfileData({
+            name: profile.name || "Usuário",
+            specialty: profile.specialty || "",
+            crm: profile.crm || "",
+            avatarUrl: avatarUrl || ""
+          });
+        }
+      }
+    };
+    
+    loadProfile();
+  }, [user, getProfile]);
   
   const handleSignOut = async () => {
     try {
@@ -40,6 +72,16 @@ export function SideNav({ className }: SideNavProps) {
       console.error("Erro ao fazer logout:", error);
       toast.error("Erro ao fazer logout");
     }
+  };
+  
+  // Extrai as iniciais do nome para o fallback do avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
   
   const navItems = [
@@ -100,12 +142,16 @@ export function SideNav({ className }: SideNavProps) {
       <div className="px-3 py-2">
         <div className="flex flex-col items-center mb-6 p-2">
           <Avatar className="h-16 w-16 mb-2">
-            <AvatarImage src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=200" alt="Avatar" />
-            <AvatarFallback>AS</AvatarFallback>
+            <AvatarImage src={profileData.avatarUrl} alt="Avatar" />
+            <AvatarFallback>{getInitials(profileData.name)}</AvatarFallback>
           </Avatar>
-          <h3 className="font-medium">Dra. Ana Silva</h3>
-          <p className="text-xs text-muted-foreground">Ortopedia</p>
-          <p className="text-xs text-muted-foreground">CRM 123456/SP</p>
+          <h3 className="font-medium">{profileData.name}</h3>
+          {profileData.specialty && (
+            <p className="text-xs text-muted-foreground">{profileData.specialty}</p>
+          )}
+          {profileData.crm && (
+            <p className="text-xs text-muted-foreground">CRM {profileData.crm}</p>
+          )}
           <Button variant="outline" size="sm" className="mt-2 w-full" asChild>
             <Link to="/profile">Ver perfil</Link>
           </Button>

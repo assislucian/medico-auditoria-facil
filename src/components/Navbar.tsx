@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   LogOut, 
@@ -23,9 +23,68 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
-const Navbar = ({ isLoggedIn = false }: { isLoggedIn?: boolean }) => {
+const Navbar = ({ isLoggedIn: propIsLoggedIn }: { isLoggedIn?: boolean }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, signOut, getProfile } = useAuth();
+  const navigate = useNavigate();
+  const isLoggedIn = propIsLoggedIn !== undefined ? propIsLoggedIn : !!user;
+  const [profileData, setProfileData] = useState({
+    name: "Carregando...",
+    specialty: "",
+    email: "",
+    avatarUrl: ""
+  });
+  
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (isLoggedIn && user) {
+        const profile = await getProfile();
+        if (profile) {
+          let avatarUrl;
+          if (profile.notification_preferences && 
+              typeof profile.notification_preferences === 'object' && 
+              'avatar_url' in profile.notification_preferences) {
+            avatarUrl = profile.notification_preferences.avatar_url;
+          }
+          
+          setProfileData({
+            name: profile.name || "Usuário",
+            specialty: profile.specialty || "",
+            email: profile.email || user.email || "",
+            avatarUrl: avatarUrl || ""
+          });
+        }
+      }
+    };
+    
+    if (isLoggedIn) {
+      loadProfile();
+    }
+  }, [isLoggedIn, user, getProfile]);
+  
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Logout realizado com sucesso');
+      navigate('/');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast.error('Erro ao fazer logout');
+    }
+  };
+  
+  // Extrai as iniciais do nome para o fallback do avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -149,12 +208,14 @@ const Navbar = ({ isLoggedIn = false }: { isLoggedIn?: boolean }) => {
                       className="flex items-center gap-2"
                     >
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=200" alt="Avatar" />
-                        <AvatarFallback>AS</AvatarFallback>
+                        <AvatarImage src={profileData.avatarUrl} alt="Avatar" />
+                        <AvatarFallback>{getInitials(profileData.name)}</AvatarFallback>
                       </Avatar>
                       <div className="hidden lg:block text-left">
-                        <p className="text-sm font-medium">Dra. Ana Silva</p>
-                        <p className="text-xs text-muted-foreground">Ortopedia</p>
+                        <p className="text-sm font-medium">{profileData.name}</p>
+                        {profileData.specialty && (
+                          <p className="text-xs text-muted-foreground">{profileData.specialty}</p>
+                        )}
                       </div>
                       <ChevronDown className="h-4 w-4 hidden lg:block" />
                     </Button>
@@ -162,12 +223,12 @@ const Navbar = ({ isLoggedIn = false }: { isLoggedIn?: boolean }) => {
                   <DropdownMenuContent align="end" className="w-60">
                     <div className="flex items-center justify-start p-2 lg:hidden">
                       <Avatar className="h-10 w-10 mr-3">
-                        <AvatarImage src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=200" alt="Avatar" />
-                        <AvatarFallback>AS</AvatarFallback>
+                        <AvatarImage src={profileData.avatarUrl} alt="Avatar" />
+                        <AvatarFallback>{getInitials(profileData.name)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">Dra. Ana Silva</p>
-                        <p className="text-xs text-muted-foreground">dr.anasilva@exemplo.com.br</p>
+                        <p className="font-medium">{profileData.name}</p>
+                        <p className="text-xs text-muted-foreground">{profileData.email}</p>
                       </div>
                     </div>
                     <DropdownMenuSeparator className="lg:hidden" />
@@ -191,7 +252,10 @@ const Navbar = ({ isLoggedIn = false }: { isLoggedIn?: boolean }) => {
                       </div>
                     </div>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
+                    <DropdownMenuItem 
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                      onClick={handleLogout}
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Sair</span>
                     </DropdownMenuItem>
@@ -277,12 +341,12 @@ const Navbar = ({ isLoggedIn = false }: { isLoggedIn?: boolean }) => {
                 {/* Avatar para usuário logado em mobile */}
                 <div className="flex items-center p-4 border-b">
                   <Avatar className="h-10 w-10 mr-3">
-                    <AvatarImage src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=200" alt="Avatar" />
-                    <AvatarFallback>AS</AvatarFallback>
+                    <AvatarImage src={profileData.avatarUrl} alt="Avatar" />
+                    <AvatarFallback>{getInitials(profileData.name)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">Dra. Ana Silva</p>
-                    <p className="text-xs text-muted-foreground">dr.anasilva@exemplo.com.br</p>
+                    <p className="font-medium">{profileData.name}</p>
+                    <p className="text-xs text-muted-foreground">{profileData.email}</p>
                   </div>
                 </div>
                 
@@ -328,7 +392,11 @@ const Navbar = ({ isLoggedIn = false }: { isLoggedIn?: boolean }) => {
                   Sobre o MedCheck
                 </Link>
                 
-                <Button variant="destructive" className="w-full mt-4">
+                <Button 
+                  variant="destructive" 
+                  className="w-full mt-4"
+                  onClick={handleLogout}
+                >
                   <LogOut size={16} className="mr-2" />
                   Sair
                 </Button>

@@ -25,6 +25,8 @@ import Support from "./pages/Support";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 import CompareContracheque from "./pages/CompareContracheque";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (!user) {
     return <Navigate to="/login" />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Guest Only Route component (prevents authenticated users from accessing login/register)
+const GuestOnlyRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) return null;
+  
+  if (user) {
+    return <Navigate to="/dashboard" />;
   }
   
   return <>{children}</>;
@@ -60,14 +75,18 @@ const App = () => {
                 <Routes>
                   {/* Public routes */}
                   <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/checkout" element={<CheckoutPage />} />
+                  
+                  {/* Guest-only routes */}
+                  <Route path="/login" element={<GuestOnlyRoute><Login /></GuestOnlyRoute>} />
+                  <Route path="/register" element={<GuestOnlyRoute><Register /></GuestOnlyRoute>} />
+                  <Route path="/forgot-password" element={<GuestOnlyRoute><ForgotPassword /></GuestOnlyRoute>} />
+                  <Route path="/reset-password" element={<GuestOnlyRoute><ResetPassword /></GuestOnlyRoute>} />
                   
                   {/* Protected routes */}
+                  <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
                   <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                   <Route path="/uploads" element={<ProtectedRoute><Uploads /></ProtectedRoute>} />
                   <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />

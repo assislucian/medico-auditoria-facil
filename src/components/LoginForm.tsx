@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,20 +8,43 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+});
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<{email?: string, password?: string}>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
-  const navigate = useNavigate();
+
+  const validateForm = () => {
+    try {
+      loginSchema.parse({ email, password });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: {email?: string, password?: string} = {};
+        error.errors.forEach((err) => {
+          if (err.path[0] === 'email') newErrors.email = err.message;
+          if (err.path[0] === 'password') newErrors.password = err.message;
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast.error('Preencha todos os campos');
+    if (!validateForm()) {
       return;
     }
 
@@ -30,9 +53,16 @@ const LoginForm = () => {
     try {
       await signIn(email, password);
       toast.success('Login realizado com sucesso!');
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error('Erro ao fazer login. Verifique suas credenciais.');
+    } catch (error: any) {
+      console.error('Erro ao fazer login:', error);
+      
+      if (error.message.includes('Invalid login')) {
+        toast.error('Email ou senha incorretos. Verifique suas credenciais.');
+      } else if (error.message.includes('Email not confirmed')) {
+        toast.error('Email ainda não confirmado. Verifique sua caixa de entrada.');
+      } else {
+        toast.error('Erro ao fazer login. Tente novamente mais tarde.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -56,9 +86,13 @@ const LoginForm = () => {
               placeholder="seu.email@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className={errors.email ? "border-destructive" : ""}
               required
               autoComplete="email"
             />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email}</p>
+            )}
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -74,9 +108,9 @@ const LoginForm = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className={`pr-10 ${errors.password ? "border-destructive" : ""}`}
                 required
                 autoComplete="current-password"
-                className="pr-10"
               />
               <button
                 type="button"
@@ -89,6 +123,9 @@ const LoginForm = () => {
                 </span>
               </button>
             </div>
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password}</p>
+            )}
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Entrando...' : 'Entrar'}

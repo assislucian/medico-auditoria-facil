@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -11,6 +12,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, data: { name: string; crm: string }) => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
+  getProfile: () => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         navigate('/dashboard');
       } else if (event === 'SIGNED_OUT') {
         navigate('/');
+      } else if (event === 'PASSWORD_RECOVERY') {
+        navigate('/reset-password');
+      } else if (event === 'USER_UPDATED') {
+        setSession(session);
+        setUser(session?.user ?? null);
       }
     });
 
@@ -72,8 +81,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+    
+    // Se a atualização for bem-sucedida, redirecione para login
+    navigate('/login');
+  };
+
+  const getProfile = async () => {
+    try {
+      if (!user) throw new Error("Usuário não autenticado");
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Erro ao carregar perfil:', error);
+      return null;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      loading, 
+      signIn, 
+      signUp, 
+      signOut, 
+      resetPassword, 
+      updatePassword,
+      getProfile
+    }}>
       {children}
     </AuthContext.Provider>
   );
