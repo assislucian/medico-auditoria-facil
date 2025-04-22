@@ -4,7 +4,8 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, ProfileWithUUID } from '@/types';
 import { toast } from "sonner";
-import { hasData, hasError, toJson, extractData, ProfileUpdatePayload } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile } from "@/utils/supabaseHelpers";
+import { Json } from '@/integrations/supabase/types';
 
 interface AuthContextProps {
   session: Session | null;
@@ -41,17 +42,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(session?.user || null);
 
         if (session?.user) {
-          // Fetch profile data here
-          const response = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (hasError(response)) {
-            console.error("Erro ao buscar perfil:", response.error);
-          } else if (hasData(response) && response.data) {
-            setProfile(response.data as Profile);
+          // Fetch profile data using our helper function
+          const profileData = await getProfile(supabase, session.user.id);
+          
+          if (profileData) {
+            setProfile(profileData as Profile);
           }
         }
       } catch (error) {
@@ -114,26 +109,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const updateProfile = async (data: Partial<Profile>) => {
+  const updateUserProfile = async (data: Partial<Profile>) => {
     try {
       if (!user) throw new Error('Usuário não autenticado');
       
-      // Create a profile update object with typed fields
-      const updateData: ProfileUpdatePayload = {
-        ...data
-      };
+      // Use our helper function
+      const success = await updateProfile(supabase, user.id, data as any);
       
-      // Remove id from update data if present
-      if ('id' in updateData) {
-        delete updateData.id;
+      if (!success) {
+        throw new Error('Erro ao atualizar o perfil');
       }
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id);
-        
-      if (error) throw error;
       
       // Update the local profile state
       setProfile(prev => prev ? { ...prev, ...data } : null);
@@ -144,22 +129,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
   
-  const getProfile = async (): Promise<Profile | null> => {
+  const getUserProfile = async (): Promise<Profile | null> => {
     try {
       if (!user) throw new Error('Usuário não autenticado');
       
-      const response = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-        
-      if (hasError(response)) {
-        console.error("Erro ao buscar perfil:", response.error);
-        return null;
-      }
-      
-      const profileData = extractData(response);
+      // Use our helper function
+      const profileData = await getProfile(supabase, user.id);
       return profileData as Profile | null;
     } catch (error: any) {
       console.error("Erro ao buscar perfil:", error);
@@ -175,8 +150,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     signIn,
     signOut,
     signUp,
-    updateProfile,
-    getProfile,
+    updateProfile: updateUserProfile,
+    getProfile: getUserProfile,
     resetPassword
   };
 

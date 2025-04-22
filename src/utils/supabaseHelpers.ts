@@ -22,20 +22,6 @@ export function hasData<T>(
 }
 
 /**
- * Helper to safely cast user ID to UUID type for Supabase queries
- */
-export function toUUID(id: string): string {
-  return id;
-}
-
-/**
- * Helper to safely cast object to Json type for Supabase updates
- */
-export function toJson(obj: any): Json {
-  return obj as Json;
-}
-
-/**
  * Extract data safely from a query response
  * @param response - Response from Supabase query
  * @returns The data or null if an error occurred
@@ -61,3 +47,47 @@ export type ProfileUpdatePayload = {
   reference_tables_preferences?: Json;
   updated_at?: string;
 };
+
+/**
+ * Helper function to handle updating a profile safely
+ * @param supabase - Supabase client instance
+ * @param userId - User ID
+ * @param data - Update data
+ * @returns The updated data or null if an error occurred
+ */
+export async function updateProfile(supabase: any, userId: string, data: ProfileUpdatePayload) {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update(data)
+      .eq('id', userId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return false;
+  }
+}
+
+/**
+ * Helper function to safely get profile data
+ * @param supabase - Supabase client instance
+ * @param userId - User ID
+ * @returns The profile data or null if an error occurred
+ */
+export async function getProfile(supabase: any, userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error getting profile:", error);
+    return null;
+  }
+}

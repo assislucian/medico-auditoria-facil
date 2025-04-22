@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +15,7 @@ import {
   notificationPreferencesToJson
 } from "./types";
 import { ProfileWithUUID } from '@/types';
-import { hasData, hasError, toJson, extractData, ProfileUpdatePayload } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile } from "@/utils/supabaseHelpers";
 
 /**
  * NotificationsSettings Component
@@ -38,17 +37,7 @@ export const NotificationSettings = () => {
       
       setLoading(true);
       try {
-        const response = await supabase
-          .from('profiles')
-          .select('notification_preferences')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (hasError(response)) {
-          throw response.error;
-        }
-        
-        const profileData = extractData(response);
+        const profileData = await getProfile(supabase, user.id);
         
         // Parse and set notification preferences using helper function
         if (profileData?.notification_preferences) {
@@ -83,17 +72,14 @@ export const NotificationSettings = () => {
     
     setSaving(true);
     try {
-      const updateData: ProfileUpdatePayload = {
-        notification_preferences: toJson(notificationPreferencesToJson(notifications)),
+      const success = await updateProfile(supabase, user.id, {
+        notification_preferences: notificationPreferencesToJson(notifications) as Json,
         updated_at: new Date().toISOString()
-      };
+      });
 
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id);
-
-      if (error) throw error;
+      if (!success) {
+        throw new Error("Não foi possível atualizar o perfil");
+      }
       
       toast.success('Preferências de notificação atualizadas');
     } catch (error) {

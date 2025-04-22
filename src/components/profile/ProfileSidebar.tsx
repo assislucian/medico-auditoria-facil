@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
 import { ProfileWithUUID } from "@/types";
-import { hasData, hasError, toUUID, toJson, extractData, ProfileUpdatePayload } from "@/utils/supabaseHelpers";
+import { updateProfile, getProfile } from "@/utils/supabaseHelpers";
 
 interface ProfileSidebarProps {
   name: string;
@@ -99,39 +98,28 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
           .from('profiles')
           .getPublicUrl(filePath);
           
-        // Update user profile with avatar URL
-        const response = await supabase
-          .from('profiles')
-          .select('notification_preferences')
-          .eq('id', userId)
-          .maybeSingle();
-          
-        if (hasError(response)) {
-          throw response.error;
+        // Get the current user profile
+        const profileData = await getProfile(supabase, userId);
+        
+        if (!profileData) {
+          throw new Error("Não foi possível recuperar o perfil do usuário");
         }
         
-        const profileData = extractData(response);
-        
         // Ensure we have an object to work with
-        const currentPreferences = profileData?.notification_preferences 
+        const currentPreferences = profileData.notification_preferences 
           ? profileData.notification_preferences 
           : {};
         
         // Update the profile with new avatar_url
-        const updateData: ProfileUpdatePayload = {
-          notification_preferences: toJson({
+        const success = await updateProfile(supabase, userId, {
+          notification_preferences: {
             ...(currentPreferences as object),
             avatar_url: urlData.publicUrl
-          })
-        };
-        
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update(updateData)
-          .eq('id', userId);
+          } as Json
+        });
 
-        if (updateError) {
-          throw updateError;
+        if (!success) {
+          throw new Error("Não foi possível atualizar o perfil");
         }
 
         toast.success("Foto atualizada", {

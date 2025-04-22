@@ -5,7 +5,7 @@ import { validateCRM, formatCRM } from '@/utils/formatters';
 import { toast } from "sonner";
 import { Json } from '@/integrations/supabase/types';
 import { Profile } from '@/types';
-import { hasData, hasError, toJson, extractData, ProfileUpdatePayload } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile } from "@/utils/supabaseHelpers";
 
 interface ProfileData {
   name: string;
@@ -50,17 +50,7 @@ export const useProfile = () => {
         throw new Error('Não autenticado');
       }
       
-      const response = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .maybeSingle();
-        
-      if (hasError(response)) {
-        throw response.error;
-      }
-      
-      const profileData = extractData(response);
+      const profileData = await getProfile(supabase, session.user.id);
       
       // Extract avatar URL from notification_preferences if it exists
       if (profileData && profileData.notification_preferences) {
@@ -124,7 +114,7 @@ export const useProfile = () => {
     }
   };
 
-  const updateProfile = async (data: ProfileData, avatarFile?: File | null): Promise<boolean> => {
+  const updateUserProfile = async (data: ProfileData, avatarFile?: File | null): Promise<boolean> => {
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -143,17 +133,7 @@ export const useProfile = () => {
       }
       
       // Get current profile to merge with updated data
-      const response = await supabase
-        .from('profiles')
-        .select('notification_preferences')
-        .eq('id', session.user.id)
-        .maybeSingle();
-      
-      if (hasError(response)) {
-        throw response.error;
-      }
-      
-      const profileData = extractData(response);
+      const profileData = await getProfile(supabase, session.user.id);
       
       // Ensure notification_preferences is an object before spreading
       const currentNotificationPrefs = profileData && 
@@ -168,20 +148,15 @@ export const useProfile = () => {
       };
       
       // Update profile data
-      const updateData: ProfileUpdatePayload = {
+      const success = await updateProfile(supabase, session.user.id, {
         name: data.name,
         email: data.email,
         specialty: data.especialidade,
-        notification_preferences: toJson(updatedNotificationPrefs)
-      };
+        notification_preferences: updatedNotificationPrefs as Json
+      });
       
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', session.user.id);
-        
-      if (error) {
-        throw error;
+      if (!success) {
+        throw new Error('Erro ao atualizar o perfil');
       }
       
       toast.success("Perfil atualizado", {
@@ -246,17 +221,7 @@ export const useProfile = () => {
       }
       
       // Get current profile to preserve avatar URL if it exists
-      const response = await supabase
-        .from('profiles')
-        .select('notification_preferences')
-        .eq('id', session.user.id)
-        .maybeSingle();
-        
-      if (hasError(response)) {
-        throw response.error;
-      }
-      
-      const profileData = extractData(response);
+      const profileData = await getProfile(supabase, session.user.id);
       
       // Ensure notification_preferences is an object before spreading
       const currentNotificationPrefs = profileData && 
@@ -280,17 +245,12 @@ export const useProfile = () => {
         }
       };
       
-      const updateData: ProfileUpdatePayload = {
-        notification_preferences: toJson(prefJson)
-      };
+      const success = await updateProfile(supabase, session.user.id, {
+        notification_preferences: prefJson as Json
+      });
       
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', session.user.id);
-        
-      if (error) {
-        throw error;
+      if (!success) {
+        throw new Error('Erro ao atualizar preferências');
       }
       
       toast.success("Preferências atualizadas", {
@@ -313,7 +273,7 @@ export const useProfile = () => {
     avatarUrl,
     fetchProfile,
     uploadAvatar,
-    updateProfile,
+    updateProfile: updateUserProfile,
     updateSecurity,
     updateNotificationPreferences
   };

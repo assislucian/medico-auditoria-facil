@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -16,7 +15,8 @@ import {
   ensureCheckedProperty,
   ReferenceTable as ReferenceTableType
 } from './reference-tables/types';
-import { hasData, hasError, toJson, extractData, ProfileUpdatePayload } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile } from "@/utils/supabaseHelpers";
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * ReferenceTablesSettings Component
@@ -47,17 +47,7 @@ export const ReferenceTablesSettings = () => {
       
       setLoading(true);
       try {
-        const response = await supabase
-          .from('profiles')
-          .select('reference_tables_preferences')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (hasError(response)) {
-          throw response.error;
-        }
-        
-        const profileData = extractData(response);
+        const profileData = await getProfile(supabase, user.id);
         
         // Parse and set reference tables preferences using helper function
         if (profileData?.reference_tables_preferences) {
@@ -114,17 +104,14 @@ export const ReferenceTablesSettings = () => {
         roles: selectedRolesWithChecked
       };
       
-      const updateData: ProfileUpdatePayload = {
-        reference_tables_preferences: toJson(preferences),
+      const success = await updateProfile(supabase, user.id, {
+        reference_tables_preferences: preferences as Json,
         updated_at: new Date().toISOString()
-      };
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id);
+      });
 
-      if (error) throw error;
+      if (!success) {
+        throw new Error("Não foi possível atualizar o perfil");
+      }
       
       toast.success('Preferências de tabelas atualizadas');
     } catch (error) {
@@ -144,9 +131,9 @@ export const ReferenceTablesSettings = () => {
     );
   }
 
-  // Ensure tables and roles have checked property for component props
-  const tablesWithCheckedProp = ensureCheckedProperty(medicalReferenceTables);
-  const rolesWithCheckedProp = ensureCheckedProperty(medicalRoles);
+  // Ensure proper type compatibility for components
+  const tablesWithCheckedProp: ReferenceTableType[] = ensureCheckedProperty(medicalReferenceTables) as ReferenceTableType[];
+  const rolesWithCheckedProp: ReferenceTableType[] = ensureCheckedProperty(medicalRoles) as ReferenceTableType[];
 
   return (
     <div className="space-y-6">
