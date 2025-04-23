@@ -20,7 +20,7 @@ import RegisterPage from "@/pages/Register";
 import ForgotPasswordPage from "@/pages/ForgotPassword";
 import ResetPasswordPage from "@/pages/ResetPassword";
 import WelcomePage from "@/pages/Welcome";
-import CheckoutPage from "@/pages/CheckoutPage";
+import CheckoutPage from "@/components/checkout/CheckoutPage";  // Fixed import path
 import DashboardPage from "@/pages/Dashboard";
 import UploadsPage from "@/pages/Uploads";
 import HistoryPage from "@/pages/History";

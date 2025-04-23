@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ErrorAlert from '@/components/auth/ErrorAlert';
 import EmailField from '@/components/auth/EmailField';
 import PasswordField from '@/components/auth/PasswordField';
+import { z } from 'zod';  // Added missing import for 'z'
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
