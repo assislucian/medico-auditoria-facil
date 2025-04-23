@@ -47,7 +47,8 @@ additional_redirect_urls = [
   "https://preview--medico-auditoria-facil.lovable.app", 
   "http://localhost:5173",
   "https://40f5f53f-0884-4719-86ce-4bbb2a86f8f4.lovableproject.com/auth/callback",
-  "https://40f5f53f-0884-4719-86ce-4bbb2a86f8f4.lovableproject.com/reset-password"
+  "https://40f5f53f-0884-4719-86ce-4bbb2a86f8f4.lovableproject.com/reset-password",
+  "https://40f5f53f-0884-4719-86ce-4bbb2a86f8f4.lovableproject.com"
 ]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
@@ -56,8 +57,8 @@ enable_signup = true
 
 [auth.email]
 enable_signup = true
-double_confirm_changes = true
-enable_confirmations = true
+double_confirm_changes = false
+enable_confirmations = false
 
 [auth.sms]
 enable_signup = true

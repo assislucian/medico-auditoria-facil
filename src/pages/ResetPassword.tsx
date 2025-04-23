@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,11 +31,23 @@ const ResetPassword = () => {
   const [isTokenValid, setIsTokenValid] = useState<boolean | null>(null);
   const { updatePassword } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Verifica se há um hash na URL que indica que o usuário chegou via link de reset
+  // Logs for debugging
+  useEffect(() => {
+    console.log("Current URL:", window.location.href);
+    console.log("Hash:", window.location.hash);
+    console.log("Search params:", window.location.search);
+    console.log("Location state:", location);
+  }, [location]);
+
+  // Verifica se há um hash na URL ou query params que indica que o usuário chegou via link de reset
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // Para depuração
+        console.log("Verificando token de recuperação de senha");
+        
         // Verificar se o usuário está numa sessão de redefinição de senha
         const { data, error } = await supabase.auth.getSession();
         
@@ -51,40 +63,69 @@ const ResetPassword = () => {
         // Se não há sessão ou usuário, pode ser um erro
         if (!data.session) {
           console.warn("Sem sessão ativa para redefinição de senha");
-          setIsTokenValid(false);
-          // Não mostrar erro ainda, pois há outros métodos de verificação
+          
+          // Vamos verificar se temos tokens na URL
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const queryParams = new URLSearchParams(window.location.search);
+          
+          // Logs para debug
+          console.log("Hash params:", Object.fromEntries(hashParams.entries()));
+          console.log("Query params:", Object.fromEntries(queryParams.entries()));
+          
+          const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token');
+          const type = hashParams.get('type') || queryParams.get('type');
+          
+          if ((accessToken || refreshToken) && type === 'recovery') {
+            console.log("Token de recuperação detectado na URL");
+            
+            try {
+              // Tentar configurar a sessão com o token da URL
+              let sessionParams: any = {};
+              
+              if (accessToken) {
+                sessionParams.access_token = accessToken;
+              }
+              
+              if (refreshToken) {
+                sessionParams.refresh_token = refreshToken;
+              }
+              
+              const { data: sessionData, error: sessionError } = await supabase.auth.setSession(sessionParams);
+              
+              if (sessionError) {
+                console.error("Erro ao definir sessão com token:", sessionError);
+                setIsTokenValid(false);
+                toast.error("Token de recuperação inválido");
+              } else {
+                console.log("Sessão configurada com sucesso:", sessionData);
+                setIsTokenValid(true);
+              }
+            } catch (e) {
+              console.error("Erro ao processar tokens da URL:", e);
+              setIsTokenValid(false);
+            }
+          } else {
+            // Verificar se temos o código de recuperação no hash
+            const recoveryHash = window.location.hash;
+            if (recoveryHash && recoveryHash.includes('type=recovery')) {
+              try {
+                // O hash contém o token de recuperação, vamos considerá-lo válido por enquanto
+                console.log("Hash de recuperação detectado");
+                setIsTokenValid(true);
+              } catch (e) {
+                console.error("Erro ao processar hash de recuperação:", e);
+                setIsTokenValid(false);
+              }
+            } else {
+              console.warn("Nenhum token de recuperação encontrado na URL");
+              setIsTokenValid(false);
+            }
+          }
         } else {
           // Temos uma sessão válida
+          console.log("Sessão válida encontrada");
           setIsTokenValid(true);
-        }
-        
-        // Verificar URL para tokens de reset
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const queryParams = new URLSearchParams(window.location.search);
-        
-        // Logs para debug
-        console.log("Hash params:", Object.fromEntries(hashParams.entries()));
-        console.log("Query params:", Object.fromEntries(queryParams.entries()));
-        
-        const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
-        const type = hashParams.get('type') || queryParams.get('type');
-        
-        if (accessToken && type === 'recovery') {
-          console.log("Token de recuperação detectado na URL");
-          // Token válido encontrado na URL
-          setIsTokenValid(true);
-          
-          // Atualiza a sessão com o token da URL
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: '',
-          });
-          
-          if (sessionError) {
-            console.error("Erro ao definir sessão com token:", sessionError);
-            setIsTokenValid(false);
-            toast.error("Erro ao processar o link de redefinição");
-          }
         }
       } catch (error) {
         console.error("Erro ao verificar token:", error);
@@ -124,6 +165,7 @@ const ResetPassword = () => {
     setIsLoading(true);
     
     try {
+      console.log("Tentando atualizar senha...");
       await updatePassword(password);
       toast.success('Senha redefinida com sucesso!');
       // Redirecionar após sucesso

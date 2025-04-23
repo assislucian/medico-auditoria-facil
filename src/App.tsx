@@ -38,6 +38,8 @@ const AuthCallback = () => {
     // Extraindo parâmetros da URL após redirecionamento do Supabase
     const handleAuthCallback = async () => {
       try {
+        console.log("Auth callback - URL completa:", window.location.href);
+        
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const queryParams = new URLSearchParams(window.location.search);
         
@@ -46,11 +48,13 @@ const AuthCallback = () => {
         
         // Se for um redirecionamento de recuperação de senha
         if ((hashParams.get('type') === 'recovery' || queryParams.get('type') === 'recovery')) {
+          console.log("Redirecionando para página de redefinição de senha");
           window.location.href = '/reset-password' + window.location.hash + window.location.search;
           return;
         }
         
         // Para outros tipos de autenticação, redirecionar para dashboard
+        console.log("Redirecionando para dashboard");
         window.location.href = '/dashboard';
       } catch (error) {
         console.error("Erro no callback de autenticação:", error);
@@ -73,7 +77,14 @@ const AuthCallback = () => {
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <span className="ml-3 text-xl font-medium">Carregando...</span>
+      </div>
+    );
+  }
   
   if (!user) {
     return <Navigate to="/login" />;
@@ -86,7 +97,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const GuestOnlyRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <span className="ml-3 text-xl font-medium">Carregando...</span>
+      </div>
+    );
+  }
   
   if (user) {
     return <Navigate to="/dashboard" />;

@@ -32,11 +32,36 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
 });
 
-// Log de debug para verificar o funcionamento da autenticação
+// Debugging helper for authentication
 if (typeof window !== 'undefined') {
   (window as any).getSupabaseSession = async () => {
     const { data, error } = await supabase.auth.getSession();
-    console.log("Sessão atual:", data.session, error);
+    console.log("Current session:", data.session, error);
+    return { data, error };
+  };
+
+  // Helper functions for testing
+  (window as any).createTestUser = async () => {
+    const testEmail = `test${Math.floor(Math.random() * 10000)}@example.com`;
+    const testPassword = "Password123!";
+    
+    const { data, error } = await supabase.auth.signUp({
+      email: testEmail,
+      password: testPassword,
+    });
+    
+    console.log("Test user created:", { email: testEmail, password: testPassword }, data, error);
+    return { email: testEmail, password: testPassword, data, error };
+  };
+
+  // Direct login method for testing
+  (window as any).loginWithPassword = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    console.log("Login result:", data, error);
     return { data, error };
   };
 }

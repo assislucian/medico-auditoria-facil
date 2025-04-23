@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +19,7 @@ interface AuthContextProps {
   getProfile: () => Promise<Profile | null>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -57,16 +59,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     loadSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log("Auth state change event:", _event);
       setSession(session);
       setUser(session?.user || null);
       
       if (session?.user) {
-        getProfile(supabase, session.user.id).then(profileData => {
-          if (profileData) {
-            setProfile(profileData as Profile);
-          }
-        });
+        const profileData = await getProfile(supabase, session.user.id);
+        if (profileData) {
+          setProfile(profileData as Profile);
+        }
       } else {
         setProfile(null);
       }
@@ -84,6 +86,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const origin = window.location.origin;
       const redirectTo = `${origin}/auth/callback`;
       
+      console.log("Sending magic link with redirect to:", redirectTo);
+      
       const { error } = await supabase.auth.signInWithOtp({ 
         email,
         options: {
@@ -94,6 +98,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) throw error;
       toast.success('Verifique seu email para o link de login mágico!');
     } catch (error: any) {
+      console.error("Error during signIn:", error);
+      toast.error(error.error_description || error.message || 'Erro ao fazer login');
+    }
+  };
+  
+  const signInWithPassword = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      toast.success('Login efetuado com sucesso!');
+    } catch (error: any) {
+      console.error("Error during signInWithPassword:", error);
       toast.error(error.error_description || error.message || 'Erro ao fazer login');
     }
   };
@@ -114,6 +134,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) throw error;
       toast.success('Verifique seu email para confirmar o cadastro!');
     } catch (error: any) {
+      console.error("Error during signUp:", error);
       toast.error(error.error_description || error.message || 'Erro ao criar conta');
     }
   };
@@ -123,11 +144,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const origin = window.location.origin;
       const redirectTo = `${origin}/reset-password`;
       
+      console.log("Sending password reset email with redirect to:", redirectTo);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectTo,
       });
       
       if (error) throw error;
+      console.log("Email de recuperação enviado para:", email);
       toast.success('Email com instruções para redefinir senha enviado!');
     } catch (error: any) {
       toast.error(error.error_description || error.message || 'Erro ao enviar email de redefinição de senha');
@@ -208,7 +232,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     updateProfile: updateUserProfile,
     getProfile: getUserProfile,
     resetPassword,
-    updatePassword
+    updatePassword,
+    signInWithPassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
