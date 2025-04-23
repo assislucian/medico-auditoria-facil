@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
-import { ProfileWithUUID } from "@/types";
+import { Profile, ProfileWithUUID } from "@/types";
 import { updateProfile, getProfile } from "@/utils/supabaseHelpers";
 
 interface ProfileSidebarProps {

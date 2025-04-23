@@ -15,7 +15,7 @@ import {
   parseNotificationPreferences,
   notificationPreferencesToJson
 } from "./types";
-import { ProfileWithUUID } from '@/types';
+import { Profile, ProfileWithUUID } from '@/types';
 import { getProfile, updateProfile, toJson } from "@/utils/supabaseHelpers";
 
 /**
