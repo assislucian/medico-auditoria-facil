@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
     "file-saver": "^2.0.5",
+    "xmlbuilder2": "^3.1.1",
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },

@@ -1,7 +1,7 @@
-
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import { HistoryItem } from '@/components/history/data';
+import { create } from 'xmlbuilder2';
 
 /**
  * Exporta dados para Excel
@@ -182,5 +182,192 @@ export function exportReportToExcel(reportData: any, reportName: string): void {
   } catch (error) {
     console.error('Erro ao exportar relatório para Excel:', error);
     throw new Error('Falha ao exportar relatório para Excel');
+  }
+}
+
+/**
+ * Exporta dados para XML no formato TISS da ANS
+ * @param data Os dados a serem exportados
+ * @param filename Nome do arquivo (sem extensão)
+ */
+export function exportToTissXML<T extends Record<string, any>>(data: T[], filename: string): void {
+  try {
+    // Criar estrutura base do XML TISS
+    const root = create({ version: '1.0', encoding: 'UTF-8' })
+      .ele('ans:mensagemTISS', {
+        'xmlns:ans': 'http://www.ans.gov.br/padroes/tiss/schemas',
+        'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+        'xsi:schemaLocation': 'http://www.ans.gov.br/padroes/tiss/schemas',
+        'versaoCompTISS': '3.05.00'
+      });
+
+    // Adicionar cabeçalho
+    const cabecalho = root.ele('ans:cabecalho');
+    cabecalho.ele('ans:identificacaoTransacao')
+      .ele('ans:tipoTransacao').txt('ENVIO_LOTE_GUIAS').up()
+      .ele('ans:sequencialTransacao').txt('1').up()
+      .ele('ans:dataRegistroTransacao').txt(new Date().toISOString().split('T')[0]).up()
+      .ele('ans:horaRegistroTransacao').txt(new Date().toISOString().split('T')[1].substring(0, 8));
+
+    // Adicionar dados
+    const corpo = root.ele('ans:corpo');
+    const lote = corpo.ele('ans:loteGuias');
+
+    // Itens do lote
+    data.forEach((item, index) => {
+      const guia = lote.ele('ans:guiaSP-SADT');
+      
+      // Mapeamento básico para formato TISS
+      guia.ele('ans:identificacaoGuiaSADTSP')
+        .ele('ans:numeroGuiaPrestador').txt(item.id || `GUIA${index}`);
+
+      // Adicionar procedimentos se existirem
+      if (item.procedimentos) {
+        const procedimentosRealizados = guia.ele('ans:procedimentosRealizados');
+        
+        // Transformar dados de procedimentos no formato TISS
+        if (Array.isArray(item.procedimentos)) {
+          item.procedimentos.forEach((proc, procIndex) => {
+            const procedimento = procedimentosRealizados.ele('ans:procedimentoRealizado');
+            procedimento.ele('ans:procedimento')
+              .ele('ans:codigoTabela').txt('22').up()
+              .ele('ans:codigoProcedimento').txt(proc.codigo || '').up()
+              .ele('ans:descricaoProcedimento').txt(proc.descricao || '');
+          });
+        }
+      }
+    });
+
+    // Gerar XML como string
+    const xmlString = root.end({ prettyPrint: true });
+    
+    // Criar blob e iniciar download
+    const blob = new Blob([xmlString], { type: 'application/xml' });
+    saveAs(blob, `${filename}.xml`);
+    
+    console.info('Exportação XML TISS concluída com sucesso');
+  } catch (error) {
+    console.error('Erro ao exportar dados para XML:', error);
+    throw new Error('Falha ao exportar dados para XML formato TISS');
+  }
+}
+
+/**
+ * Exporta dados para JSON no formato HL7 FHIR
+ * @param data Os dados a serem exportados
+ * @param resourceType Tipo de recurso FHIR (Patient, Practitioner, etc)
+ * @param filename Nome do arquivo (sem extensão)
+ */
+export function exportToFHIR<T extends Record<string, any>>(
+  data: T[], 
+  resourceType: string,
+  filename: string
+): void {
+  try {
+    // Criar estrutura base do bundle FHIR
+    const fhirBundle = {
+      resourceType: "Bundle",
+      type: "collection",
+      meta: {
+        lastUpdated: new Date().toISOString()
+      },
+      entry: data.map(item => {
+        // Converter dados para o formato FHIR básico
+        const resource = {
+          resourceType: resourceType,
+          id: item.id || crypto.randomUUID(),
+          meta: {
+            versionId: "1",
+            lastUpdated: new Date().toISOString()
+          }
+        };
+
+        // Adicionar propriedades específicas por tipo de recurso
+        switch (resourceType) {
+          case 'Patient':
+            return {
+              fullUrl: `urn:uuid:${resource.id}`,
+              resource: {
+                ...resource,
+                name: [{
+                  use: "official",
+                  text: item.nome || item.name || "Nome não especificado"
+                }],
+                gender: item.genero || item.gender || "unknown",
+                birthDate: item.dataNascimento || item.birthDate
+              }
+            };
+          case 'Practitioner':
+            return {
+              fullUrl: `urn:uuid:${resource.id}`,
+              resource: {
+                ...resource,
+                identifier: [{
+                  system: "http://conselho.saude.gov.br/crm",
+                  value: item.crm || "CRM não especificado"
+                }],
+                name: [{
+                  use: "official",
+                  text: item.nome || item.name || "Nome não especificado"
+                }],
+                qualification: [{
+                  code: {
+                    coding: [{
+                      system: "http://terminology.hl7.org/CodeSystem/v2-0360",
+                      code: "MD",
+                      display: "Medical Doctor"
+                    }],
+                    text: item.especialidade || item.specialty || "Médico"
+                  }
+                }]
+              }
+            };
+          case 'Procedure':
+            return {
+              fullUrl: `urn:uuid:${resource.id}`,
+              resource: {
+                ...resource,
+                status: "completed",
+                code: {
+                  coding: [{
+                    system: "http://www.amb.org.br/cbhpm",
+                    code: item.codigo || item.code,
+                    display: item.descricao || item.description || "Procedimento não especificado"
+                  }]
+                },
+                subject: {
+                  reference: item.pacienteId ? `Patient/${item.pacienteId}` : undefined
+                },
+                performer: item.medico ? [{
+                  actor: {
+                    reference: `Practitioner/${item.medico.id}`
+                  },
+                  function: {
+                    text: item.medico.funcao || "Médico responsável"
+                  }
+                }] : undefined
+              }
+            };
+          default:
+            return {
+              fullUrl: `urn:uuid:${resource.id}`,
+              resource: {
+                ...resource,
+                ...item
+              }
+            };
+        }
+      })
+    };
+
+    // Converter para JSON e fazer download
+    const jsonString = JSON.stringify(fhirBundle, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/fhir+json' });
+    saveAs(blob, `${filename}.json`);
+    
+    console.info('Exportação FHIR concluída com sucesso');
+  } catch (error) {
+    console.error('Erro ao exportar dados para formato FHIR:', error);
+    throw new Error('Falha ao exportar dados para formato FHIR');
   }
 }

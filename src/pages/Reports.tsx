@@ -9,8 +9,10 @@ import { StatusCardsSection } from "@/components/reports/StatusCardsSection";
 import { OverviewCharts } from "@/components/reports/OverviewCharts";
 import { HospitalsTable } from "@/components/reports/HospitalsTable";
 import { fetchMonthlyData, fetchHospitalData, fetchReportsTotals } from "@/services/reportsService";
-import { exportReportToExcel } from "@/services/exportService";
+import { exportReportToExcel, exportToTissXML, exportToFHIR } from "@/services/exportService";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 const ReportsPage = () => {
   const [currentYear, setCurrentYear] = useState("2025");
@@ -58,7 +60,7 @@ const ReportsPage = () => {
     });
   };
   
-  const handleExport = () => {
+  const handleExport = (format: 'excel' | 'tiss' | 'fhir' = 'excel') => {
     try {
       const reportData = {
         period: `Ano ${currentYear}`,
@@ -68,11 +70,30 @@ const ReportsPage = () => {
         procedureData: [] // Será implementado na próxima versão
       };
       
-      exportReportToExcel(reportData, `relatorio-medcheck-${currentYear}`);
+      const filename = `relatorio-medcheck-${currentYear}`;
       
-      toast.success("Relatório exportado com sucesso", {
-        description: "O arquivo foi baixado para o seu computador."
-      });
+      switch (format) {
+        case 'excel':
+          exportReportToExcel(reportData, filename);
+          toast.success("Relatório exportado em Excel", {
+            description: "O arquivo foi baixado para o seu computador."
+          });
+          break;
+          
+        case 'tiss':
+          exportToTissXML(hospitalData, `${filename}-tiss`);
+          toast.success("Relatório exportado em formato TISS (XML)", {
+            description: "O arquivo XML foi baixado para o seu computador."
+          });
+          break;
+          
+        case 'fhir':
+          exportToFHIR(hospitalData, 'Organization', `${filename}-fhir`);
+          toast.success("Relatório exportado em formato HL7 FHIR", {
+            description: "O arquivo JSON foi baixado para o seu computador."
+          });
+          break;
+      }
     } catch (error) {
       console.error("Erro ao exportar relatório:", error);
       toast.error("Erro ao exportar", {
@@ -89,8 +110,32 @@ const ReportsPage = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar isLoggedIn={true} />
         <div className="flex-1 container py-8">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">Relatórios</h1>
+            <div className="flex items-center gap-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    Exportar
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleExport('excel')}>
+                    Exportar como Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('tiss')}>
+                    Exportar como TISS (XML)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('fhir')}>
+                    Exportar como HL7 FHIR
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          
           <ReportsHeader 
-            onExport={handleExport}
+            onExport={() => handleExport('excel')}
             onYearChange={handleYearChange}
             onFilterPeriod={handleFilterPeriod}
           />
