@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTrialStatus } from '@/hooks/use-trial-status';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -12,12 +12,24 @@ const TrialGuard = ({ children }: TrialGuardProps) => {
   const { user } = useAuth();
   const { status, isLoading } = useTrialStatus();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (!isLoading && user && status === 'not_started') {
-      navigate('/lock');
+    // Only redirect if we have a user and their trial status is loaded
+    if (!isLoading && user) {
+      if (status === 'not_started') {
+        // Store the attempted URL to redirect back after trial activation
+        const returnPath = location.pathname + location.search;
+        // Only redirect if we're not already on the lock screen
+        if (location.pathname !== '/lock') {
+          navigate('/lock', { 
+            state: { returnTo: returnPath },
+            replace: true 
+          });
+        }
+      }
     }
-  }, [isLoading, user, status, navigate]);
+  }, [isLoading, user, status, navigate, location]);
 
   if (isLoading) {
     return (
@@ -27,6 +39,7 @@ const TrialGuard = ({ children }: TrialGuardProps) => {
     );
   }
 
+  // Only render children if trial is active
   return status === 'active' ? <>{children}</> : null;
 };
 
