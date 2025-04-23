@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/lib/supabase';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -57,10 +57,21 @@ const LoginForm = () => {
     try {
       console.log(`Iniciando login para: ${email}`);
       
-      await signInWithPassword(email, password);
+      const { data } = await signInWithPassword(email, password);
       
-      // Navegue para o dashboard após o login bem-sucedido
-      navigate('/dashboard');
+      // Verifica se é o primeiro login do usuário
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('trial_status')
+        .eq('id', data.user?.id)
+        .single();
+
+      // Se o trial ainda não foi ativado, redireciona para a página de boas-vindas
+      if (!profileData?.trial_status) {
+        navigate('/welcome');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error: any) {
       console.error('Erro ao fazer login:', error);
       

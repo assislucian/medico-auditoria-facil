@@ -7,34 +7,11 @@ import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider } from "@/contexts";
 import { useAuth } from "@/contexts";
-import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Uploads from "./pages/Uploads";
-import History from "./pages/History";
-import Reports from "./pages/Reports";
-import Pricing from "./pages/Pricing";
-import CheckoutPage from "./components/checkout/CheckoutPage";
-import Profile from "./pages/Profile";
-import Settings from "./pages/Settings";
-import Help from "./pages/Help";
-import Support from "./pages/Support";
-import Contact from "./pages/Contact";
-import About from "./pages/About";
-import CompareContracheque from "./pages/CompareContracheque";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
-// Componente de callback para autenticação
 const AuthCallback = () => {
   useEffect(() => {
-    // Extraindo parâmetros da URL após redirecionamento do Supabase
     const handleAuthCallback = async () => {
       try {
         console.log("Auth callback - URL completa:", window.location.href);
@@ -45,14 +22,12 @@ const AuthCallback = () => {
         console.log("Auth callback - Hash params:", Object.fromEntries(hashParams.entries()));
         console.log("Auth callback - Query params:", Object.fromEntries(queryParams.entries()));
         
-        // Se for um redirecionamento de recuperação de senha
         if ((hashParams.get('type') === 'recovery' || queryParams.get('type') === 'recovery')) {
           console.log("Redirecionando para página de redefinição de senha");
           window.location.href = '/reset-password' + window.location.hash + window.location.search;
           return;
         }
         
-        // Para outros tipos de autenticação, redirecionar para dashboard
         console.log("Redirecionando para dashboard");
         window.location.href = '/dashboard';
       } catch (error) {
@@ -72,7 +47,6 @@ const AuthCallback = () => {
   );
 };
 
-// Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
@@ -92,7 +66,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Guest Only Route component (prevents authenticated users from accessing login/register)
 const GuestOnlyRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
@@ -113,7 +86,6 @@ const GuestOnlyRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  // Force light theme at app start
   if (document.documentElement.classList.contains('dark')) {
     document.documentElement.classList.remove('dark');
     document.documentElement.classList.add('light');
@@ -129,22 +101,20 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <Routes>
-                  {/* Public routes */}
                   <Route path="/" element={<Index />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/pricing" element={<Pricing />} />
                   
-                  {/* Auth callback route */}
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   
-                  {/* Guest-only routes */}
                   <Route path="/login" element={<GuestOnlyRoute><Login /></GuestOnlyRoute>} />
                   <Route path="/register" element={<GuestOnlyRoute><Register /></GuestOnlyRoute>} />
                   <Route path="/forgot-password" element={<GuestOnlyRoute><ForgotPassword /></GuestOnlyRoute>} />
                   <Route path="/reset-password" element={<GuestOnlyRoute><ResetPassword /></GuestOnlyRoute>} />
                   
-                  {/* Protected routes */}
+                  <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
+                  
                   <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
                   <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                   <Route path="/uploads" element={<ProtectedRoute><Uploads /></ProtectedRoute>} />
@@ -156,7 +126,6 @@ const App = () => {
                   <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
                   <Route path="/compare" element={<ProtectedRoute><CompareContracheque /></ProtectedRoute>} />
                   
-                  {/* Catch-all route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthProvider>
