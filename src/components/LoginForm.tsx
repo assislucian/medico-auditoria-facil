@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ErrorAlert from '@/components/auth/ErrorAlert';
 import EmailField from '@/components/auth/EmailField';
 import PasswordField from '@/components/auth/PasswordField';
-import { z } from 'zod';  // Added missing import for 'z'
+import { z } from 'zod';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -52,17 +52,50 @@ const LoginForm = () => {
     try {
       console.log(`Iniciando login para: ${email}`);
       
-      const { data } = await signInWithPassword(email, password);
+      const { data, error } = await signInWithPassword(email, password);
       
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('trial_status')
-        .eq('id', data.user?.id)
-        .single();
+      if (error) {
+        throw error;
+      }
 
-      if (!profileData?.trial_status) {
-        navigate('/welcome');
-      } else {
+      if (!data.user) {
+        throw new Error('Não foi possível autenticar. Usuário não encontrado.');
+      }
+      
+      console.log('Login bem-sucedido, buscando perfil do usuário');
+      
+      try {
+        // Use uma consulta com timeout para evitar que a página fique presa
+        const profilePromise = supabase
+          .from('profiles')
+          .select('trial_status')
+          .eq('id', data.user.id)
+          .single();
+          
+        // Set a timeout to prevent getting stuck
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 3000)
+        );
+        
+        const profileResult = await Promise.race([profilePromise, timeoutPromise]) as any;
+        
+        if (profileResult.error) {
+          console.error('Erro ao buscar perfil:', profileResult.error);
+          // Se não conseguirmos obter o perfil, vamos para o dashboard
+          navigate('/dashboard');
+          return;
+        }
+
+        if (!profileResult.data?.trial_status || profileResult.data.trial_status === 'not_started') {
+          console.log('Usuário sem trial ativo, redirecionando para welcome');
+          navigate('/welcome');
+        } else {
+          console.log('Usuário com trial ativo, redirecionando para dashboard');
+          navigate('/dashboard');
+        }
+      } catch (profileError) {
+        console.error('Erro ou timeout ao buscar perfil:', profileError);
+        // Em caso de erro ou timeout na busca do perfil, vamos para o dashboard
         navigate('/dashboard');
       }
     } catch (error: any) {
@@ -75,7 +108,6 @@ const LoginForm = () => {
       } else {
         setAuthError('Erro ao fazer login. Tente novamente mais tarde.');
       }
-    } finally {
       setIsLoading(false);
     }
   };

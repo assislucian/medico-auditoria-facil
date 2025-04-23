@@ -3,11 +3,12 @@ import { Helmet } from 'react-helmet-async';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTrialStatus } from '@/hooks/use-trial-status';
 
 interface ActivateTrialResponse {
   success: boolean;
@@ -20,9 +21,21 @@ const WelcomePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { status: trialStatus, isLoading: trialLoading } = useTrialStatus();
   
   // Get return path from location state, or default to dashboard
   const returnTo = location.state?.returnTo || '/dashboard';
+
+  // Check if trial is already active and redirect if needed
+  useEffect(() => {
+    if (!trialLoading && trialStatus === 'active' && user) {
+      console.log('Trial already active, redirecting to:', returnTo);
+      navigate(returnTo, { 
+        state: { startTour: true },
+        replace: true 
+      });
+    }
+  }, [trialStatus, trialLoading, user, navigate, returnTo]);
 
   const handleStartTrial = async () => {
     if (!user) {
@@ -47,24 +60,39 @@ const WelcomePage = () => {
       if (data) {
         if (!data.success) {
           toast.error(data.message || 'Erro ao ativar trial');
+          setIsActivating(false);
           return;
         }
 
         toast.success('Trial ativado com sucesso!');
-        navigate(returnTo, { 
-          state: { startTour: true },
-          replace: true 
-        });
+        
+        // Short delay to allow the toast to be visible
+        setTimeout(() => {
+          navigate(returnTo, { 
+            state: { startTour: true },
+            replace: true 
+          });
+        }, 1000);
       } else {
         toast.error('Resposta vazia ao ativar o trial');
+        setIsActivating(false);
       }
     } catch (error) {
       console.error('Erro ao ativar trial:', error);
       toast.error('Erro ao ativar o trial. Por favor, tente novamente.');
-    } finally {
       setIsActivating(false);
     }
   };
+
+  // Show loading state when checking trial status
+  if (trialLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <span className="ml-3 text-xl font-medium">Verificando status do trial...</span>
+      </div>
+    );
+  }
 
   return (
     <>

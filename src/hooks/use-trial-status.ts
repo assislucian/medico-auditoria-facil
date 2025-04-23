@@ -25,9 +25,13 @@ export function useTrialStatus() {
   });
 
   useEffect(() => {
+    let isMounted = true;
+    
     const checkStatus = async () => {
       if (!user) {
-        setStatus(s => ({ ...s, isLoading: false }));
+        if (isMounted) {
+          setStatus(s => ({ ...s, isLoading: false }));
+        }
         return;
       }
 
@@ -39,24 +43,26 @@ export function useTrialStatus() {
 
         if (error) {
           console.error('Error checking trial status:', error);
-          setStatus(s => ({ 
-            ...s, 
-            isLoading: false, 
-            error: new Error(error.message || 'Failed to check trial status') 
-          }));
+          if (isMounted) {
+            setStatus(s => ({ 
+              ...s, 
+              isLoading: false, 
+              error: new Error(error.message || 'Failed to check trial status') 
+            }));
+          }
           return;
         }
         
         console.log('Trial status response:', data);
         
-        if (data) {
+        if (data && isMounted) {
           setStatus({
             status: data.status,
             endDate: data.end_date ? new Date(data.end_date) : null,
             isLoading: false,
             error: null
           });
-        } else {
+        } else if (isMounted) {
           console.log('No trial status data returned');
           setStatus(s => ({ 
             ...s, 
@@ -66,15 +72,21 @@ export function useTrialStatus() {
         }
       } catch (error) {
         console.error('Exception checking trial status:', error);
-        setStatus(s => ({ 
-          ...s, 
-          isLoading: false,
-          error: error instanceof Error ? error : new Error('Unknown error checking trial status')
-        }));
+        if (isMounted) {
+          setStatus(s => ({ 
+            ...s, 
+            isLoading: false,
+            error: error instanceof Error ? error : new Error('Unknown error checking trial status')
+          }));
+        }
       }
     };
 
     checkStatus();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   return status;

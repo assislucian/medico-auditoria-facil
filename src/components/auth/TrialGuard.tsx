@@ -11,34 +11,31 @@ interface TrialGuardProps {
 
 const TrialGuard = ({ children }: TrialGuardProps) => {
   const { user } = useAuth();
-  const { status, endDate, isLoading } = useTrialStatus();
+  const { status, endDate, isLoading, error } = useTrialStatus();
   const navigate = useNavigate();
   const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
+  const [hasNavigated, setHasNavigated] = useState(false);
 
   useEffect(() => {
-    console.log('TrialGuard - User:', !!user, 'Status:', status, 'isLoading:', isLoading);
+    console.log('TrialGuard - User:', !!user, 'Status:', status, 'isLoading:', isLoading, 'Path:', location.pathname);
     
     // Only proceed if loading is complete
-    if (!isLoading && user) {
+    if (!isLoading && user && !hasNavigated) {
       console.log('TrialGuard check complete - Status:', status);
       
-      if (status === 'not_started') {
-        console.log('Trial not started, redirecting to welcome page');
-        // Store the attempted URL to redirect back after trial activation
-        if (location.pathname !== '/welcome') {
-          console.log('Redirecting to welcome page from:', location.pathname);
-          navigate('/welcome', { 
-            state: { returnTo: location.pathname + location.search },
-            replace: true 
-          });
-        }
+      if (status === 'not_started' && location.pathname !== '/welcome') {
+        console.log('Trial not started, redirecting to welcome page from:', location.pathname);
+        setHasNavigated(true);
+        navigate('/welcome', { 
+          state: { returnTo: location.pathname + location.search },
+          replace: true 
+        });
       } else if (status === 'expired') {
         console.log('Trial expired, showing message');
         toast.error('Seu período de avaliação expirou', {
           description: 'Por favor, atualize para um plano pago para continuar.'
         });
-        // For expired trials, we still allow access but show a message
       }
       
       setIsChecking(false);
@@ -46,7 +43,38 @@ const TrialGuard = ({ children }: TrialGuardProps) => {
       // If there's no user and we're not loading, allow the auth routes to handle it
       setIsChecking(false);
     }
-  }, [isLoading, user, status, navigate, location]);
+    
+    // If we're still loading or checking, don't update isChecking yet
+    if (isLoading) {
+      return;
+    }
+    
+    // If we've reached this point and we're still checking, stop checking
+    // This prevents infinite loading states
+    if (isChecking && !isLoading) {
+      const timer = setTimeout(() => {
+        setIsChecking(false);
+      }, 2000); // Set a maximum wait time
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, user, status, navigate, location, isChecking, hasNavigated]);
+
+  // Added a max timeout to prevent infinite loading
+  useEffect(() => {
+    const maxLoadingTimer = setTimeout(() => {
+      if (isChecking) {
+        console.log('TrialGuard max loading time reached, forcing proceed');
+        setIsChecking(false);
+      }
+    }, 5000);
+    
+    return () => clearTimeout(maxLoadingTimer);
+  }, [isChecking]);
+
+  if (error) {
+    console.error('Trial status error:', error);
+  }
 
   if (isChecking || isLoading) {
     return (
@@ -57,8 +85,9 @@ const TrialGuard = ({ children }: TrialGuardProps) => {
     );
   }
 
-  // Only render children if trial is active or expired (we show a message for expired)
-  return status === 'active' || status === 'expired' ? <>{children}</> : null;
+  // Always render children if not in the checking state, even if the status is not_started
+  // This allows the Welcome page to work without redirecting back to itself
+  return <>{children}</>;
 };
 
 export default TrialGuard;
