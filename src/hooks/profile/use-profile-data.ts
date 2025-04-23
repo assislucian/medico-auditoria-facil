@@ -3,10 +3,21 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types";
 import { toast } from "sonner";
-import { getProfile } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile as updateProfileHelper } from "@/utils/supabaseHelpers";
+import { useProfileAvatar } from "./use-profile-avatar";
+import { Json } from '@/integrations/supabase/types';
+
+// Define the ProfileData interface that was missing
+interface ProfileData {
+  name: string;
+  email: string;
+  especialidade?: string;
+  [key: string]: any; // To allow for additional properties
+}
 
 export const useProfileData = () => {
   const [loading, setLoading] = useState(false);
+  const { uploadAvatar } = useProfileAvatar();
 
   const fetchProfile = async () => {
     try {
@@ -35,7 +46,7 @@ export const useProfileData = () => {
       
       let avatarUrl = null;
       if (avatarFile) {
-        avatarUrl = await useProfileAvatar().uploadAvatar(avatarFile);
+        avatarUrl = await uploadAvatar(avatarFile);
         if (!avatarUrl) {
           throw new Error('Falha ao fazer upload da imagem');
         }
@@ -53,7 +64,8 @@ export const useProfileData = () => {
         ...(avatarUrl ? { avatar_url: avatarUrl } : {})
       };
       
-      const success = await updateProfile(supabase, session.user.id, {
+      // Fix the call to updateProfileHelper with correct arguments
+      const success = await updateProfileHelper(supabase, session.user.id, {
         name: data.name,
         email: data.email,
         specialty: data.especialidade,
