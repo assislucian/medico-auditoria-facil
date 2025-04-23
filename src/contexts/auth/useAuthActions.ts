@@ -2,9 +2,25 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Profile } from '@/types';
-import { handlePasswordReset, handleSignOut } from './authUtils';
+import { handlePasswordReset, handleSignOut, getProfileData } from './authUtils';
 
 export const useAuthActions = () => {
+  const getProfile = async () => {
+    try {
+      const { data: userData, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      
+      if (userData.user) {
+        const profileData = await getProfileData(userData.user.id);
+        return profileData;
+      }
+      return null;
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+  };
+
   const signIn = async (email: string) => {
     try {
       const origin = window.location.origin;
@@ -110,6 +126,6 @@ export const useAuthActions = () => {
     resetPassword: handlePasswordReset,
     updatePassword,
     updateProfile: updateUserProfile,
+    getProfile,
   };
 };
-

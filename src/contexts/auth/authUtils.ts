@@ -5,8 +5,14 @@ import { toast } from 'sonner';
 
 export const getProfileData = async (userId: string): Promise<Profile | null> => {
   try {
-    const profileData = await getProfile(supabase, userId);
-    return profileData as Profile;
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) throw error;
+    return data as Profile;
   } catch (error) {
     console.error("Error fetching profile:", error);
     return null;
@@ -39,4 +45,3 @@ export const handleSignOut = async () => {
   if (error) throw error;
   toast.success('Logout realizado com sucesso');
 };
-

@@ -11,7 +11,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { session, user, profile, loading } = useAuthState();
+  const { session, user, profile, loading, setProfile } = useAuthState();
   const actions = useAuthActions();
 
   const value: AuthContextProps = {
@@ -19,7 +19,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     user,
     profile,
     loading,
-    ...actions
+    ...actions,
+    getProfile: async () => {
+      if (!user) return null;
+      return profile;
+    }
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -32,4 +36,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
