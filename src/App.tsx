@@ -1,3 +1,5 @@
+
+import { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +9,28 @@ import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider } from "@/contexts";
 import { useAuth } from "@/contexts";
+
+// Import pages
+import IndexPage from "@/pages/Index";
+import AboutPage from "@/pages/About";
+import ContactPage from "@/pages/Contact";
+import PricingPage from "@/pages/Pricing";
+import LoginPage from "@/pages/Login";
+import RegisterPage from "@/pages/Register";
+import ForgotPasswordPage from "@/pages/ForgotPassword";
+import ResetPasswordPage from "@/pages/ResetPassword";
+import WelcomePage from "@/pages/Welcome";
+import CheckoutPage from "@/pages/CheckoutPage";
+import DashboardPage from "@/pages/Dashboard";
+import UploadsPage from "@/pages/Uploads";
+import HistoryPage from "@/pages/History";
+import ReportsPage from "@/pages/Reports";
+import ProfilePage from "@/pages/Profile";
+import SettingsPage from "@/pages/Settings";
+import HelpPage from "@/pages/Help";
+import SupportPage from "@/pages/Support";
+import ComparePage from "@/pages/CompareContracheque";
+import NotFoundPage from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -101,32 +125,32 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/" element={<IndexPage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/pricing" element={<PricingPage />} />
                   
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   
-                  <Route path="/login" element={<GuestOnlyRoute><Login /></GuestOnlyRoute>} />
-                  <Route path="/register" element={<GuestOnlyRoute><Register /></GuestOnlyRoute>} />
-                  <Route path="/forgot-password" element={<GuestOnlyRoute><ForgotPassword /></GuestOnlyRoute>} />
-                  <Route path="/reset-password" element={<GuestOnlyRoute><ResetPassword /></GuestOnlyRoute>} />
+                  <Route path="/login" element={<GuestOnlyRoute><LoginPage /></GuestOnlyRoute>} />
+                  <Route path="/register" element={<GuestOnlyRoute><RegisterPage /></GuestOnlyRoute>} />
+                  <Route path="/forgot-password" element={<GuestOnlyRoute><ForgotPasswordPage /></GuestOnlyRoute>} />
+                  <Route path="/reset-password" element={<GuestOnlyRoute><ResetPasswordPage /></GuestOnlyRoute>} />
                   
                   <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
                   
                   <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                  <Route path="/uploads" element={<ProtectedRoute><Uploads /></ProtectedRoute>} />
-                  <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
-                  <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                  <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
-                  <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
-                  <Route path="/compare" element={<ProtectedRoute><CompareContracheque /></ProtectedRoute>} />
+                  <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                  <Route path="/uploads" element={<ProtectedRoute><UploadsPage /></ProtectedRoute>} />
+                  <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+                  <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                  <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+                  <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
+                  <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
+                  <Route path="/compare" element={<ProtectedRoute><ComparePage /></ProtectedRoute>} />
                   
-                  <Route path="*" element={<NotFound />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </AuthProvider>
             </BrowserRouter>

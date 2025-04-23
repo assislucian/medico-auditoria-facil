@@ -1,26 +1,20 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { z } from 'zod';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { supabase } from '@/lib/supabase';
-
-const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres')
-});
+import { loginSchema } from '@/components/auth/validation';
+import { supabase } from '@/integrations/supabase/client';
+import ErrorAlert from '@/components/auth/ErrorAlert';
+import EmailField from '@/components/auth/EmailField';
+import PasswordField from '@/components/auth/PasswordField';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{email?: string, password?: string}>({});
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const { signInWithPassword } = useAuth();
@@ -59,14 +53,12 @@ const LoginForm = () => {
       
       const { data } = await signInWithPassword(email, password);
       
-      // Verifica se é o primeiro login do usuário
       const { data: profileData } = await supabase
         .from('profiles')
         .select('trial_status')
         .eq('id', data.user?.id)
         .single();
 
-      // Se o trial ainda não foi ativado, redireciona para a página de boas-vindas
       if (!profileData?.trial_status) {
         navigate('/welcome');
       } else {
@@ -96,63 +88,20 @@ const LoginForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {authError && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{authError}</AlertDescription>
-          </Alert>
-        )}
+        <ErrorAlert message={authError} />
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu.email@exemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={errors.email ? "border-destructive" : ""}
-              required
-              autoComplete="email"
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email}</p>
-            )}
-          </div>
+          <EmailField 
+            email={email}
+            setEmail={setEmail}
+            error={errors.email}
+          />
           
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Senha</Label>
-              <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                Esqueceu a senha?
-              </Link>
-            </div>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`pr-10 ${errors.password ? "border-destructive" : ""}`}
-                required
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 flex items-center px-3"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
-                <span className="sr-only">
-                  {showPassword ? 'Esconder senha' : 'Mostrar senha'}
-                </span>
-              </button>
-            </div>
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password}</p>
-            )}
-          </div>
+          <PasswordField 
+            password={password}
+            setPassword={setPassword}
+            error={errors.password}
+          />
           
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Entrando...' : 'Entrar'}
