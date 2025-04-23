@@ -15,3 +15,4 @@ export interface AuthContextProps {
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   getProfile: () => Promise<Profile | null>;
 }
+

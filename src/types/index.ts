@@ -9,12 +9,9 @@ export interface Profile {
   specialty?: string;
   notification_preferences?: Json;
   reference_tables_preferences?: Json;
+  trial_status: 'not_started' | 'active' | 'expired';
+  trial_end_date?: string;
   updated_at?: string;
   created_at?: string;
 }
 
-// Extension of the Profile interface that includes UUID type for ID
-// to be used with Supabase queries
-export interface ProfileWithUUID extends Omit<Profile, 'id'> {
-  id: unknown; // This allows the Supabase UUID type to be used
-}

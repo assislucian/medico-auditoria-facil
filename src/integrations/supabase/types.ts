@@ -346,6 +346,8 @@ export type Database = {
           notification_preferences: Json | null
           reference_tables_preferences: Json | null
           specialty: string | null
+          trial_end_date: string | null
+          trial_status: string
           updated_at: string
         }
         Insert: {
@@ -357,6 +359,8 @@ export type Database = {
           notification_preferences?: Json | null
           reference_tables_preferences?: Json | null
           specialty?: string | null
+          trial_end_date?: string | null
+          trial_status?: string
           updated_at?: string
         }
         Update: {
@@ -368,6 +372,8 @@ export type Database = {
           notification_preferences?: Json | null
           reference_tables_preferences?: Json | null
           specialty?: string | null
+          trial_end_date?: string | null
+          trial_status?: string
           updated_at?: string
         }
         Relationships: []

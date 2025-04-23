@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Profile } from '@/types';
@@ -28,13 +27,17 @@ export const useAuthActions = () => {
         password
       });
       
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('Email not confirmed')) {
+          throw new Error('Por favor, verifique seu email para ativar sua conta.');
+        }
+        throw error;
+      }
       
-      // O login foi bem-sucedido, o redirecionamento será tratado pelo componente
       return data;
     } catch (error: any) {
       console.error("Error during signInWithPassword:", error);
-      throw error; // Propaga o erro para ser tratado pelo componente
+      throw error;
     }
   };
 
@@ -53,11 +56,11 @@ export const useAuthActions = () => {
       
       if (error) throw error;
       
-      // O signup foi bem-sucedido, o redirecionamento será tratado pelo componente
+      toast.success('Confira seu email para ativar sua conta!');
       return data;
     } catch (error: any) {
       console.error("Error during signUp:", error);
-      throw error; // Propaga o erro para ser tratado pelo componente
+      throw error;
     }
   };
 
