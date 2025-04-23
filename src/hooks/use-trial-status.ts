@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { PostgrestSingleResponse } from '@supabase/supabase-js';
 
 interface TrialStatus {
   status: 'not_started' | 'active' | 'expired';
@@ -10,15 +9,9 @@ interface TrialStatus {
   isLoading: boolean;
 }
 
-// Define the expected return type from the RPC function
 interface CheckTrialStatusResponse {
   status: 'not_started' | 'active' | 'expired';
   end_date: string | null;
-}
-
-// Define the RPC parameters type
-interface CheckTrialStatusParams {
-  user_id: string;
 }
 
 export function useTrialStatus() {
@@ -37,20 +30,16 @@ export function useTrialStatus() {
       }
 
       try {
-        // Using any to bypass TypeScript's type checking for the RPC function name
-        const { data, error } = await supabase.rpc(
-          'check_trial_status' as any, 
-          { user_id: user.id } as CheckTrialStatusParams
-        );
+        const { data, error } = await supabase.rpc('check_trial_status', {
+          user_id: user.id
+        }) as { data: CheckTrialStatusResponse, error: any };
 
         if (error) throw error;
         
         if (data) {
-          // Since we know the shape of the data, we can safely cast it
-          const typedData = data as unknown as CheckTrialStatusResponse;
           setStatus({
-            status: typedData.status,
-            endDate: typedData.end_date ? new Date(typedData.end_date) : null,
+            status: data.status,
+            endDate: data.end_date ? new Date(data.end_date) : null,
             isLoading: false
           });
         } else {

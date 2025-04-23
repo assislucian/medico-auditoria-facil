@@ -591,6 +591,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_trial: {
+        Args: { user_id: string }
+        Returns: Json
+      }
+      check_trial_status: {
+        Args: { user_id: string }
+        Returns: Json
+      }
+      get_dashboard_stats: {
+        Args: { user_id: string }
+        Returns: Json
+      }
       update_onboarding_status: {
         Args: { completed: boolean }
         Returns: Json

@@ -14,7 +14,6 @@ interface ActivateTrialResponse {
   trial_end_date?: string;
 }
 
-// Define the RPC parameters type
 interface ActivateTrialParams {
   user_id: string;
 }
@@ -29,19 +28,15 @@ const WelcomePage = () => {
     
     setIsActivating(true);
     try {
-      // Using any to bypass TypeScript's type checking for the RPC function name
-      const { data, error } = await supabase.rpc(
-        'activate_trial' as any, 
-        { user_id: user.id } as ActivateTrialParams
-      );
+      const { data, error } = await supabase.rpc('activate_trial', {
+        user_id: user.id
+      }) as { data: ActivateTrialResponse, error: any };
 
       if (error) throw error;
       
       if (data) {
-        // Since we know the shape of the data, we can safely cast it
-        const typedData = data as unknown as ActivateTrialResponse;
-        if (!typedData.success) {
-          toast.error(typedData.message || 'Erro ao ativar trial');
+        if (!data.success) {
+          toast.error(data.message || 'Erro ao ativar trial');
           return;
         }
 
