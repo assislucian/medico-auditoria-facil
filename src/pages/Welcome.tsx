@@ -1,3 +1,4 @@
+
 import { Helmet } from 'react-helmet-async';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,19 +26,24 @@ const WelcomePage = () => {
     setIsActivating(true);
     try {
       const { data, error } = await supabase
-        .rpc<ActivateTrialResponse, { user_id: string }>('activate_trial', {
+        .rpc('activate_trial', {
           user_id: user.id
         });
 
       if (error) throw error;
 
-      if (data && !data.success) {
-        toast.error(data.message || 'Erro ao ativar trial');
-        return;
-      }
+      if (data) {
+        // Cast the data to the expected type
+        const typedData = data as ActivateTrialResponse;
+        
+        if (!typedData.success) {
+          toast.error(typedData.message || 'Erro ao ativar trial');
+          return;
+        }
 
-      toast.success('Trial ativado com sucesso!');
-      navigate('/dashboard');
+        toast.success('Trial ativado com sucesso!');
+        navigate('/dashboard');
+      }
     } catch (error) {
       console.error('Erro ao ativar trial:', error);
       toast.error('Erro ao ativar o trial. Por favor, tente novamente.');

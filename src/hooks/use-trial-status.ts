@@ -31,17 +31,20 @@ export function useTrialStatus() {
       }
 
       try {
+        // Fix the RPC call to properly handle types
         const { data, error } = await supabase
-          .rpc<CheckTrialStatusResponse, { user_id: string }>('check_trial_status', {
+          .rpc('check_trial_status', {
             user_id: user.id
           });
 
         if (error) throw error;
 
         if (data) {
+          // Cast the data to the expected type
+          const typedData = data as CheckTrialStatusResponse;
           setStatus({
-            status: data.status,
-            endDate: data.end_date ? new Date(data.end_date) : null,
+            status: typedData.status,
+            endDate: typedData.end_date ? new Date(typedData.end_date) : null,
             isLoading: false
           });
         } else {
