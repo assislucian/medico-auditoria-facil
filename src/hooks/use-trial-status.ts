@@ -36,20 +36,21 @@ export function useTrialStatus() {
       }
 
       try {
-        // Use "any" temporarily to bypass TypeScript constraints
-        const { data, error } = await supabase.rpc<any, any>(
+        // Cast to unknown first, then to the desired type
+        const { data, error } = await (supabase.rpc(
           'check_trial_status', 
           { user_id: user.id }
-        );
+        ) as unknown as Promise<{ 
+          data: CheckTrialStatusResponse | null; 
+          error: any 
+        }>);
 
         if (error) throw error;
-
-        const typedData = data as CheckTrialStatusResponse;
         
-        if (typedData) {
+        if (data) {
           setStatus({
-            status: typedData.status,
-            endDate: typedData.end_date ? new Date(typedData.end_date) : null,
+            status: data.status,
+            endDate: data.end_date ? new Date(data.end_date) : null,
             isLoading: false
           });
         } else {

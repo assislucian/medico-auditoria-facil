@@ -1,3 +1,4 @@
+
 import { Helmet } from 'react-helmet-async';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,19 +30,20 @@ const WelcomePage = () => {
     
     setIsActivating(true);
     try {
-      // Use "any" temporarily to bypass TypeScript constraints
-      const { data, error } = await supabase.rpc<any, any>(
+      // Cast to unknown first, then to the desired type
+      const { data, error } = await (supabase.rpc(
         'activate_trial', 
         { user_id: user.id }
-      );
+      ) as unknown as Promise<{ 
+        data: ActivateTrialResponse | null; 
+        error: any 
+      }>);
 
       if (error) throw error;
-
-      const typedData = data as ActivateTrialResponse;
       
-      if (typedData) {
-        if (!typedData.success) {
-          toast.error(typedData.message || 'Erro ao ativar trial');
+      if (data) {
+        if (!data.success) {
+          toast.error(data.message || 'Erro ao ativar trial');
           return;
         }
 
