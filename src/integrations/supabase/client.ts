@@ -15,6 +15,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
+    storage: localStorage
   },
   global: {
     headers: {
@@ -26,6 +27,16 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Add session token to global headers when available
 supabase.auth.onAuthStateChange((event, session) => {
   if (session?.access_token) {
+    console.log("Auth state change:", event);
     supabase.functions.setAuth(session.access_token);
   }
 });
+
+// Log de debug para verificar o funcionamento da autenticação
+if (typeof window !== 'undefined') {
+  (window as any).getSupabaseSession = async () => {
+    const { data, error } = await supabase.auth.getSession();
+    console.log("Sessão atual:", data.session, error);
+    return { data, error };
+  };
+}

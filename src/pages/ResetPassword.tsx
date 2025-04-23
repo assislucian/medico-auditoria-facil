@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,9 +8,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
 
 const passwordSchema = z.object({
   password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres'),
@@ -27,7 +28,73 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{password?: string, confirmPassword?: string}>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isTokenValid, setIsTokenValid] = useState<boolean | null>(null);
   const { updatePassword } = useAuth();
+  const navigate = useNavigate();
+
+  // Verifica se há um hash na URL que indica que o usuário chegou via link de reset
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        // Verificar se o usuário está numa sessão de redefinição de senha
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Erro ao verificar sessão:", error);
+          setIsTokenValid(false);
+          toast.error("Link de redefinição de senha inválido ou expirado");
+          return;
+        }
+
+        console.log("Dados da sessão:", data);
+        
+        // Se não há sessão ou usuário, pode ser um erro
+        if (!data.session) {
+          console.warn("Sem sessão ativa para redefinição de senha");
+          setIsTokenValid(false);
+          // Não mostrar erro ainda, pois há outros métodos de verificação
+        } else {
+          // Temos uma sessão válida
+          setIsTokenValid(true);
+        }
+        
+        // Verificar URL para tokens de reset
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const queryParams = new URLSearchParams(window.location.search);
+        
+        // Logs para debug
+        console.log("Hash params:", Object.fromEntries(hashParams.entries()));
+        console.log("Query params:", Object.fromEntries(queryParams.entries()));
+        
+        const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
+        const type = hashParams.get('type') || queryParams.get('type');
+        
+        if (accessToken && type === 'recovery') {
+          console.log("Token de recuperação detectado na URL");
+          // Token válido encontrado na URL
+          setIsTokenValid(true);
+          
+          // Atualiza a sessão com o token da URL
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: '',
+          });
+          
+          if (sessionError) {
+            console.error("Erro ao definir sessão com token:", sessionError);
+            setIsTokenValid(false);
+            toast.error("Erro ao processar o link de redefinição");
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao verificar token:", error);
+        setIsTokenValid(false);
+        toast.error("Ocorreu um erro ao verificar o link de redefinição");
+      }
+    };
+
+    checkSession();
+  }, []);
 
   const validateForm = () => {
     try {
@@ -59,6 +126,10 @@ const ResetPassword = () => {
     try {
       await updatePassword(password);
       toast.success('Senha redefinida com sucesso!');
+      // Redirecionar após sucesso
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
     } catch (error: any) {
       console.error('Erro ao redefinir senha:', error);
       toast.error('Erro ao redefinir senha. O link pode ter expirado.');
@@ -66,6 +137,65 @@ const ResetPassword = () => {
       setIsLoading(false);
     }
   };
+
+  // Se ainda estamos verificando o token
+  if (isTokenValid === null) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+          <Card className="w-full max-w-md mx-auto glass-card">
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p className="text-center text-muted-foreground">
+                  Verificando seu link de redefinição de senha...
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Se o token não é válido
+  if (isTokenValid === false) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+          <Card className="w-full max-w-md mx-auto glass-card">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-center">Link inválido</CardTitle>
+              <CardDescription className="text-center">
+                O link de redefinição de senha é inválido ou expirou.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center mb-4">
+                Por favor, solicite um novo link de redefinição de senha.
+              </p>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => navigate('/forgot-password')}
+              >
+                Solicitar novo link
+              </Button>
+            </CardContent>
+            <CardFooter className="flex justify-center">
+              <p className="text-sm text-muted-foreground">
+                <Link to="/login" className="text-primary hover:underline">
+                  Voltar para o login
+                </Link>
+              </p>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

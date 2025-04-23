@@ -8,6 +8,8 @@ import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -29,6 +31,43 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
+
+// Componente de callback para autenticação
+const AuthCallback = () => {
+  useEffect(() => {
+    // Extraindo parâmetros da URL após redirecionamento do Supabase
+    const handleAuthCallback = async () => {
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const queryParams = new URLSearchParams(window.location.search);
+        
+        console.log("Auth callback - Hash params:", Object.fromEntries(hashParams.entries()));
+        console.log("Auth callback - Query params:", Object.fromEntries(queryParams.entries()));
+        
+        // Se for um redirecionamento de recuperação de senha
+        if ((hashParams.get('type') === 'recovery' || queryParams.get('type') === 'recovery')) {
+          window.location.href = '/reset-password' + window.location.hash + window.location.search;
+          return;
+        }
+        
+        // Para outros tipos de autenticação, redirecionar para dashboard
+        window.location.href = '/dashboard';
+      } catch (error) {
+        console.error("Erro no callback de autenticação:", error);
+        window.location.href = '/login';
+      }
+    };
+    
+    handleAuthCallback();
+  }, []);
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <span className="ml-3 text-xl font-medium">Redirecionando...</span>
+    </div>
+  );
+};
 
 // Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -78,6 +117,9 @@ const App = () => {
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/pricing" element={<Pricing />} />
+                  
+                  {/* Auth callback route */}
+                  <Route path="/auth/callback" element={<AuthCallback />} />
                   
                   {/* Guest-only routes */}
                   <Route path="/login" element={<GuestOnlyRoute><Login /></GuestOnlyRoute>} />

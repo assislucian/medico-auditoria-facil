@@ -46,6 +46,7 @@ const ForgotPassword = () => {
     
     try {
       await resetPassword(email);
+      console.log("Email de recuperação enviado para:", email);
       toast.success('Email de recuperação enviado com sucesso!');
       setEmailSent(true);
     } catch (error: any) {

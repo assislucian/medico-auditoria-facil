@@ -42,8 +42,13 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://localhost:5173"
-additional_redirect_urls = ["https://preview--medico-auditoria-facil.lovable.app"]
+site_url = "https://40f5f53f-0884-4719-86ce-4bbb2a86f8f4.lovableproject.com"
+additional_redirect_urls = [
+  "https://preview--medico-auditoria-facil.lovable.app", 
+  "http://localhost:5173",
+  "https://40f5f53f-0884-4719-86ce-4bbb2a86f8f4.lovableproject.com/auth/callback",
+  "https://40f5f53f-0884-4719-86ce-4bbb2a86f8f4.lovableproject.com/reset-password"
+]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10

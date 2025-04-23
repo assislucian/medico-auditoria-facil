@@ -9,15 +9,15 @@ import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
 });
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(''); // Mantido para compatibilidade, mas não será utilizado
   const [errors, setErrors] = useState<{email?: string, password?: string}>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +25,7 @@ const LoginForm = () => {
 
   const validateForm = () => {
     try {
-      loginSchema.parse({ email, password });
+      loginSchema.parse({ email });
       setErrors({});
       return true;
     } catch (error) {
@@ -33,7 +33,6 @@ const LoginForm = () => {
         const newErrors: {email?: string, password?: string} = {};
         error.errors.forEach((err) => {
           if (err.path[0] === 'email') newErrors.email = err.message;
-          if (err.path[0] === 'password') newErrors.password = err.message;
         });
         setErrors(newErrors);
       }
@@ -51,15 +50,25 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
+      console.log("Iniciando processo de login para:", email);
+      
+      // Teste de conectividade com o Supabase
+      try {
+        const { data: pingData, error: pingError } = await supabase.from('profiles').select('count');
+        console.log("Teste de conectividade com Supabase:", pingError ? "Falha" : "Sucesso", pingData, pingError);
+      } catch (pingError) {
+        console.error("Erro ao testar conectividade com Supabase:", pingError);
+      }
+      
       // Fix: Pass just email as per the updated AuthContext interface
       await signIn(email); 
       toast.success('Verifique seu email para o link de login mágico!');
     } catch (error: any) {
       console.error('Erro ao fazer login:', error);
       
-      if (error.message.includes('Invalid login')) {
+      if (error.message && error.message.includes('Invalid login')) {
         toast.error('Email ou senha incorretos. Verifique suas credenciais.');
-      } else if (error.message.includes('Email not confirmed')) {
+      } else if (error.message && error.message.includes('Email not confirmed')) {
         toast.error('Email ainda não confirmado. Verifique sua caixa de entrada.');
       } else {
         toast.error('Erro ao fazer login. Tente novamente mais tarde.');

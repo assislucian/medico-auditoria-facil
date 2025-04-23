@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,7 +61,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setSession(session);
       setUser(session?.user || null);
       
-      // Carregar perfil quando o estado de autenticação mudar
       if (session?.user) {
         getProfile(supabase, session.user.id).then(profileData => {
           if (profileData) {
@@ -83,15 +81,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signIn = async (email: string) => {
     try {
-      // Verificar se estamos em um ambiente de desenvolvimento
-      const isDev = window.location.hostname === 'localhost' || 
-                    window.location.hostname === '127.0.0.1';
+      const origin = window.location.origin;
+      const redirectTo = `${origin}/auth/callback`;
       
-      const options = isDev
-        ? { emailRedirectTo: `${window.location.origin}/auth/callback` }
-        : undefined;
+      const { error } = await supabase.auth.signInWithOtp({ 
+        email,
+        options: {
+          emailRedirectTo: redirectTo
+        }
+      });
       
-      const { error } = await supabase.auth.signInWithOtp({ email, options });
       if (error) throw error;
       toast.success('Verifique seu email para o link de login mágico!');
     } catch (error: any) {
@@ -101,18 +100,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signUp = async (email: string, password: string) => {
     try {
-      // Verificar se estamos em um ambiente de desenvolvimento
-      const isDev = window.location.hostname === 'localhost' || 
-                    window.location.hostname === '127.0.0.1';
-      
-      const options = isDev
-        ? { emailRedirectTo: `${window.location.origin}/auth/callback` }
-        : undefined;
+      const origin = window.location.origin;
+      const redirectTo = `${origin}/auth/callback`;
       
       const { error } = await supabase.auth.signUp({
         email: email,
         password: password,
-        options: options
+        options: {
+          emailRedirectTo: redirectTo
+        }
       });
       
       if (error) throw error;
@@ -124,13 +120,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const resetPassword = async (email: string) => {
     try {
+      const origin = window.location.origin;
+      const redirectTo = `${origin}/reset-password`;
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: redirectTo,
       });
+      
       if (error) throw error;
       toast.success('Email com instruções para redefinir senha enviado!');
     } catch (error: any) {
       toast.error(error.error_description || error.message || 'Erro ao enviar email de redefinição de senha');
+      console.error('Erro detalhado de resetPassword:', error);
     }
   };
 
@@ -179,13 +180,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const updatePassword = async (password: string) => {
     try {
+      console.log("Iniciando atualização de senha");
       const { error } = await supabase.auth.updateUser({
         password: password
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao atualizar senha:", error);
+        throw error;
+      }
       toast.success('Senha atualizada com sucesso!');
     } catch (error: any) {
+      console.error("Erro completo na atualização de senha:", error);
       toast.error(error.message || 'Erro ao atualizar senha');
       throw error;
     }
