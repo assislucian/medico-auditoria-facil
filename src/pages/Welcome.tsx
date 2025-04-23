@@ -30,7 +30,7 @@ const WelcomePage = () => {
     
     setIsActivating(true);
     try {
-      const { data, error } = await supabase.rpc<ActivateTrialResponse>(
+      const { data, error } = await supabase.rpc<ActivateTrialResponse, ActivateTrialParams>(
         'activate_trial', 
         { user_id: user.id } as ActivateTrialParams
       );
