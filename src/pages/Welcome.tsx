@@ -30,14 +30,11 @@ const WelcomePage = () => {
     
     setIsActivating(true);
     try {
-      // Use a type assertion to handle the RPC call with proper typing
-      const { data, error } = await (supabase.rpc(
+      // Use a type annotation to handle the RPC call
+      const { data, error } = await supabase.rpc<ActivateTrialResponse>(
         'activate_trial', 
-        { user_id: user.id }
-      ) as unknown as Promise<{ 
-        data: ActivateTrialResponse | null; 
-        error: any 
-      }>);
+        { user_id: user.id } as ActivateTrialParams
+      );
 
       if (error) throw error;
       

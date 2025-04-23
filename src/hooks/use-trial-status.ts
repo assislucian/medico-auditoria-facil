@@ -36,14 +36,11 @@ export function useTrialStatus() {
       }
 
       try {
-        // Use a type assertion to handle the RPC call with proper typing
-        const { data, error } = await (supabase.rpc(
+        // Use a type annotation to handle the RPC call
+        const { data, error } = await supabase.rpc<CheckTrialStatusResponse>(
           'check_trial_status', 
-          { user_id: user.id }
-        ) as unknown as Promise<{ 
-          data: CheckTrialStatusResponse | null; 
-          error: any 
-        }>);
+          { user_id: user.id } as CheckTrialStatusParams
+        );
 
         if (error) throw error;
         
