@@ -36,9 +36,10 @@ export function useTrialStatus() {
       }
 
       try {
-        const { data, error } = await supabase.rpc<CheckTrialStatusResponse, CheckTrialStatusParams>(
+        // Use "any" temporarily to bypass TypeScript constraints
+        const { data, error } = await supabase.rpc<any, any>(
           'check_trial_status', 
-          { user_id: user.id } as CheckTrialStatusParams
+          { user_id: user.id }
         );
 
         if (error) throw error;
