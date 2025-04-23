@@ -19,16 +19,18 @@ const WelcomePage = () => {
     
     setIsActivating(true);
     try {
-      // Atualiza o status do trial no perfil do usuário
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          trial_status: 'active',
-          trial_end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        })
-        .eq('id', user.id);
+      // Call our new database function to activate trial
+      const { data, error } = await supabase
+        .rpc('activate_trial', {
+          user_id: user.id
+        });
 
       if (error) throw error;
+
+      if (!data.success) {
+        toast.error(data.message || 'Erro ao ativar trial');
+        return;
+      }
 
       toast.success('Trial ativado com sucesso!');
       navigate('/dashboard');
