@@ -20,10 +20,11 @@ const TrialGuard = ({ children }: TrialGuardProps) => {
   useEffect(() => {
     console.log('TrialGuard - User:', !!user, 'Status:', status, 'isLoading:', isLoading, 'Path:', location.pathname);
     
-    // Only proceed if loading is complete
+    // Only proceed if loading is complete and we're not already on the welcome page
     if (!isLoading && user && !hasNavigated) {
       console.log('TrialGuard check complete - Status:', status);
       
+      // Only redirect to welcome if not already on welcome page and trial not started
       if (status === 'not_started' && location.pathname !== '/welcome') {
         console.log('Trial not started, redirecting to welcome page from:', location.pathname);
         setHasNavigated(true);
@@ -43,22 +44,7 @@ const TrialGuard = ({ children }: TrialGuardProps) => {
       // If there's no user and we're not loading, allow the auth routes to handle it
       setIsChecking(false);
     }
-    
-    // If we're still loading or checking, don't update isChecking yet
-    if (isLoading) {
-      return;
-    }
-    
-    // If we've reached this point and we're still checking, stop checking
-    // This prevents infinite loading states
-    if (isChecking && !isLoading) {
-      const timer = setTimeout(() => {
-        setIsChecking(false);
-      }, 2000); // Set a maximum wait time
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, user, status, navigate, location, isChecking, hasNavigated]);
+  }, [isLoading, user, status, navigate, location, hasNavigated]);
 
   // Added a max timeout to prevent infinite loading
   useEffect(() => {
@@ -85,8 +71,7 @@ const TrialGuard = ({ children }: TrialGuardProps) => {
     );
   }
 
-  // Always render children if not in the checking state, even if the status is not_started
-  // This allows the Welcome page to work without redirecting back to itself
+  // Always render children if not in the checking state
   return <>{children}</>;
 };
 

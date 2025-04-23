@@ -22,6 +22,7 @@ import ResetPasswordPage from "./pages/ResetPassword";
 import UpdatePasswordPage from "./pages/UpdatePassword";
 import CompareView from "./components/ComparisonView";
 import NewAuditPage from "./pages/NewAudit";
+import TrialGuard from "./components/auth/TrialGuard";
 
 const queryClient = new QueryClient();
 
@@ -39,11 +40,14 @@ const App = () => {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/update-password" element={<UpdatePasswordPage />} />
+              <Route path="/welcome" element={<WelcomePage />} />
               <Route
                 path="/"
                 element={
                   <PrivateRoute>
-                    <DashboardPage />
+                    <TrialGuard>
+                      <DashboardPage />
+                    </TrialGuard>
                   </PrivateRoute>
                 }
               />
@@ -51,7 +55,9 @@ const App = () => {
                 path="/dashboard"
                 element={
                   <PrivateRoute>
-                    <DashboardPage />
+                    <TrialGuard>
+                      <DashboardPage />
+                    </TrialGuard>
                   </PrivateRoute>
                 }
               />
@@ -59,19 +65,19 @@ const App = () => {
                 path="/profile"
                 element={
                   <PrivateRoute>
-                    <ProfilePage />
+                    <TrialGuard>
+                      <ProfilePage />
+                    </TrialGuard>
                   </PrivateRoute>
                 }
-              />
-              <Route
-                path="/welcome"
-                element={<WelcomePage />}
               />
               <Route
                 path="/compare"
                 element={
                   <PrivateRoute>
-                    <CompareView />
+                    <TrialGuard>
+                      <CompareView />
+                    </TrialGuard>
                   </PrivateRoute>
                 }
               />
@@ -79,7 +85,9 @@ const App = () => {
                 path="/new-audit"
                 element={
                   <PrivateRoute>
-                    <NewAuditPage />
+                    <TrialGuard>
+                      <NewAuditPage />
+                    </TrialGuard>
                   </PrivateRoute>
                 }
               />

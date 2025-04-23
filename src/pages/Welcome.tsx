@@ -52,7 +52,9 @@ const WelcomePage = () => {
 
       if (error) {
         console.error('Error activating trial:', error);
-        throw error;
+        toast.error('Erro ao ativar trial: ' + error.message);
+        setIsActivating(false);
+        return;
       }
       
       console.log('Trial activation response:', data);
