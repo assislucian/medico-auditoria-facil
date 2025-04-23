@@ -1,4 +1,3 @@
-
 import { Helmet } from 'react-helmet-async';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useLocation } from 'react-router-dom';
 
 interface ActivateTrialResponse {
   success: boolean;
@@ -20,22 +18,18 @@ const WelcomePage = () => {
   const [isActivating, setIsActivating] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const location = useLocation();
 
   const handleStartTrial = async () => {
     if (!user) return;
     
     setIsActivating(true);
     try {
-      // Fix: Call rpc without type parameters and pass params as an object
-      const { data, error } = await supabase
-        .rpc('activate_trial', {
-          user_id: user.id
-        });
+      const { data, error } = await supabase.rpc('activate_trial', {
+        user_id: user.id as string
+      });
 
       if (error) throw error;
 
-      // Cast the data to our expected response type
       const typedData = data as ActivateTrialResponse;
       
       if (typedData) {
@@ -45,7 +39,6 @@ const WelcomePage = () => {
         }
 
         toast.success('Trial ativado com sucesso!');
-        // Always navigate to dashboard to start the tour
         navigate('/dashboard', { 
           state: { startTour: true },
           replace: true 

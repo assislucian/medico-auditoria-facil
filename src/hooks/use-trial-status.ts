@@ -31,15 +31,12 @@ export function useTrialStatus() {
       }
 
       try {
-        // Fix: Call rpc without type parameters and pass params as an object
-        const { data, error } = await supabase
-          .rpc('check_trial_status', {
-            user_id: user.id
-          });
+        const { data, error } = await supabase.rpc('check_trial_status', {
+          user_id: user.id as string
+        });
 
         if (error) throw error;
 
-        // Cast the data to our expected response type
         const typedData = data as CheckTrialStatusResponse;
         
         if (typedData) {
