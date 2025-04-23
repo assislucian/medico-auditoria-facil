@@ -9,6 +9,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Define the expected return type from the RPC function
+interface ActivateTrialResponse {
+  success: boolean;
+  message?: string;
+  trial_end_date?: string;
+}
+
 const WelcomePage = () => {
   const [isActivating, setIsActivating] = useState(false);
   const navigate = useNavigate();
@@ -21,13 +28,13 @@ const WelcomePage = () => {
     try {
       // Call our new database function to activate trial
       const { data, error } = await supabase
-        .rpc('activate_trial', {
+        .rpc<ActivateTrialResponse>('activate_trial', {
           user_id: user.id
         });
 
       if (error) throw error;
 
-      if (!data.success) {
+      if (data && !data.success) {
         toast.error(data.message || 'Erro ao ativar trial');
         return;
       }
