@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,8 +9,7 @@ import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
-import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -23,43 +22,13 @@ const LoginForm = () => {
   const [errors, setErrors] = useState<{email?: string, password?: string}>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [loginMethod, setLoginMethod] = useState<'magic' | 'password'>('magic');
-  const { signIn, signInWithPassword } = useAuth();
-
-  // For demonstration purposes - creates a test user with no email confirmation needed
-  const createTestUser = async () => {
-    setIsLoading(true);
-    try {
-      const testEmail = `test${Math.floor(Math.random() * 10000)}@example.com`;
-      const testPassword = "Password123!";
-      
-      const { data, error } = await supabase.auth.signUp({
-        email: testEmail,
-        password: testPassword,
-      });
-      
-      if (error) throw error;
-      
-      toast.success(`Usuário de teste criado: ${testEmail} / ${testPassword}`);
-      setEmail(testEmail);
-      setPassword(testPassword);
-      
-      console.log("Usuário de teste criado:", { email: testEmail, password: testPassword });
-    } catch (error: any) {
-      console.error('Erro ao criar usuário de teste:', error);
-      toast.error('Erro ao criar usuário de teste');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [authError, setAuthError] = useState<string | null>(null);
+  const { signInWithPassword } = useAuth();
+  const navigate = useNavigate();
 
   const validateForm = () => {
     try {
-      if (loginMethod === 'magic') {
-        z.object({ email: z.string().email('Email inválido') }).parse({ email });
-      } else {
-        loginSchema.parse({ email, password });
-      }
+      loginSchema.parse({ email, password });
       setErrors({});
       return true;
     } catch (error) {
@@ -77,6 +46,7 @@ const LoginForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError(null);
     
     if (!validateForm()) {
       return;
@@ -85,31 +55,21 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
-      console.log(`Iniciando processo de login ${loginMethod} para:`, email);
+      console.log(`Iniciando login para: ${email}`);
       
-      // Teste de conectividade com o Supabase
-      try {
-        const { data: pingData, error: pingError } = await supabase.from('profiles').select('count');
-        console.log("Teste de conectividade com Supabase:", pingError ? "Falha" : "Sucesso", pingData, pingError);
-      } catch (pingError) {
-        console.error("Erro ao testar conectividade com Supabase:", pingError);
-      }
+      await signInWithPassword(email, password);
       
-      if (loginMethod === 'magic') {
-        await signIn(email);
-        toast.success('Verifique seu email para o link de login mágico!');
-      } else {
-        await signInWithPassword(email, password);
-      }
+      // Navegue para o dashboard após o login bem-sucedido
+      navigate('/dashboard');
     } catch (error: any) {
       console.error('Erro ao fazer login:', error);
       
       if (error.message && error.message.includes('Invalid login')) {
-        toast.error('Email ou senha incorretos. Verifique suas credenciais.');
+        setAuthError('Email ou senha incorretos. Verifique suas credenciais.');
       } else if (error.message && error.message.includes('Email not confirmed')) {
-        toast.error('Email ainda não confirmado. Verifique sua caixa de entrada.');
+        setAuthError('Email ainda não confirmado. Verifique sua caixa de entrada e confirme seu email.');
       } else {
-        toast.error('Erro ao fazer login. Tente novamente mais tarde.');
+        setAuthError('Erro ao fazer login. Tente novamente mais tarde.');
       }
     } finally {
       setIsLoading(false);
@@ -125,86 +85,68 @@ const LoginForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="magic" onValueChange={(value) => setLoginMethod(value as 'magic' | 'password')}>
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="magic">Link Mágico</TabsTrigger>
-            <TabsTrigger value="password">Senha</TabsTrigger>
-          </TabsList>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu.email@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={errors.email ? "border-destructive" : ""}
-                required
-                autoComplete="email"
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
-            </div>
-            
-            {loginMethod === 'password' && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Senha</Label>
-                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                    Esqueceu a senha?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`pr-10 ${errors.password ? "border-destructive" : ""}`}
-                    required={loginMethod === 'password'}
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 flex items-center px-3"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
-                    <span className="sr-only">
-                      {showPassword ? 'Esconder senha' : 'Mostrar senha'}
-                    </span>
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password}</p>
-                )}
-              </div>
+        {authError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{authError}</AlertDescription>
+          </Alert>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="seu.email@exemplo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={errors.email ? "border-destructive" : ""}
+              required
+              autoComplete="email"
+            />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email}</p>
             )}
-            
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Entrando...' : loginMethod === 'magic' ? 'Enviar link de login' : 'Entrar'}
-            </Button>
-          </form>
-          
-          <div className="mt-6">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="w-full" 
-              onClick={createTestUser}
-              disabled={isLoading}
-            >
-              Criar usuário de teste
-            </Button>
-            <p className="text-xs text-center mt-2 text-muted-foreground">
-              Cria um usuário temporário para testes sem precisar de confirmação por email
-            </p>
           </div>
-        </Tabs>
+          
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Senha</Label>
+              <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                Esqueceu a senha?
+              </Link>
+            </div>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`pr-10 ${errors.password ? "border-destructive" : ""}`}
+                required
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 flex items-center px-3"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                <span className="sr-only">
+                  {showPassword ? 'Esconder senha' : 'Mostrar senha'}
+                </span>
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password}</p>
+            )}
+          </div>
+          
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Entrando...' : 'Entrar'}
+          </Button>
+        </form>
       </CardContent>
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">

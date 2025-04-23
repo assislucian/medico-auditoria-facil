@@ -20,41 +20,21 @@ export const useAuthActions = () => {
       return null;
     }
   };
-
-  const signIn = async (email: string) => {
-    try {
-      const origin = window.location.origin;
-      const redirectTo = `${origin}/auth/callback`;
-      
-      console.log("Sending magic link with redirect to:", redirectTo);
-      
-      const { error } = await supabase.auth.signInWithOtp({ 
-        email,
-        options: {
-          emailRedirectTo: redirectTo
-        }
-      });
-      
-      if (error) throw error;
-      toast.success('Verifique seu email para o link de login mágico!');
-    } catch (error: any) {
-      console.error("Error during signIn:", error);
-      toast.error(error.error_description || error.message || 'Erro ao fazer login');
-    }
-  };
   
   const signInWithPassword = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
       if (error) throw error;
-      toast.success('Login efetuado com sucesso!');
+      
+      // O login foi bem-sucedido, o redirecionamento será tratado pelo componente
+      return data;
     } catch (error: any) {
       console.error("Error during signInWithPassword:", error);
-      toast.error(error.error_description || error.message || 'Erro ao fazer login');
+      throw error; // Propaga o erro para ser tratado pelo componente
     }
   };
 
@@ -63,7 +43,7 @@ export const useAuthActions = () => {
       const origin = window.location.origin;
       const redirectTo = `${origin}/auth/callback`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: email,
         password: password,
         options: {
@@ -72,10 +52,12 @@ export const useAuthActions = () => {
       });
       
       if (error) throw error;
-      toast.success('Verifique seu email para confirmar o cadastro!');
+      
+      // O signup foi bem-sucedido, o redirecionamento será tratado pelo componente
+      return data;
     } catch (error: any) {
       console.error("Error during signUp:", error);
-      toast.error(error.error_description || error.message || 'Erro ao criar conta');
+      throw error; // Propaga o erro para ser tratado pelo componente
     }
   };
 
@@ -119,7 +101,6 @@ export const useAuthActions = () => {
   };
 
   return {
-    signIn,
     signInWithPassword,
     signUp,
     signOut: handleSignOut,

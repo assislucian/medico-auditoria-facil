@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,13 +15,14 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 const registerSchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
-  crm: z.string().min(4, 'CRM inválido').regex(/^\d+$/, 'CRM deve conter apenas números'),
+  crm: z.string().optional(),
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres'),
   confirmPassword: z.string()
@@ -37,6 +37,7 @@ const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -53,23 +54,20 @@ const RegisterForm = () => {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
+    setRegisterError(null);
     
     try {
-      // Fix: Only pass email and password as per the updated AuthContext interface
       await signUp(data.email, data.password);
       
-      // You can handle additional user data via the profiles table later
-      // For example via a trigger function that captures raw_user_meta_data
-      
-      toast.success('Cadastro realizado com sucesso! Verifique seu email para confirmar sua conta.');
+      toast.success('Cadastro realizado! Verifique seu email para confirmar sua conta.');
       navigate('/login');
     } catch (error: any) {
       console.error('Erro ao realizar cadastro:', error);
       
       if (error.message.includes('User already registered')) {
-        toast.error('Email já cadastrado. Tente fazer login ou recuperar sua senha.');
+        setRegisterError('Email já cadastrado. Tente fazer login ou recuperar sua senha.');
       } else {
-        toast.error('Erro ao realizar cadastro. Tente novamente mais tarde.');
+        setRegisterError('Erro ao realizar cadastro. Tente novamente mais tarde.');
       }
     } finally {
       setIsLoading(false);
@@ -85,6 +83,12 @@ const RegisterForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {registerError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{registerError}</AlertDescription>
+          </Alert>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -106,7 +110,7 @@ const RegisterForm = () => {
               name="crm"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>CRM (apenas números)</FormLabel>
+                  <FormLabel>CRM (opcional)</FormLabel>
                   <FormControl>
                     <Input placeholder="12345" {...field} />
                   </FormControl>
