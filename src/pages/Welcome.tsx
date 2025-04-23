@@ -1,3 +1,4 @@
+
 import { Helmet } from 'react-helmet-async';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,11 @@ interface ActivateTrialResponse {
   trial_end_date?: string;
 }
 
+// Define the RPC parameters type
+interface ActivateTrialParams {
+  user_id: string;
+}
+
 const WelcomePage = () => {
   const [isActivating, setIsActivating] = useState(false);
   const navigate = useNavigate();
@@ -24,9 +30,10 @@ const WelcomePage = () => {
     
     setIsActivating(true);
     try {
-      const { data, error } = await supabase.rpc('activate_trial', { 
-        user_id: user.id 
-      });
+      const { data, error } = await supabase.rpc<ActivateTrialResponse>(
+        'activate_trial', 
+        { user_id: user.id } as ActivateTrialParams
+      );
 
       if (error) throw error;
 

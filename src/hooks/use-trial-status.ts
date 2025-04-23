@@ -15,6 +15,11 @@ interface CheckTrialStatusResponse {
   end_date: string | null;
 }
 
+// Define the RPC parameters type
+interface CheckTrialStatusParams {
+  user_id: string;
+}
+
 export function useTrialStatus() {
   const { user } = useAuth();
   const [status, setStatus] = useState<TrialStatus>({
@@ -31,9 +36,10 @@ export function useTrialStatus() {
       }
 
       try {
-        const { data, error } = await supabase.rpc('check_trial_status', { 
-          user_id: user.id 
-        });
+        const { data, error } = await supabase.rpc<CheckTrialStatusResponse>(
+          'check_trial_status', 
+          { user_id: user.id } as CheckTrialStatusParams
+        );
 
         if (error) throw error;
 
