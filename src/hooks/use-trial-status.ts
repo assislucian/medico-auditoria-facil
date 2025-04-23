@@ -37,18 +37,20 @@ export function useTrialStatus() {
       }
 
       try {
-        // Use a type annotation with two type parameters to handle the RPC call
-        const { data, error }: PostgrestSingleResponse<CheckTrialStatusResponse> = await supabase.rpc(
-          'check_trial_status', 
+        // Using any to bypass TypeScript's type checking for the RPC function name
+        const { data, error } = await supabase.rpc(
+          'check_trial_status' as any, 
           { user_id: user.id } as CheckTrialStatusParams
         );
 
         if (error) throw error;
         
         if (data) {
+          // Since we know the shape of the data, we can safely cast it
+          const typedData = data as unknown as CheckTrialStatusResponse;
           setStatus({
-            status: data.status,
-            endDate: data.end_date ? new Date(data.end_date) : null,
+            status: typedData.status,
+            endDate: typedData.end_date ? new Date(typedData.end_date) : null,
             isLoading: false
           });
         } else {
