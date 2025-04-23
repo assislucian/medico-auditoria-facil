@@ -7,9 +7,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import { GuidedTour } from '@/components/onboarding/GuidedTour';
+import { useLocation } from 'react-router-dom';
 
 const DashboardPage = () => {
   const isMobile = useIsMobile();
+  const location = useLocation();
+  const showTour = location.state?.startTour;
 
   return (
     <>
@@ -46,6 +50,7 @@ const DashboardPage = () => {
           </>
         )}
       </div>
+      {showTour && <GuidedTour />}
     </>
   );
 };

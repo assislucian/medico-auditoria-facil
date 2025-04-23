@@ -1,3 +1,4 @@
+
 import { Helmet } from 'react-helmet-async';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +28,7 @@ const WelcomePage = () => {
     setIsActivating(true);
     try {
       const { data, error } = await supabase
-        .rpc<ActivateTrialResponse>('activate_trial', {
+        .rpc<ActivateTrialResponse, { user_id: string }>('activate_trial', {
           user_id: user.id
         });
 
@@ -40,8 +41,11 @@ const WelcomePage = () => {
         }
 
         toast.success('Trial ativado com sucesso!');
-        const returnTo = location.state?.returnTo || '/dashboard';
-        navigate(returnTo, { replace: true });
+        // Always navigate to dashboard to start the tour
+        navigate('/dashboard', { 
+          state: { startTour: true },
+          replace: true 
+        });
       }
     } catch (error) {
       console.error('Erro ao ativar trial:', error);

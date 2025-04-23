@@ -32,7 +32,7 @@ export function useTrialStatus() {
 
       try {
         const { data, error } = await supabase
-          .rpc<CheckTrialStatusResponse>('check_trial_status', {
+          .rpc<CheckTrialStatusResponse, { user_id: string }>('check_trial_status', {
             user_id: user.id
           });
 
