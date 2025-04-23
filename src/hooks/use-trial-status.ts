@@ -36,7 +36,7 @@ export function useTrialStatus() {
       }
 
       try {
-        // Cast to unknown first, then to the desired type
+        // Use a type assertion to handle the RPC call with proper typing
         const { data, error } = await (supabase.rpc(
           'check_trial_status', 
           { user_id: user.id }
