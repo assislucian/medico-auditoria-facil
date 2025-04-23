@@ -27,16 +27,20 @@ const WelcomePage = () => {
     
     setIsActivating(true);
     try {
+      // Fix: Remove the generic type parameters from rpc and cast the result instead
       const { data, error } = await supabase
-        .rpc<ActivateTrialResponse, { user_id: string }>('activate_trial', {
+        .rpc('activate_trial', {
           user_id: user.id
         });
 
       if (error) throw error;
 
-      if (data) {
-        if (!data.success) {
-          toast.error(data.message || 'Erro ao ativar trial');
+      // Cast the data to our expected response type
+      const typedData = data as ActivateTrialResponse;
+      
+      if (typedData) {
+        if (!typedData.success) {
+          toast.error(typedData.message || 'Erro ao ativar trial');
           return;
         }
 

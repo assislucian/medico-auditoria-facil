@@ -31,17 +31,21 @@ export function useTrialStatus() {
       }
 
       try {
+        // Fix: Remove the generic type parameters from rpc and cast the result instead
         const { data, error } = await supabase
-          .rpc<CheckTrialStatusResponse, { user_id: string }>('check_trial_status', {
+          .rpc('check_trial_status', {
             user_id: user.id
           });
 
         if (error) throw error;
 
-        if (data) {
+        // Cast the data to our expected response type
+        const typedData = data as CheckTrialStatusResponse;
+        
+        if (typedData) {
           setStatus({
-            status: data.status,
-            endDate: data.end_date ? new Date(data.end_date) : null,
+            status: typedData.status,
+            endDate: typedData.end_date ? new Date(typedData.end_date) : null,
             isLoading: false
           });
         } else {
