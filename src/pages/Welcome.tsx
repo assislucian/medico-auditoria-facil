@@ -24,9 +24,10 @@ const WelcomePage = () => {
     
     setIsActivating(true);
     try {
-      const { data, error } = await supabase.rpc('activate_trial', {
-        user_id: user.id as string
-      });
+      const { data, error } = await supabase.rpc(
+        'activate_trial', 
+        { user_id: user.id } as any
+      );
 
       if (error) throw error;
 

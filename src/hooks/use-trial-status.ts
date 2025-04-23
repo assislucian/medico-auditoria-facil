@@ -31,9 +31,11 @@ export function useTrialStatus() {
       }
 
       try {
-        const { data, error } = await supabase.rpc('check_trial_status', {
-          user_id: user.id as string
-        });
+        // Fix: use rpc call without type parameters and with explicit casting
+        const { data, error } = await supabase.rpc(
+          'check_trial_status', 
+          { user_id: user.id } as any
+        );
 
         if (error) throw error;
 
