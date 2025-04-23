@@ -344,6 +344,8 @@ export type Database = {
           id: string
           name: string
           notification_preferences: Json | null
+          onboarding_completed: boolean | null
+          onboarding_completed_at: string | null
           reference_tables_preferences: Json | null
           specialty: string | null
           trial_end_date: string | null
@@ -357,6 +359,8 @@ export type Database = {
           id: string
           name: string
           notification_preferences?: Json | null
+          onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
           reference_tables_preferences?: Json | null
           specialty?: string | null
           trial_end_date?: string | null
@@ -370,6 +374,8 @@ export type Database = {
           id?: string
           name?: string
           notification_preferences?: Json | null
+          onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
           reference_tables_preferences?: Json | null
           specialty?: string | null
           trial_end_date?: string | null
@@ -585,7 +591,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_onboarding_status: {
+        Args: { completed: boolean }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -10,6 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, SkipForward } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface TourStep {
   title: string;
@@ -46,11 +47,27 @@ export function GuidedTour() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Navigate to the current step's path
     if (isOpen && tourSteps[currentStep]) {
       navigate(tourSteps[currentStep].path);
     }
   }, [currentStep, isOpen, navigate]);
+
+  const updateOnboardingStatus = async (completed: boolean) => {
+    try {
+      const { data, error } = await supabase.rpc('update_onboarding_status', { 
+        completed 
+      });
+
+      if (error) throw error;
+
+      if (!data?.success) {
+        throw new Error('Failed to update onboarding status');
+      }
+    } catch (error) {
+      console.error('Error updating onboarding status:', error);
+      toast.error('Erro ao salvar progresso do tour');
+    }
+  };
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
@@ -60,13 +77,16 @@ export function GuidedTour() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    await updateOnboardingStatus(true);
     setIsOpen(false);
     navigate('/dashboard');
   };
 
-  const handleSkip = () => {
-    handleComplete();
+  const handleSkip = async () => {
+    await updateOnboardingStatus(false);
+    setIsOpen(false);
+    navigate('/dashboard');
   };
 
   if (!isOpen) return null;
