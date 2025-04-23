@@ -1,7 +1,7 @@
 
 import { FileWithStatus } from '@/types/upload';
 import { toast } from 'sonner';
-import { processFiles } from '@/services/uploadService';
+import { processFiles } from '@/services/upload';
 import { determineProcessingMode } from '@/utils/uploadUtils';
 
 // Define the result type
