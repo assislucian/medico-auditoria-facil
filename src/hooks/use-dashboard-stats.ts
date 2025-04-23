@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import type { Json } from '@/integrations/supabase/types';
 
 interface DashboardStats {
   totals: {
@@ -36,7 +37,14 @@ export function useDashboardStats() {
       });
 
       if (error) throw error;
-      return data as DashboardStats;
+      
+      // Type assertion after validating the structure
+      const statsData = data as unknown as DashboardStats;
+      if (!statsData || !statsData.totals || !Array.isArray(statsData.monthlyData) || !Array.isArray(statsData.hospitalData)) {
+        throw new Error('Invalid data structure received from server');
+      }
+
+      return statsData;
     },
     enabled: !!user?.id
   });
