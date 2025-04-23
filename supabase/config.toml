@@ -42,8 +42,11 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "https://40f5f53f-0884-4719-86ce-4bbb2a86f8f4.lovableproject.com"
+site_url = "https://meudominio.com"
 additional_redirect_urls = [
+  "https://meudominio.com", 
+  "https://meudominio.com/auth/callback",
+  "https://meudominio.com/reset-password",
   "https://preview--medico-auditoria-facil.lovable.app", 
   "http://localhost:5173",
   "https://40f5f53f-0884-4719-86ce-4bbb2a86f8f4.lovableproject.com/auth/callback",

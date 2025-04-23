@@ -21,8 +21,8 @@ export const getProfileData = async (userId: string): Promise<Profile | null> =>
 
 export const handlePasswordReset = async (email: string) => {
   try {
-    const origin = window.location.origin;
-    const redirectTo = `${origin}/reset-password`;
+    // Use the custom domain for the password reset email
+    const redirectTo = `https://meudominio.com/reset-password`;
     
     console.log("Sending password reset email with redirect to:", redirectTo);
     
