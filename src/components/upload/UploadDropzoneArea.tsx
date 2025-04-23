@@ -33,4 +33,3 @@ const UploadDropzoneArea = ({
 };
 
 export default UploadDropzoneArea;
-

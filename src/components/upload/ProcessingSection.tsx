@@ -1,7 +1,7 @@
 
+import { ProcessingStage } from '@/types/upload';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import UploadProgress from './UploadProgress';
-import { ProcessingStage } from '@/types/upload';
 
 interface ProcessingSectionProps {
   uploading: boolean;
@@ -49,4 +49,3 @@ const ProcessingSection = ({
 };
 
 export default ProcessingSection;
-

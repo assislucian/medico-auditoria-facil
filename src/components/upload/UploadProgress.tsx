@@ -49,4 +49,3 @@ const UploadProgress = ({ progress, show, stage = 'idle' }: UploadProgressProps)
 };
 
 export default UploadProgress;
-

@@ -1,5 +1,6 @@
 
-import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { FileType } from "@/types/upload";
 
 interface UploadAlertsProps {
@@ -9,49 +10,44 @@ interface UploadAlertsProps {
   hasValidFilesForProcessing: boolean;
 }
 
-const UploadAlerts = ({ 
-  hasGuiaDemonstrativoPair, 
-  hasInvalidFiles, 
-  hasFile, 
-  hasValidFilesForProcessing 
+const UploadAlerts = ({
+  hasGuiaDemonstrativoPair,
+  hasInvalidFiles,
+  hasFile,
+  hasValidFilesForProcessing,
 }: UploadAlertsProps) => {
-  if (!hasValidFilesForProcessing && (hasFile('guia') || hasFile('demonstrativo'))) {
-    return (
-      <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900/50 p-3 text-sm flex items-start gap-2">
-        <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
-        <div>
-          <span className="font-medium">Atenção:</span> Todos os arquivos selecionados são inválidos.
-          Por favor, envie arquivos PDF válidos para processamento.
-        </div>
-      </div>
-    );
-  }
-  
-  if (!hasGuiaDemonstrativoPair && !hasFile('guia') && !hasFile('demonstrativo')) {
-    return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/50 p-3 text-sm flex items-start gap-2">
-        <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
-        <div>
-          <span className="font-medium">Para começar:</span> Selecione pelo menos um tipo de documento 
-          (guias médicas ou demonstrativos de pagamento) para análise.
-        </div>
-      </div>
-    );
-  }
-  
-  if (hasInvalidFiles) {
-    return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/50 p-3 text-sm flex items-start gap-2">
-        <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
-        <div>
-          <span className="font-medium">Atenção:</span> Alguns arquivos podem estar em formato não reconhecido ou serem ilegíveis.
-          Arquivos marcados como inválidos serão ignorados durante o processamento.
-        </div>
-      </div>
-    );
-  }
-  
-  return null;
+  if (!hasFile('guia') && !hasFile('demonstrativo')) return null;
+
+  return (
+    <div className="space-y-3">
+      {hasInvalidFiles && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Alguns arquivos são inválidos e foram removidos. Por favor, verifique o formato e tamanho dos arquivos.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!hasValidFilesForProcessing && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Nenhum arquivo válido para processamento. Por favor, adicione arquivos válidos.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {hasGuiaDemonstrativoPair && hasValidFilesForProcessing && (
+        <Alert className="bg-green-50 border-green-200 text-green-800">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Ótimo! Você tem guias e demonstrativos prontos para análise comparativa.
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
+  );
 };
 
 export default UploadAlerts;

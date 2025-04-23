@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { FileUp, FileText, Trash2, Eye, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
@@ -22,16 +23,6 @@ type FileListProps = {
   disabled: boolean;
 };
 
-/**
- * FileList Component
- * 
- * Displays a list of uploaded files with their type (guia or demonstrativo) and
- * provides options to preview or remove each file.
- * 
- * @param files - Array of uploaded files with metadata
- * @param onRemove - Function to handle file removal
- * @param disabled - Whether the buttons are disabled (during processing)
- */
 const FileList = ({ files, onRemove, disabled }: FileListProps) => {
   const [previewFile, setPreviewFile] = useState<string | null>(null);
   

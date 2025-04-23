@@ -1,3 +1,4 @@
+
 export type FileType = 'guia' | 'demonstrativo';
 export type ProcessingStage = 'idle' | 'extracting' | 'analyzing' | 'comparing' | 'complete' | 'uploading' | 'error';
 export type FileStatus = 'valid' | 'invalid' | 'processing';
@@ -53,36 +54,4 @@ export interface ExtractedData {
   demonstrativoInfo: DemonstrativoInfo;
   procedimentos: ProcedureExtracted[];
   totais: ProcessingTotals;
-}
-
-export interface GuiaData {
-  numero: string;
-  execucao: string;
-  beneficiario: {
-    codigo: string;
-    nome: string;
-  };
-  prestador: {
-    codigo: string;
-    nome: string;
-  };
-  procedimentos: ProcedimentoGuia[];
-}
-
-export interface ProcedimentoGuia {
-  codigo: string;
-  descricao: string;
-  dataExecucao: string;
-  quantidade: number;
-  status: string;
-  participacoes: ParticipacaoMedica[];
-}
-
-export interface ParticipacaoMedica {
-  funcao: string;
-  crm: string;
-  nome: string;
-  dataInicio: string;
-  dataFim: string;
-  status: string;
 }

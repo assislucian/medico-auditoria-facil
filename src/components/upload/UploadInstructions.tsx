@@ -1,19 +1,20 @@
 
-import React from 'react';
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const UploadInstructions = () => {
   return (
-    <div className="text-sm text-muted-foreground mb-4">
-      <p className="mb-2">
-        <strong>Como funciona:</strong> Você pode enviar guias médicas, demonstrativos de pagamento, ou ambos.
-      </p>
-      <ul className="list-disc ml-5 space-y-1">
-        <li><strong>Guias médicas:</strong> Contêm os procedimentos realizados e servem como comprovante do serviço.</li>
-        <li><strong>Demonstrativos:</strong> Documentos de pagamento que detalham os valores pagos pelo plano de saúde.</li>
-        <li><strong>Análise completa:</strong> Quando ambos são enviados, o sistema compara os valores pagos com a tabela CBHPM.</li>
-        <li><strong>Comparativo CBHPM 2015:</strong> Análise detalhada por papel (Cirurgião, 1º Auxiliar, 2º Auxiliar) dos valores pagos versus CBHPM.</li>
-      </ul>
-    </div>
+    <Alert>
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription className="text-sm">
+        <ul className="list-disc pl-5 space-y-1">
+          <li>Faça upload das guias médicas (formato PDF) na área da esquerda</li>
+          <li>Faça upload dos demonstrativos de pagamento (formato PDF) na área da direita</li>
+          <li>Para uma análise completa, envie ambos os tipos de documento</li>
+          <li>Tamanho máximo por arquivo: 10MB</li>
+        </ul>
+      </AlertDescription>
+    </Alert>
   );
 };
 
