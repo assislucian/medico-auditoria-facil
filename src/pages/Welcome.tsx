@@ -27,7 +27,7 @@ const WelcomePage = () => {
     
     setIsActivating(true);
     try {
-      // Fix: Remove the generic type parameters from rpc and cast the result instead
+      // Fix: Call rpc without type parameters and pass params as an object
       const { data, error } = await supabase
         .rpc('activate_trial', {
           user_id: user.id
