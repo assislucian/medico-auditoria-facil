@@ -1,4 +1,3 @@
-
 import { Helmet } from 'react-helmet-async';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Define the expected return type from the RPC function
 interface ActivateTrialResponse {
   success: boolean;
   message?: string;
@@ -26,9 +24,8 @@ const WelcomePage = () => {
     
     setIsActivating(true);
     try {
-      // Call our new database function to activate trial
       const { data, error } = await supabase
-        .rpc<ActivateTrialResponse>('activate_trial', {
+        .rpc<ActivateTrialResponse, { user_id: string }>('activate_trial', {
           user_id: user.id
         });
 

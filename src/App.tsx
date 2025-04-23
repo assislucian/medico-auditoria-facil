@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -20,7 +19,7 @@ import RegisterPage from "@/pages/Register";
 import ForgotPasswordPage from "@/pages/ForgotPassword";
 import ResetPasswordPage from "@/pages/ResetPassword";
 import WelcomePage from "@/pages/Welcome";
-import CheckoutPage from "@/components/checkout/CheckoutPage";  // Fixed import path
+import CheckoutPage from "@/components/checkout/CheckoutPage";
 import DashboardPage from "@/pages/Dashboard";
 import UploadsPage from "@/pages/Uploads";
 import HistoryPage from "@/pages/History";
@@ -31,6 +30,8 @@ import HelpPage from "@/pages/Help";
 import SupportPage from "@/pages/Support";
 import ComparePage from "@/pages/CompareContracheque";
 import NotFoundPage from "@/pages/NotFound";
+import LockScreen from "@/pages/LockScreen";
+import TrialGuard from "@/components/auth/TrialGuard";
 
 const queryClient = new QueryClient();
 
@@ -137,18 +138,19 @@ const App = () => {
                   <Route path="/forgot-password" element={<GuestOnlyRoute><ForgotPasswordPage /></GuestOnlyRoute>} />
                   <Route path="/reset-password" element={<GuestOnlyRoute><ResetPasswordPage /></GuestOnlyRoute>} />
                   
+                  <Route path="/lock" element={<ProtectedRoute><LockScreen /></ProtectedRoute>} />
                   <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
                   
-                  <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-                  <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-                  <Route path="/uploads" element={<ProtectedRoute><UploadsPage /></ProtectedRoute>} />
-                  <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
-                  <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
-                  <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-                  <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-                  <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
-                  <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
-                  <Route path="/compare" element={<ProtectedRoute><ComparePage /></ProtectedRoute>} />
+                  <Route path="/dashboard" element={<ProtectedRoute><TrialGuard><DashboardPage /></TrialGuard></ProtectedRoute>} />
+                  <Route path="/uploads" element={<ProtectedRoute><TrialGuard><UploadsPage /></TrialGuard></ProtectedRoute>} />
+                  <Route path="/history" element={<ProtectedRoute><TrialGuard><HistoryPage /></TrialGuard></ProtectedRoute>} />
+                  <Route path="/reports" element={<ProtectedRoute><TrialGuard><ReportsPage /></TrialGuard></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><TrialGuard><ProfilePage /></TrialGuard></ProtectedRoute>} />
+                  <Route path="/settings" element={<ProtectedRoute><TrialGuard><SettingsPage /></TrialGuard></ProtectedRoute>} />
+                  <Route path="/help" element={<ProtectedRoute><TrialGuard><HelpPage /></TrialGuard></ProtectedRoute>} />
+                  <Route path="/support" element={<ProtectedRoute><TrialGuard><SupportPage /></TrialGuard></ProtectedRoute>} />
+                  <Route path="/compare" element={<ProtectedRoute><TrialGuard><ComparePage /></TrialGuard></ProtectedRoute>} />
+                  <Route path="/checkout" element={<ProtectedRoute><TrialGuard><CheckoutPage /></TrialGuard></ProtectedRoute>} />
                   
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
