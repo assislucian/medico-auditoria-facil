@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useState } from "react";
-import { fetchHospitalData } from "@/services/reportsService";
+import { fetchHospitalData } from "@/services/reports";
 import { Loader2 } from "lucide-react";
 
 type HospitalData = {

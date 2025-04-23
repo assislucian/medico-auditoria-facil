@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { useEffect, useState } from "react";
-import { fetchMonthlyData } from "@/services/reportsService";
+import { fetchMonthlyData } from "@/services/reports";
 import { Loader2 } from "lucide-react";
 
 export function OverviewCharts() {

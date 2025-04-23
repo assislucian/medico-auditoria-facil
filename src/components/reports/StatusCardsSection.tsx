@@ -1,8 +1,7 @@
-
 import { StatusCard } from "@/components/StatusCard";
 import { FileText, AlertCircle, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
-import { fetchReportsTotals } from "@/services/reportsService";
+import { fetchReportsTotals } from "@/services/reports";
 
 export function StatusCardsSection() {
   const [reportData, setReportData] = useState({

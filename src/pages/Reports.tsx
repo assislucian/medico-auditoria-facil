@@ -8,7 +8,7 @@ import { ReportsHeader } from "@/components/reports/ReportsHeader";
 import { StatusCardsSection } from "@/components/reports/StatusCardsSection";
 import { OverviewCharts } from "@/components/reports/OverviewCharts";
 import { HospitalsTable } from "@/components/reports/HospitalsTable";
-import { fetchMonthlyData, fetchHospitalData, fetchReportsTotals } from "@/services/reportsService";
+import { fetchMonthlyData, fetchHospitalData, fetchReportsTotals } from "@/services/reports";
 import { exportReportToExcel, exportToTissXML, exportToFHIR } from "@/services/exportService";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
