@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { PostgrestSingleResponse } from '@supabase/supabase-js';
 
 interface TrialStatus {
   status: 'not_started' | 'active' | 'expired';
@@ -36,8 +37,8 @@ export function useTrialStatus() {
       }
 
       try {
-        // Use a type annotation to handle the RPC call
-        const { data, error } = await supabase.rpc<CheckTrialStatusResponse>(
+        // Use a type annotation with two type parameters to handle the RPC call
+        const { data, error }: PostgrestSingleResponse<CheckTrialStatusResponse> = await supabase.rpc(
           'check_trial_status', 
           { user_id: user.id } as CheckTrialStatusParams
         );

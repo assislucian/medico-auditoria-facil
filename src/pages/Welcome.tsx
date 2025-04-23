@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PostgrestSingleResponse } from '@supabase/supabase-js';
 
 interface ActivateTrialResponse {
   success: boolean;
@@ -30,8 +31,8 @@ const WelcomePage = () => {
     
     setIsActivating(true);
     try {
-      // Use a type annotation to handle the RPC call
-      const { data, error } = await supabase.rpc<ActivateTrialResponse>(
+      // Use a type annotation with two type parameters to handle the RPC call
+      const { data, error }: PostgrestSingleResponse<ActivateTrialResponse> = await supabase.rpc(
         'activate_trial', 
         { user_id: user.id } as ActivateTrialParams
       );
