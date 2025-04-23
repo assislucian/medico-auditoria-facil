@@ -1,7 +1,8 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Profile, ProfileWithUUID } from '@/types';
+import { Profile } from '@/types';
 import { toast } from "sonner";
 import { getProfile, updateProfile } from "@/utils/supabaseHelpers";
 import { Json } from '@/integrations/supabase/types';
@@ -57,33 +58,67 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     loadSession();
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user || null);
-      loadSession();
+      
+      // Carregar perfil quando o estado de autenticação mudar
+      if (session?.user) {
+        getProfile(supabase, session.user.id).then(profileData => {
+          if (profileData) {
+            setProfile(profileData as Profile);
+          }
+        });
+      } else {
+        setProfile(null);
+      }
     });
+
+    return () => {
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
+    };
   }, []);
 
   const signIn = async (email: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email });
+      // Verificar se estamos em um ambiente de desenvolvimento
+      const isDev = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1';
+      
+      const options = isDev
+        ? { emailRedirectTo: `${window.location.origin}/auth/callback` }
+        : undefined;
+      
+      const { error } = await supabase.auth.signInWithOtp({ email, options });
       if (error) throw error;
       toast.success('Verifique seu email para o link de login mágico!');
     } catch (error: any) {
-      toast.error(error.error_description || error.message);
+      toast.error(error.error_description || error.message || 'Erro ao fazer login');
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // Verificar se estamos em um ambiente de desenvolvimento
+      const isDev = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1';
+      
+      const options = isDev
+        ? { emailRedirectTo: `${window.location.origin}/auth/callback` }
+        : undefined;
+      
+      const { error } = await supabase.auth.signUp({
         email: email,
         password: password,
+        options: options
       });
+      
       if (error) throw error;
       toast.success('Verifique seu email para confirmar o cadastro!');
     } catch (error: any) {
-      toast.error(error.error_description || error.message);
+      toast.error(error.error_description || error.message || 'Erro ao criar conta');
     }
   };
 
@@ -95,7 +130,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) throw error;
       toast.success('Email com instruções para redefinir senha enviado!');
     } catch (error: any) {
-      toast.error(error.error_description || error.message);
+      toast.error(error.error_description || error.message || 'Erro ao enviar email de redefinição de senha');
     }
   };
 
@@ -103,8 +138,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      toast.success('Logout realizado com sucesso');
     } catch (error: any) {
-      toast.error(error.error_description || error.message);
+      toast.error(error.error_description || error.message || 'Erro ao fazer logout');
     }
   };
 
@@ -122,7 +161,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       toast.success('Perfil atualizado com sucesso!');
     } catch (error: any) {
-      toast.error(error.error_description || error.message);
+      toast.error(error.message || 'Erro ao atualizar perfil');
     }
   };
   
@@ -147,7 +186,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) throw error;
       toast.success('Senha atualizada com sucesso!');
     } catch (error: any) {
-      toast.error(error.error_description || error.message);
+      toast.error(error.message || 'Erro ao atualizar senha');
       throw error;
     }
   };

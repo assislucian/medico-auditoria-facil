@@ -1,13 +1,14 @@
 
 import { saveAs } from 'file-saver';
 import { create } from 'xmlbuilder2';
+import { TISSProcedure } from './types';
 
 /**
  * Exporta dados para XML no formato TISS da ANS
  * @param data Os dados a serem exportados
  * @param filename Nome do arquivo (sem extensão)
  */
-export function exportToTissXML<T extends Record<string, any>>(data: T[], filename: string): void {
+export function exportToTissXML(data: any[], filename: string): void {
   try {
     // Criar estrutura base do XML TISS
     const root = create({ version: '1.0', encoding: 'UTF-8' })
@@ -20,11 +21,12 @@ export function exportToTissXML<T extends Record<string, any>>(data: T[], filena
 
     // Adicionar cabeçalho
     const cabecalho = root.ele('ans:cabecalho');
-    cabecalho.ele('ans:identificacaoTransacao')
-      .ele('ans:tipoTransacao').txt('ENVIO_LOTE_GUIAS').up()
-      .ele('ans:sequencialTransacao').txt('1').up()
-      .ele('ans:dataRegistroTransacao').txt(new Date().toISOString().split('T')[0]).up()
-      .ele('ans:horaRegistroTransacao').txt(new Date().toISOString().split('T')[1].substring(0, 8));
+    cabecalho
+      .ele('ans:identificacaoTransacao')
+        .ele('ans:tipoTransacao').txt('ENVIO_LOTE_GUIAS').up()
+        .ele('ans:sequencialTransacao').txt('1').up()
+        .ele('ans:dataRegistroTransacao').txt(new Date().toISOString().split('T')[0]).up()
+        .ele('ans:horaRegistroTransacao').txt(new Date().toISOString().split('T')[1].substring(0, 8));
 
     // Adicionar dados
     const corpo = root.ele('ans:corpo');
@@ -35,8 +37,9 @@ export function exportToTissXML<T extends Record<string, any>>(data: T[], filena
       const guia = lote.ele('ans:guiaSP-SADT');
       
       // Mapeamento básico para formato TISS
-      guia.ele('ans:identificacaoGuiaSADTSP')
-        .ele('ans:numeroGuiaPrestador').txt(item.id || `GUIA${index}`);
+      guia
+        .ele('ans:identificacaoGuiaSADTSP')
+          .ele('ans:numeroGuiaPrestador').txt(item.id || `GUIA${index}`);
 
       // Adicionar procedimentos se existirem
       if (item.procedimentos) {
@@ -44,12 +47,13 @@ export function exportToTissXML<T extends Record<string, any>>(data: T[], filena
         
         // Transformar dados de procedimentos no formato TISS
         if (Array.isArray(item.procedimentos)) {
-          item.procedimentos.forEach((proc, procIndex) => {
+          item.procedimentos.forEach((proc: TISSProcedure, procIndex: number) => {
             const procedimento = procedimentosRealizados.ele('ans:procedimentoRealizado');
-            procedimento.ele('ans:procedimento')
-              .ele('ans:codigoTabela').txt('22').up()
-              .ele('ans:codigoProcedimento').txt(proc.codigo || '').up()
-              .ele('ans:descricaoProcedimento').txt(proc.descricao || '');
+            procedimento
+              .ele('ans:procedimento')
+                .ele('ans:codigoTabela').txt('22').up()
+                .ele('ans:codigoProcedimento').txt(proc.codigo || '').up()
+                .ele('ans:descricaoProcedimento').txt(proc.descricao || '');
           });
         }
       }
@@ -57,11 +61,10 @@ export function exportToTissXML<T extends Record<string, any>>(data: T[], filena
 
     // Gerar XML como string
     const xmlString = root.end({ prettyPrint: true });
-    
+
     // Criar blob e iniciar download
     const blob = new Blob([xmlString], { type: 'application/xml' });
     saveAs(blob, `${filename}.xml`);
-    
     console.info('Exportação XML TISS concluída com sucesso');
   } catch (error) {
     console.error('Erro ao exportar dados para XML:', error);

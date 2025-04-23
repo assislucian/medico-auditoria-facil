@@ -1,49 +1,47 @@
 
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
+import { isHistoryData, ReportData } from './types';
 import { HistoryItem } from '@/components/history/data';
-
-/**
- * Verifica se os dados são do tipo HistoryItem[]
- */
-function isHistoryData(data: any[]): data is HistoryItem[] {
-  return data.length > 0 && 'status' in data[0] && 'glosados' in data[0];
-}
 
 /**
  * Exporta dados para Excel
  * @param data Os dados a serem exportados
  * @param filename Nome do arquivo (sem extensão)
  */
-export function exportToExcel<T extends Record<string, any>>(data: T[], filename: string): void {
+export function exportToExcel(data: any[], filename: string): void {
   try {
+    // Verificar se são dados do histórico
+    if (isHistoryData(data)) {
+      return exportHistoryData(data, filename);
+    }
+
     // Preparação dos dados para exportação
-    const exportData = data.map(item => {
+    const exportData = data.map((item) => {
       const cleanItem: Record<string, any> = {};
-      
       // Remover propriedades com objetos complexos e formatar datas
-      Object.keys(item).forEach(key => {
+      Object.keys(item).forEach((key) => {
         if (typeof item[key] !== 'object' || item[key] === null) {
           cleanItem[key] = item[key];
         }
       });
-      
       return cleanItem;
     });
-    
-    // Tratamento especial para histórico
-    if (isHistoryData(data)) {
-      return exportHistoryData(data, filename);
-    }
-    
+
     // Criar workbook e worksheet
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Dados');
-    
+
     // Gerar o arquivo e iniciar download
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const fileData = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array'
+    });
+    const fileData = new Blob(
+      [excelBuffer], 
+      {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'}
+    );
     saveAs(fileData, `${filename}.xlsx`);
   } catch (error) {
     console.error('Erro ao exportar dados para Excel:', error);
@@ -58,7 +56,7 @@ export function exportToExcel<T extends Record<string, any>>(data: T[], filename
  */
 function exportHistoryData(data: HistoryItem[], filename: string): void {
   // Transformar dados para melhor visualização
-  const formattedData = data.map(item => ({
+  const formattedData = data.map((item) => ({
     'Data': item.date,
     'Hospital': item.description.split(' - ')[0],
     'Competência': item.description.split(' - ')[1] || '',
@@ -66,10 +64,10 @@ function exportHistoryData(data: HistoryItem[], filename: string): void {
     'Status': item.status,
     'Total de Procedimentos': item.procedimentos,
     'Procedimentos Glosados': item.glosados,
-    'Valor Glosado (estimativa R$)': item.glosados * 850, // Valor médio estimado por procedimento
+    'Valor Glosado (estimativa R$)': item.glosados * 850,
     'ID': item.id
   }));
-  
+
   // Criar workbook e worksheet com dados formatados
   const worksheet = XLSX.utils.json_to_sheet(formattedData);
   
@@ -85,16 +83,15 @@ function exportHistoryData(data: HistoryItem[], filename: string): void {
     { wch: 18 }, // Valor Glosado
     { wch: 36 }  // ID
   ];
-  
   worksheet['!cols'] = wscols;
   
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Histórico de Análises');
-  
+
   // Adicionar folha com dados para contestação
   const contestacaoData = data
-    .filter(item => item.glosados > 0)
-    .map(item => ({
+    .filter((item) => item.glosados > 0)
+    .map((item) => ({
       'Hospital': item.description.split(' - ')[0],
       'Competência': item.description.split(' - ')[1] || '',
       'Total de Procedimentos Glosados': item.glosados,
@@ -113,21 +110,26 @@ function exportHistoryData(data: HistoryItem[], filename: string): void {
       { wch: 30 }, // Hospital
       { wch: 15 }, // Competência
       { wch: 15 }, // Total de Procedimentos Glosados
-      { wch: 40 }, // Justificativa
-      { wch: 40 }, // Fundamentação
+      { wch: 40 }, // Justificativa de Contestação
+      { wch: 40 }, // Fundamentação Legal
       { wch: 15 }, // Valor a ser Recuperado
       { wch: 15 }, // Data de Análise
       { wch: 36 }  // ID da Análise
     ];
-    
     contestacaoSheet['!cols'] = contestacaoCols;
     
     XLSX.utils.book_append_sheet(workbook, contestacaoSheet, 'Contestação');
   }
-  
+
   // Gerar o arquivo e iniciar download
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  const fileData = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: 'xlsx',
+    type: 'array'
+  });
+  const fileData = new Blob(
+    [excelBuffer], 
+    {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'}
+  );
   saveAs(fileData, `${filename}.xlsx`);
 }
 
@@ -136,15 +138,15 @@ function exportHistoryData(data: HistoryItem[], filename: string): void {
  * @param reportData Dados do relatório
  * @param reportName Nome do relatório
  */
-export function exportReportToExcel(reportData: any, reportName: string): void {
+export function exportReportToExcel(reportData: ReportData, reportName: string): void {
   try {
     // Criar workbook
     const workbook = XLSX.utils.book_new();
-    
+
     // Adicionar folha de resumo
     if (reportData.summary) {
       const summaryData = [
-        { 
+        {
           'Período': reportData.period || 'Todo o período',
           'Total Recebido': `R$ ${reportData.summary.totalRecebido.toFixed(2)}`,
           'Total Glosado': `R$ ${reportData.summary.totalGlosado.toFixed(2)}`,
@@ -152,32 +154,37 @@ export function exportReportToExcel(reportData: any, reportName: string): void {
           'Pendentes': reportData.summary.auditoriaPendente
         }
       ];
-      
       const summarySheet = XLSX.utils.json_to_sheet(summaryData);
       XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumo');
     }
-    
+
     // Adicionar folha de dados por hospital
     if (reportData.hospitalData && reportData.hospitalData.length > 0) {
       const hospitalSheet = XLSX.utils.json_to_sheet(reportData.hospitalData);
       XLSX.utils.book_append_sheet(workbook, hospitalSheet, 'Por Hospital');
     }
-    
+
     // Adicionar folha de dados por procedimento
     if (reportData.procedureData && reportData.procedureData.length > 0) {
       const procedureSheet = XLSX.utils.json_to_sheet(reportData.procedureData);
       XLSX.utils.book_append_sheet(workbook, procedureSheet, 'Por Procedimento');
     }
-    
+
     // Adicionar folha de dados mensais
     if (reportData.monthlyData && reportData.monthlyData.length > 0) {
       const monthlySheet = XLSX.utils.json_to_sheet(reportData.monthlyData);
       XLSX.utils.book_append_sheet(workbook, monthlySheet, 'Dados Mensais');
     }
-    
+
     // Gerar o arquivo e iniciar download
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const fileData = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array'
+    });
+    const fileData = new Blob(
+      [excelBuffer], 
+      {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'}
+    );
     saveAs(fileData, `${reportName}.xlsx`);
   } catch (error) {
     console.error('Erro ao exportar relatório para Excel:', error);

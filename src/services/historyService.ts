@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { HistoryItem } from '@/components/history/data';
+import { toast } from 'sonner';
 
 /**
  * Busca o histórico de análises do usuário
@@ -12,6 +13,7 @@ export async function fetchHistoryData(): Promise<HistoryItem[]> {
     
     if (!user) {
       console.error('Usuário não está autenticado');
+      toast.error('Você precisa estar autenticado para acessar o histórico');
       return [];
     }
     
@@ -23,6 +25,7 @@ export async function fetchHistoryData(): Promise<HistoryItem[]> {
     
     if (error) {
       console.error('Erro ao buscar histórico:', error);
+      toast.error('Erro ao carregar histórico de análises');
       return [];
     }
     
@@ -37,6 +40,7 @@ export async function fetchHistoryData(): Promise<HistoryItem[]> {
     }));
   } catch (error) {
     console.error('Erro ao processar histórico:', error);
+    toast.error('Erro ao processar dados do histórico');
     return [];
   }
 }
@@ -46,26 +50,39 @@ export async function fetchHistoryData(): Promise<HistoryItem[]> {
  */
 export async function fetchAnalysisDetails(analysisId: string) {
   try {
+    // Verificar se o usuário está autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('Usuário não está autenticado');
+      toast.error('Você precisa estar autenticado para acessar detalhes da análise');
+      return null;
+    }
+    
     // Buscar os dados da análise
     const { data: analysisData, error: analysisError } = await supabase
       .from('analysis_results')
       .select('*')
       .eq('id', analysisId)
+      .eq('user_id', user.id) // Garantir que o usuário só veja suas próprias análises
       .single();
     
     if (analysisError) {
       console.error('Erro ao buscar detalhes da análise:', analysisError);
+      toast.error('Erro ao carregar detalhes da análise');
       return null;
     }
     
     // Buscar os procedimentos relacionados
     const { data: proceduresData, error: proceduresError } = await supabase
-      .from('procedure_results')
+      .from('procedures')
       .select('*')
-      .eq('analysis_id', analysisId);
+      .eq('analysis_id', analysisId)
+      .eq('user_id', user.id); // Garantir que o usuário só veja seus próprios procedimentos
     
     if (proceduresError) {
       console.error('Erro ao buscar procedimentos:', proceduresError);
+      toast.error('Erro ao carregar procedimentos da análise');
       return null;
     }
     
@@ -87,6 +104,7 @@ export async function fetchAnalysisDetails(analysisId: string) {
     };
   } catch (error) {
     console.error('Erro ao processar detalhes da análise:', error);
+    toast.error('Erro ao processar detalhes da análise');
     return null;
   }
 }
@@ -95,6 +113,11 @@ export async function fetchAnalysisDetails(analysisId: string) {
  * Formata a data para o formato DD/MM/AAAA
  */
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('pt-BR');
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  } catch (error) {
+    console.error('Erro ao formatar data:', error);
+    return dateString || '';
+  }
 }
