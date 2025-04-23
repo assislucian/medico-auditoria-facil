@@ -1,9 +1,10 @@
+
 import { Helmet } from 'react-helmet-async';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,25 +15,34 @@ interface ActivateTrialResponse {
   trial_end_date?: string;
 }
 
-interface ActivateTrialParams {
-  user_id: string;
-}
-
 const WelcomePage = () => {
   const [isActivating, setIsActivating] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  
+  // Get return path from location state, or default to dashboard
+  const returnTo = location.state?.returnTo || '/dashboard';
 
   const handleStartTrial = async () => {
-    if (!user) return;
+    if (!user) {
+      toast.error('Você precisa estar logado para ativar o trial');
+      return;
+    }
     
     setIsActivating(true);
     try {
+      console.log('Activating trial for user:', user.id);
       const { data, error } = await supabase.rpc('activate_trial', {
         user_id: user.id
       }) as { data: ActivateTrialResponse, error: any };
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error activating trial:', error);
+        throw error;
+      }
+      
+      console.log('Trial activation response:', data);
       
       if (data) {
         if (!data.success) {
@@ -41,10 +51,12 @@ const WelcomePage = () => {
         }
 
         toast.success('Trial ativado com sucesso!');
-        navigate('/dashboard', { 
+        navigate(returnTo, { 
           state: { startTour: true },
           replace: true 
         });
+      } else {
+        toast.error('Resposta vazia ao ativar o trial');
       }
     } catch (error) {
       console.error('Erro ao ativar trial:', error);

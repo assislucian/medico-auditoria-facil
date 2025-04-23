@@ -13,6 +13,7 @@ import { exportReportToExcel, exportToTissXML, exportToFHIR } from "@/services/e
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Loader2 } from "lucide-react";
 
 const ReportsPage = () => {
   const [currentYear, setCurrentYear] = useState("2025");
@@ -24,29 +25,35 @@ const ReportsPage = () => {
     totalProcedimentos: 0,
     auditoriaPendente: 0
   });
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     loadReportsData();
   }, [currentYear]);
   
   const loadReportsData = async () => {
+    setLoading(true);
     try {
-      // Carregar dados para os gráficos
-      const monthData = await fetchMonthlyData();
+      console.log('Loading reports data for year:', currentYear);
+      
+      // Run these in parallel for better performance
+      const [monthData, hospData, totals] = await Promise.all([
+        fetchMonthlyData(),
+        fetchHospitalData(),
+        fetchReportsTotals()
+      ]);
+      
+      console.log('Reports data loaded successfully');
       setMonthlyData(monthData);
-      
-      // Carregar dados para a tabela de hospitais
-      const hospData = await fetchHospitalData();
       setHospitalData(hospData);
-      
-      // Carregar totais
-      const totals = await fetchReportsTotals();
       setReportTotals(totals);
     } catch (error) {
       console.error("Erro ao carregar dados dos relatórios:", error);
       toast.error("Erro ao carregar dados", {
         description: "Não foi possível carregar os dados dos relatórios."
       });
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -101,6 +108,29 @@ const ReportsPage = () => {
       });
     }
   };
+
+  // Show loading UI if data is still loading
+  if (loading) {
+    return (
+      <>
+        <Helmet>
+          <title>Carregando Relatórios | MedCheck</title>
+        </Helmet>
+        <div className="min-h-screen flex flex-col">
+          <Navbar isLoggedIn={true} />
+          <div className="flex-1 container py-8 flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+              <h2 className="text-2xl font-medium mb-2">Carregando relatórios...</h2>
+              <p className="text-muted-foreground">
+                Estamos buscando os dados mais recentes.
+              </p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
