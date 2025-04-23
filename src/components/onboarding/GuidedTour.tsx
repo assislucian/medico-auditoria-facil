@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Dialog, 
@@ -7,71 +8,20 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, SkipForward } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-interface TourStep {
-  title: string;
-  description: string;
-  path: string;
-}
-
-const tourSteps: TourStep[] = [
-  {
-    title: "Bem-vindo ao Dashboard",
-    description: "Aqui você encontra uma visão geral dos seus pagamentos e glosas.",
-    path: "/dashboard"
-  },
-  {
-    title: "Envie seus Documentos",
-    description: "Clique em 'Uploads' no menu lateral para enviar seus contracheques e guias.",
-    path: "/uploads"
-  },
-  {
-    title: "Acompanhe seu Histórico",
-    description: "Visualize todas as suas análises anteriores e seus resultados.",
-    path: "/history"
-  },
-  {
-    title: "Configure seu Perfil",
-    description: "Personalize suas informações e preferências de notificação.",
-    path: "/profile"
-  }
-];
+import { TourNavigation } from './TourNavigation';
+import { useOnboarding } from '@/hooks/use-onboarding';
+import { tourSteps } from './tourSteps';
 
 export function GuidedTour() {
   const [isOpen, setIsOpen] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (isOpen && tourSteps[currentStep]) {
-      navigate(tourSteps[currentStep].path);
-    }
-  }, [currentStep, isOpen, navigate]);
-
-  const updateOnboardingStatus = async (completed: boolean) => {
-    try {
-      const { data, error } = await supabase.rpc('update_onboarding_status', { 
-        completed 
-      });
-
-      if (error) throw error;
-
-      if (!data?.success) {
-        throw new Error('Failed to update onboarding status');
-      }
-    } catch (error) {
-      console.error('Error updating onboarding status:', error);
-      toast.error('Erro ao salvar progresso do tour');
-    }
-  };
+  const { updateOnboardingStatus } = useOnboarding();
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
       setCurrentStep(prev => prev + 1);
+      navigate(tourSteps[currentStep + 1].path);
     } else {
       handleComplete();
     }
@@ -101,30 +51,12 @@ export function GuidedTour() {
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex items-center justify-between mt-6 gap-4">
-          <Button
-            variant="outline"
-            onClick={handleSkip}
-            className="flex items-center gap-2"
-          >
-            <SkipForward className="h-4 w-4" />
-            Pular Tour
-          </Button>
-          
-          <Button
-            onClick={handleNext}
-            className="flex items-center gap-2"
-          >
-            {currentStep < tourSteps.length - 1 ? (
-              <>
-                Próximo
-                <ArrowRight className="h-4 w-4" />
-              </>
-            ) : (
-              'Começar a usar'
-            )}
-          </Button>
-        </div>
+        <TourNavigation 
+          currentStep={currentStep}
+          totalSteps={tourSteps.length}
+          onNext={handleNext}
+          onSkip={handleSkip}
+        />
       </DialogContent>
     </Dialog>
   );
