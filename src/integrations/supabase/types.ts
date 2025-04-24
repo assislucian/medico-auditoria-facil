@@ -180,6 +180,33 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_providers: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          provider_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          provider_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          provider_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_transactions: {
         Row: {
           amount: number
@@ -603,13 +630,32 @@ export type Database = {
         Args: { user_id: string }
         Returns: Json
       }
+      handle_payment_webhook: {
+        Args: {
+          provider: string
+          event_type: string
+          transaction_id: string
+          status: string
+          payload: Json
+        }
+        Returns: Json
+      }
+      process_subscription_payment: {
+        Args: {
+          plan_id: string
+          payment_method_type: Database["public"]["Enums"]["payment_method_type"]
+          payment_details: Json
+          interval_type?: string
+        }
+        Returns: Json
+      }
       update_onboarding_status: {
         Args: { completed: boolean }
         Returns: Json
       }
     }
     Enums: {
-      [_ in never]: never
+      payment_method_type: "credit_card" | "bank_slip" | "pix"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -724,6 +770,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      payment_method_type: ["credit_card", "bank_slip", "pix"],
+    },
   },
 } as const
