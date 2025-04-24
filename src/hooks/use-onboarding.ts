@@ -15,6 +15,7 @@ export function useOnboarding() {
     const state = location.state as { startTour?: boolean } | null;
     if (state?.startTour) {
       setShowTour(true);
+      return;
     }
     
     // Check if the user has already completed onboarding
@@ -32,9 +33,8 @@ export function useOnboarding() {
         
         setOnboardingCompleted(!!data?.onboarding_completed);
         
-        // If the user hasn't completed onboarding and no explicit startTour state
-        // is provided, show the tour
-        if (!data?.onboarding_completed && !state?.hasOwnProperty('startTour')) {
+        // If the user hasn't completed onboarding, show the tour
+        if (!data?.onboarding_completed) {
           setShowTour(true);
         }
       } catch (error) {
@@ -63,17 +63,22 @@ export function useOnboarding() {
     }
   };
 
-  const completeTour = async () => {
-    await updateOnboardingStatus(true);
+  const completeTour = async (dontShowAgain = false) => {
+    if (dontShowAgain) {
+      await updateOnboardingStatus(true);
+    }
     setShowTour(false);
   };
 
-  const skipTour = async () => {
-    await updateOnboardingStatus(false);
+  const skipTour = async (dontShowAgain = false) => {
+    if (dontShowAgain) {
+      await updateOnboardingStatus(true);
+    }
     setShowTour(false);
   };
 
   const resetTour = () => {
+    updateOnboardingStatus(false);
     setShowTour(true);
   };
 

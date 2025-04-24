@@ -7,14 +7,19 @@ interface TourNavigationProps {
   totalSteps: number;
   onNext: () => void;
   onSkip: () => void;
+  dontShowAgain?: boolean;
 }
 
-export function TourNavigation({ currentStep, totalSteps, onNext, onSkip }: TourNavigationProps) {
+export function TourNavigation({ currentStep, totalSteps, onNext, onSkip, dontShowAgain }: TourNavigationProps) {
+  const handleSkip = () => {
+    onSkip();
+  };
+
   return (
     <div className="flex items-center justify-between mt-6 gap-4">
       <Button
         variant="outline"
-        onClick={onSkip}
+        onClick={handleSkip}
         className="flex items-center gap-2"
       >
         <SkipForward className="h-4 w-4" />
