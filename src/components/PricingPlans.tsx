@@ -10,6 +10,12 @@ import { useTheme } from '@/hooks/use-theme';
 
 type BillingInterval = 'monthly' | 'yearly';
 
+interface PricingPlansProps {
+  isLoggedIn: boolean;
+  isTrial: boolean;
+  onCheckout: () => boolean;
+}
+
 const plans = [
   {
     id: 'individual-monthly',
@@ -81,7 +87,7 @@ const plans = [
   }
 ];
 
-const PricingPlans = () => {
+const PricingPlans = ({ isLoggedIn, isTrial, onCheckout }: PricingPlansProps) => {
   const [billingInterval, setBillingInterval] = useState<BillingInterval>('monthly');
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -100,7 +106,10 @@ const PricingPlans = () => {
         }
       });
     } else {
-      // Navegue para a página de checkout com os dados do plano
+      // Check if user is logged in before proceeding to checkout
+      if (!onCheckout()) return;
+      
+      // Navigate to checkout with plan info
       navigate('/checkout', {
         state: {
           planId: selectedPlan.id,
@@ -112,9 +121,8 @@ const PricingPlans = () => {
     }
   };
   
-  // Filtra os planos com base no intervalo de cobrança selecionado
+  // Filter plans based on billing interval
   const filteredPlans = plans.map(plan => {
-    // Adiciona o intervalo ao ID do plano
     const planIdWithInterval = billingInterval === 'monthly' 
       ? plan.id.replace('-yearly', '-monthly') 
       : plan.id.replace('-monthly', '-yearly');
@@ -161,12 +169,18 @@ const PricingPlans = () => {
             className={cn(
               "flex flex-col h-full transition-all hover:scale-[1.02] hover:shadow-lg",
               plan.isFeatured && "border-primary shadow-md shadow-primary/20",
+              isTrial && (plan.name === 'Individual') && "border-blue-400 shadow-md shadow-blue-400/20",
               theme === 'dark' ? 'bg-card' : `bg-gradient-to-br ${plan.bgColor}`
             )}
           >
             {plan.isFeatured && (
               <div className="bg-primary text-primary-foreground text-center py-1 text-sm font-medium">
                 Mais popular
+              </div>
+            )}
+            {isTrial && plan.name === 'Individual' && (
+              <div className="bg-blue-400 text-white text-center py-1 text-sm font-medium">
+                Seu plano atual (Trial)
               </div>
             )}
             <CardHeader>
@@ -246,7 +260,7 @@ const PricingPlans = () => {
           <div>
             <h4 className="font-medium">Como funciona o período de teste gratuito?</h4>
             <p className="text-muted-foreground text-sm mt-1">
-              Atualmente não oferecemos período de teste, mas você pode usar recursos limitados gratuitamente.
+              Oferecemos um período de teste gratuito de 7 dias para novos usuários, sem compromisso.
             </p>
           </div>
           <div>

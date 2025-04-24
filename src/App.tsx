@@ -1,103 +1,76 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
+import { ThemeProvider } from './hooks/use-theme';
+import { Toaster } from '@/components/ui/sonner';
 
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-} from "react-router-dom";
-import {
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
-import { Toaster } from "sonner";
-import { Helmet, HelmetProvider } from 'react-helmet-async';
+// Pages
+import Index from './pages/Index';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import Uploads from './pages/Uploads';
+import History from './pages/History';
+import Reports from './pages/Reports';
+import NotFound from './pages/NotFound';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import UpdatePassword from './pages/UpdatePassword';
+import LockScreen from './pages/LockScreen';
+import NewAudit from './pages/NewAudit';
+import Settings from './pages/Settings';
+import Help from './pages/Help';
+import CompareContracheque from './pages/CompareContracheque';
+import Welcome from './pages/Welcome';
+import Support from './pages/Support';
+import Pricing from './pages/Pricing';
+import Checkout from './pages/Checkout';
 
-import { AuthProvider } from "./contexts/AuthContext";
-import PrivateRoute from "./components/PrivateRoute";
-import LoginPage from "./pages/Login";
-import RegisterPage from "./pages/Register";
-import DashboardPage from "./pages/Dashboard";
-import ProfilePage from "./pages/Profile";
-import WelcomePage from "./pages/Welcome";
-import ResetPasswordPage from "./pages/ResetPassword";
-import UpdatePasswordPage from "./pages/UpdatePassword";
-import CompareView from "./components/ComparisonView";
-import NewAuditPage from "./pages/NewAudit";
-import TrialGuard from "./components/auth/TrialGuard";
+// Components
+import PrivateRoute from './components/PrivateRoute';
 
-const queryClient = new QueryClient();
-
-const App = () => {
+function App() {
   return (
-    <HelmetProvider>
-      <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <Helmet>
-            <title>MedCheck | Auditoria Médica Inteligente</title>
-          </Helmet>
-          <Router>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/update-password" element={<UpdatePasswordPage />} />
-              <Route path="/welcome" element={<WelcomePage />} />
-              <Route
-                path="/"
-                element={
-                  <PrivateRoute>
-                    <TrialGuard>
-                      <DashboardPage />
-                    </TrialGuard>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <PrivateRoute>
-                    <TrialGuard>
-                      <DashboardPage />
-                    </TrialGuard>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <TrialGuard>
-                      <ProfilePage />
-                    </TrialGuard>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/compare"
-                element={
-                  <PrivateRoute>
-                    <TrialGuard>
-                      <CompareView />
-                    </TrialGuard>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/new-audit"
-                element={
-                  <PrivateRoute>
-                    <TrialGuard>
-                      <NewAuditPage />
-                    </TrialGuard>
-                  </PrivateRoute>
-                }
-              />
-            </Routes>
-          </Router>
-          <Toaster />
-        </QueryClientProvider>
-      </AuthProvider>
-    </HelmetProvider>
+    <Router>
+      <HelmetProvider>
+        <ThemeProvider>
+          <Toaster position="top-center" />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
+            <Route path="/lock-screen" element={<LockScreen />} />
+            <Route path="/new-audit" element={<NewAudit />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/checkout" element={<Checkout />} />
+            
+            {/* Protected routes */}
+            <Route element={<PrivateRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/uploads" element={<Uploads />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/help" element={<Help />} />
+              <Route path="/support" element={<Support />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/welcome" element={<Welcome />} />
+              <Route path="/compare/:id" element={<CompareContracheque />} />
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ThemeProvider>
+      </HelmetProvider>
+    </Router>
   );
-};
+}
 
 export default App;

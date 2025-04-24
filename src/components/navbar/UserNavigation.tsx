@@ -17,6 +17,9 @@ export const UserNavigation = () => {
       <Link to="/reports" className="text-foreground/80 hover:text-foreground px-3 py-2 text-sm font-medium transition-colors">
         Relatórios
       </Link>
+      <Link to="/pricing" className="text-foreground/80 hover:text-foreground px-3 py-2 text-sm font-medium transition-colors">
+        Planos
+      </Link>
     </>
   );
 };
