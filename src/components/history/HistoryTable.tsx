@@ -6,12 +6,19 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Eye, FileCheck, FileText, X } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { type HistoryItem } from "./data";
+import { useNavigate } from "react-router-dom";
 
 interface HistoryTableProps {
   items: HistoryItem[];
 }
 
 export function HistoryTable({ items }: HistoryTableProps) {
+  const navigate = useNavigate();
+  
+  const handleViewDetails = (id: string) => {
+    navigate(`/compare?analysisId=${id}`);
+  };
+
   return (
     <Card>
       <CardContent className="p-0">
@@ -62,10 +69,19 @@ export function HistoryTable({ items }: HistoryTableProps) {
                       <StatusBadge status={item.status} />
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button variant="ghost" size="icon">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleViewDetails(item.id)}
+                        title="Ver detalhes"
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        title="Baixar relatório"
+                      >
                         <Download className="h-4 w-4" />
                       </Button>
                     </TableCell>
@@ -88,3 +104,4 @@ export function HistoryTable({ items }: HistoryTableProps) {
     </Card>
   );
 }
+

@@ -1,6 +1,7 @@
 
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
+import { DateRange } from "react-day-picker";
 import Navbar from "@/components/Navbar";
 import { HistorySearch } from "@/components/history/HistorySearch";
 import { HistoryTable } from "@/components/history/HistoryTable";
@@ -11,10 +12,12 @@ import { exportToExcel } from '@/services/exportService';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { isWithinInterval, parseISO } from 'date-fns';
 
 const HistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
+  const [dateRange, setDateRange] = useState<DateRange>();
   const [loading, setLoading] = useState(true);
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
   const { user, loading: authLoading } = useAuth();
@@ -41,11 +44,20 @@ const HistoryPage = () => {
   }, [user, authLoading]);
   
   const filteredHistory = historyData.filter(item => {
-    const matchesSearch = item.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         item.type.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "todos" || item.status.toLowerCase() === filterStatus.toLowerCase();
+    const matchesSearch = 
+      item.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      item.type.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch && matchesStatus;
+    const matchesStatus = filterStatus === "todos" || 
+      item.status.toLowerCase() === filterStatus.toLowerCase();
+    
+    const matchesDateRange = !dateRange?.from || !dateRange?.to || 
+      isWithinInterval(parseISO(item.date), {
+        start: dateRange.from,
+        end: dateRange.to
+      });
+    
+    return matchesSearch && matchesStatus && matchesDateRange;
   });
   
   const handleExport = () => {
@@ -58,7 +70,6 @@ const HistoryPage = () => {
     }
   };
 
-  // Redirecionar para login se não estiver autenticado
   if (!authLoading && !user) {
     return <Navigate to="/login" />;
   }
@@ -79,6 +90,8 @@ const HistoryPage = () => {
             filterStatus={filterStatus}
             onFilterChange={setFilterStatus}
             onExport={handleExport}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
           />
           
           {loading || authLoading ? (
@@ -101,3 +114,4 @@ const HistoryPage = () => {
 };
 
 export default HistoryPage;
+

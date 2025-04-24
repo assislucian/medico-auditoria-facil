@@ -5,6 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Download, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
 
 interface HistorySearchProps {
   searchTerm: string;
@@ -12,6 +14,8 @@ interface HistorySearchProps {
   filterStatus: string;
   onFilterChange: (value: string) => void;
   onExport: () => void;
+  dateRange: DateRange | undefined;
+  onDateRangeChange: (range: DateRange | undefined) => void;
 }
 
 export function HistorySearch({ 
@@ -19,7 +23,9 @@ export function HistorySearch({
   onSearchChange, 
   filterStatus, 
   onFilterChange,
-  onExport 
+  onExport,
+  dateRange,
+  onDateRangeChange
 }: HistorySearchProps) {
   const [showDateFilter, setShowDateFilter] = useState(false);
   
@@ -55,11 +61,14 @@ export function HistorySearch({
         </Select>
       </div>
       
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={() => setShowDateFilter(!showDateFilter)}>
-          <Calendar className="mr-2 h-4 w-4" />
-          Filtrar por Data
-        </Button>
+      <div className="flex gap-2 items-center">
+        <DateRangePicker
+          value={dateRange}
+          onChange={onDateRangeChange}
+          placeholder="Filtrar por período"
+          align="start"
+          locale="pt-BR"
+        />
         <Button variant="outline" size="sm" onClick={handleExport}>
           <Download className="mr-2 h-4 w-4" />
           Exportar Excel
@@ -68,3 +77,4 @@ export function HistorySearch({
     </div>
   );
 }
+
