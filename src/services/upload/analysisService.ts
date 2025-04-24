@@ -6,7 +6,7 @@
  * Gerencia o armazenamento e recuperação de dados de análise.
  */
 
-import { ExtractedData } from '@/types/upload';
+import { ExtractedData, DoctorParticipation } from '@/types/upload';
 import { supabase } from '@/integrations/supabase/client';
 
 // Estado local para análise atual
@@ -73,6 +73,28 @@ export function clearCurrentAnalysis() {
 }
 
 /**
+ * Função auxiliar para converter dados de médicos para o formato correto
+ * @param doctorsData Dados brutos dos médicos
+ * @returns Array formatado de participação de médicos
+ */
+function formatDoctorsData(doctorsData: any): DoctorParticipation[] {
+  if (!doctorsData) return [];
+  
+  if (Array.isArray(doctorsData)) {
+    return doctorsData.map(doc => ({
+      code: String(doc.code || doc.crm || ''),
+      name: String(doc.name || doc.nome || ''),
+      role: String(doc.role || doc.papel || ''),
+      startTime: String(doc.startTime || doc.dataInicio || ''),
+      endTime: String(doc.endTime || doc.dataFim || ''),
+      status: String(doc.status || '')
+    }));
+  }
+  
+  return [];
+}
+
+/**
  * Busca dados de análise pelo ID do Supabase
  * @param analysisId ID da análise para buscar
  * @returns Dados da análise ou null se não encontrada
@@ -127,13 +149,13 @@ export async function fetchAnalysisById(analysisId: string): Promise<ExtractedDa
         pago: proc.pago,
         guia: proc.guia || '',
         beneficiario: proc.beneficiario || '',
-        doctors: proc.doctors || []
+        doctors: formatDoctorsData(proc.doctors)
       })),
       totais: {
-        valorCBHPM: analysisData.summary?.totalCBHPM || 0,
-        valorPago: analysisData.summary?.totalPago || 0,
-        diferenca: analysisData.summary?.totalDiferenca || 0,
-        procedimentosNaoPagos: analysisData.summary?.procedimentosNaoPagos || 0
+        valorCBHPM: typeof analysisData.summary === 'object' ? Number(analysisData.summary.totalCBHPM || 0) : 0,
+        valorPago: typeof analysisData.summary === 'object' ? Number(analysisData.summary.totalPago || 0) : 0,
+        diferenca: typeof analysisData.summary === 'object' ? Number(analysisData.summary.totalDiferenca || 0) : 0,
+        procedimentosNaoPagos: typeof analysisData.summary === 'object' ? Number(analysisData.summary.procedimentosNaoPagos || 0) : 0
       }
     };
     

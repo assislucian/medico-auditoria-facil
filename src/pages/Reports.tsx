@@ -1,4 +1,3 @@
-
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
@@ -9,7 +8,9 @@ import { StatusCardsSection } from "@/components/reports/StatusCardsSection";
 import { OverviewCharts } from "@/components/reports/OverviewCharts";
 import { HospitalsTable } from "@/components/reports/HospitalsTable";
 import { fetchMonthlyData, fetchHospitalData, fetchReportsTotals } from "@/services/reports";
-import { exportReportToExcel, exportToTissXML, exportToFHIR } from "@/services/exportService";
+import { exportToExcel } from "@/services/export";
+import { exportToTissXML } from "@/services/export/tissExport";
+import { exportToFHIR } from "@/services/export/fhirExport";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -81,7 +82,7 @@ const ReportsPage = () => {
       
       switch (format) {
         case 'excel':
-          exportReportToExcel(reportData, filename);
+          exportToExcel(reportData.hospitalData || [], filename);
           toast.success("Relatório exportado em Excel", {
             description: "O arquivo foi baixado para o seu computador."
           });
@@ -109,7 +110,6 @@ const ReportsPage = () => {
     }
   };
 
-  // Show loading UI if data is still loading
   if (loading) {
     return (
       <>

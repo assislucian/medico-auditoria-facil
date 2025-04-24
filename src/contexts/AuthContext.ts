@@ -1,11 +1,16 @@
 
-/**
- * AuthContext.ts
- * 
- * Re-exporta o contexto de autenticação de auth/AuthContext.ts
- * para manter compatibilidade com a estrutura de importação existente.
- */
+import { createContext } from 'react';
 
-// This is a re-export file to maintain backward compatibility with existing imports
-export { AuthProvider, useAuth } from './auth/AuthContext';
-export type { AuthContextProps } from './auth/types';
+export interface AuthContextProps {
+  session: any | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+}
+
+export const AuthContext = createContext<AuthContextProps>({
+  session: null,
+  loading: true,
+  isAuthenticated: false
+});
+
+export default AuthContext;
