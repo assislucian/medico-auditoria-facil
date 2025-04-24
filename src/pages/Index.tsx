@@ -8,8 +8,11 @@ import { PricingSection } from "@/components/landing/PricingSection";
 
 const Index = () => {
   return (
-    <PublicLayout title="Auditoria médica automatizada">
-      <div className="min-h-screen flex flex-col">
+    <PublicLayout 
+      title="Auditoria médica automatizada"
+      description="MedCheck - A solução definitiva para automatizar a auditoria médica e maximizar a recuperação de valores glosados."
+    >
+      <div className="flex flex-col">
         <HeroSection />
         <ProductFeatures />
         <BenefitsSection />
