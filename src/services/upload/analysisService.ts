@@ -152,10 +152,10 @@ export async function fetchAnalysisById(analysisId: string): Promise<ExtractedDa
         doctors: formatDoctorsData(proc.doctors)
       })),
       totais: {
-        valorCBHPM: typeof analysisData.summary === 'object' ? Number(analysisData.summary.totalCBHPM || 0) : 0,
-        valorPago: typeof analysisData.summary === 'object' ? Number(analysisData.summary.totalPago || 0) : 0,
-        diferenca: typeof analysisData.summary === 'object' ? Number(analysisData.summary.totalDiferenca || 0) : 0,
-        procedimentosNaoPagos: typeof analysisData.summary === 'object' ? Number(analysisData.summary.procedimentosNaoPagos || 0) : 0
+        valorCBHPM: typeof analysisData.summary === 'object' ? Number(analysisData.summary?.totalCBHPM || 0) : 0,
+        valorPago: typeof analysisData.summary === 'object' ? Number(analysisData.summary?.totalPago || 0) : 0,
+        diferenca: typeof analysisData.summary === 'object' ? Number(analysisData.summary?.totalDiferenca || 0) : 0,
+        procedimentosNaoPagos: typeof analysisData.summary === 'object' ? Number(analysisData.summary?.procedimentosNaoPagos || 0) : 0
       }
     };
     
