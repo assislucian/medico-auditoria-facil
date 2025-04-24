@@ -13,13 +13,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-interface DateRangePickerProps {
+interface DateRangePickerProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   value?: DateRange | undefined;
   onChange?: (date: DateRange | undefined) => void;
   placeholder?: string;
   align?: "start" | "center" | "end";
   locale?: string;
-  className?: string;
 }
 
 export function DateRangePicker({
@@ -29,9 +28,10 @@ export function DateRangePicker({
   placeholder = "Selecione uma data",
   align = "center",
   locale = "pt-BR",
+  ...props
 }: DateRangePickerProps) {
   return (
-    <div className={cn("grid gap-2", className)}>
+    <div className={cn("grid gap-2", className)} {...props}>
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -66,10 +66,10 @@ export function DateRangePicker({
             onSelect={onChange}
             numberOfMonths={2}
             locale={ptBR}
+            className="pointer-events-auto"
           />
         </PopoverContent>
       </Popover>
     </div>
   );
 }
-
