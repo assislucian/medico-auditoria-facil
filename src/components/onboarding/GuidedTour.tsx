@@ -16,7 +16,7 @@ export function GuidedTour() {
   const [isOpen, setIsOpen] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
-  const { updateOnboardingStatus } = useOnboarding();
+  const { completeTour, skipTour } = useOnboarding();
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
@@ -28,13 +28,13 @@ export function GuidedTour() {
   };
 
   const handleComplete = async () => {
-    await updateOnboardingStatus(true);
+    await completeTour();
     setIsOpen(false);
     navigate('/dashboard');
   };
 
   const handleSkip = async () => {
-    await updateOnboardingStatus(false);
+    await skipTour();
     setIsOpen(false);
     navigate('/dashboard');
   };

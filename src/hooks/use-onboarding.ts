@@ -45,37 +45,32 @@ export function useOnboarding() {
     checkOnboardingStatus();
   }, [location, user]);
 
-  const completeTour = async () => {
+  const updateOnboardingStatus = async (completed: boolean) => {
     if (!user) return;
 
     try {
       const { data, error } = await supabase.rpc('update_onboarding_status', {
-        completed: true
+        completed
       });
 
       if (error) throw error;
 
-      setOnboardingCompleted(true);
-      setShowTour(false);
+      setOnboardingCompleted(completed);
+      return data;
     } catch (error) {
-      console.error('Error completing onboarding:', error);
+      console.error('Error updating onboarding status:', error);
+      throw error;
     }
   };
 
+  const completeTour = async () => {
+    await updateOnboardingStatus(true);
+    setShowTour(false);
+  };
+
   const skipTour = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase.rpc('update_onboarding_status', {
-        completed: false
-      });
-
-      if (error) throw error;
-
-      setShowTour(false);
-    } catch (error) {
-      console.error('Error skipping onboarding:', error);
-    }
+    await updateOnboardingStatus(false);
+    setShowTour(false);
   };
 
   const resetTour = () => {
@@ -85,6 +80,7 @@ export function useOnboarding() {
   return {
     showTour,
     onboardingCompleted,
+    updateOnboardingStatus,
     completeTour,
     skipTour,
     resetTour

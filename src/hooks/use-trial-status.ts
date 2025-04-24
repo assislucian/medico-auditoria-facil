@@ -34,7 +34,8 @@ export function useTrialStatus() {
           throw error;
         }
 
-        const trialData = data as TrialResponse;
+        // Properly type cast the data
+        const trialData = data as unknown as TrialResponse;
         
         setStatus(trialData.status as TrialStatus);
         
