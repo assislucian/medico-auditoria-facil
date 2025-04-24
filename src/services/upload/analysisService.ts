@@ -1,4 +1,3 @@
-
 /**
  * analysisService.ts
  * 
@@ -95,6 +94,22 @@ function formatDoctorsData(doctorsData: any): DoctorParticipation[] {
 }
 
 /**
+ * Função auxiliar para extrair valores numéricos com segurança de um objeto JSON
+ * @param summary Objeto JSON de resumo
+ * @param key Chave do valor a ser extraído
+ * @returns Valor numérico ou 0 se inválido
+ */
+const getSafeNumericValue = (summary: any, key: string): number => {
+  if (!summary || typeof summary !== 'object') return 0;
+  
+  const value = summary[key];
+  if (value === undefined || value === null) return 0;
+  
+  const num = Number(value);
+  return isNaN(num) ? 0 : num;
+};
+
+/**
  * Busca dados de análise pelo ID do Supabase
  * @param analysisId ID da análise para buscar
  * @returns Dados da análise ou null se não encontrada
@@ -152,10 +167,10 @@ export async function fetchAnalysisById(analysisId: string): Promise<ExtractedDa
         doctors: formatDoctorsData(proc.doctors)
       })),
       totais: {
-        valorCBHPM: typeof analysisData.summary === 'object' ? Number(analysisData.summary?.totalCBHPM || 0) : 0,
-        valorPago: typeof analysisData.summary === 'object' ? Number(analysisData.summary?.totalPago || 0) : 0,
-        diferenca: typeof analysisData.summary === 'object' ? Number(analysisData.summary?.totalDiferenca || 0) : 0,
-        procedimentosNaoPagos: typeof analysisData.summary === 'object' ? Number(analysisData.summary?.procedimentosNaoPagos || 0) : 0
+        valorCBHPM: getSafeNumericValue(analysisData.summary, 'totalCBHPM'),
+        valorPago: getSafeNumericValue(analysisData.summary, 'totalPago'),
+        diferenca: getSafeNumericValue(analysisData.summary, 'totalDiferenca'),
+        procedimentosNaoPagos: getSafeNumericValue(analysisData.summary, 'procedimentosNaoPagos')
       }
     };
     
