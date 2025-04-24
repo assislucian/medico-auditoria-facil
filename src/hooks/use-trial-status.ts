@@ -53,7 +53,8 @@ export function useTrialStatus() {
           return;
         }
         
-        const response = data as CheckTrialStatusResponse;
+        // Type assertion with proper casting to ensure type safety
+        const response = data as unknown as CheckTrialStatusResponse;
         console.log('Trial status response:', response);
         
         if (response && isMounted) {

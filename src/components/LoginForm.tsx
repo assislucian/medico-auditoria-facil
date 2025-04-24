@@ -52,13 +52,13 @@ const LoginForm = () => {
     try {
       console.log(`Iniciando login para: ${email}`);
       
-      const { data, error } = await signInWithPassword(email, password);
+      const result = await signInWithPassword(email, password);
       
-      if (error) {
-        throw error;
+      if (result.error) {
+        throw result.error;
       }
 
-      if (!data.user) {
+      if (!result.data?.user) {
         throw new Error('Não foi possível autenticar. Usuário não encontrado.');
       }
       
@@ -69,7 +69,7 @@ const LoginForm = () => {
         const profilePromise = supabase
           .from('profiles')
           .select('trial_status')
-          .eq('id', data.user.id)
+          .eq('id', result.data.user.id)
           .single();
           
         // Set a timeout to prevent getting stuck

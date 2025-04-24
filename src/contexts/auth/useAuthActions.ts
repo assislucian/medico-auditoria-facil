@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Profile } from '@/types';
@@ -22,19 +23,19 @@ export const useAuthActions = () => {
   
   const signInWithPassword = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const result = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
-      if (error) {
-        if (error.message.includes('Email not confirmed')) {
+      if (result.error) {
+        if (result.error.message.includes('Email not confirmed')) {
           throw new Error('Por favor, verifique seu email para ativar sua conta.');
         }
-        throw error;
+        throw result.error;
       }
       
-      return data;
+      return result;
     } catch (error: any) {
       console.error("Error during signInWithPassword:", error);
       throw error;

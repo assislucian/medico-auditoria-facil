@@ -57,7 +57,8 @@ const WelcomePage = () => {
         return;
       }
       
-      const response = data as ActivateTrialResponse;
+      // Type assertion with proper casting to ensure type safety
+      const response = data as unknown as ActivateTrialResponse;
       console.log('Trial activation response:', response);
       
       if (response) {
