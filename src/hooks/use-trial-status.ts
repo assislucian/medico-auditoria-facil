@@ -1,95 +1,67 @@
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from '@/contexts/AuthContext';
 
-interface TrialStatus {
-  status: 'not_started' | 'active' | 'expired';
-  endDate: Date | null;
-  isLoading: boolean;
-  error: Error | null;
-}
+type TrialStatus = 'not_started' | 'active' | 'expired' | 'loading' | 'error';
 
-interface CheckTrialStatusResponse {
-  status: 'not_started' | 'active' | 'expired';
+interface TrialResponse {
+  status: string;
   end_date: string | null;
 }
 
 export function useTrialStatus() {
+  const [status, setStatus] = useState<TrialStatus>('loading');
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
-  const [status, setStatus] = useState<TrialStatus>({
-    status: 'not_started',
-    endDate: null,
-    isLoading: true,
-    error: null
-  });
 
   useEffect(() => {
-    let isMounted = true;
-    
-    const checkStatus = async () => {
+    const checkTrialStatus = async () => {
       if (!user) {
-        if (isMounted) {
-          setStatus(s => ({ ...s, isLoading: false }));
-        }
+        setIsLoading(false);
+        setStatus('not_started');
         return;
       }
 
-      console.log('Checking trial status for user:', user.id);
       try {
         const { data, error } = await supabase.rpc('check_trial_status', {
           user_id: user.id
         });
 
         if (error) {
-          console.error('Error checking trial status:', error);
-          if (isMounted) {
-            setStatus(s => ({ 
-              ...s, 
-              isLoading: false, 
-              error: new Error(error.message || 'Failed to check trial status') 
-            }));
-          }
-          return;
+          throw error;
         }
+
+        const trialData = data as TrialResponse;
         
-        // Type assertion with proper casting to ensure type safety
-        const response = data as unknown as CheckTrialStatusResponse;
-        console.log('Trial status response:', response);
+        setStatus(trialData.status as TrialStatus);
         
-        if (response && isMounted) {
-          setStatus({
-            status: response.status,
-            endDate: response.end_date ? new Date(response.end_date) : null,
-            isLoading: false,
-            error: null
-          });
-        } else if (isMounted) {
-          console.log('No trial status data returned');
-          setStatus(s => ({ 
-            ...s, 
-            isLoading: false,
-            error: new Error('No trial status data returned') 
-          }));
+        if (trialData.end_date) {
+          setEndDate(new Date(trialData.end_date));
+        } else {
+          setEndDate(null);
         }
-      } catch (error) {
-        console.error('Exception checking trial status:', error);
-        if (isMounted) {
-          setStatus(s => ({ 
-            ...s, 
-            isLoading: false,
-            error: error instanceof Error ? error : new Error('Unknown error checking trial status')
-          }));
-        }
+      } catch (err) {
+        console.error('Error checking trial status:', err);
+        setError(err as Error);
+        setStatus('error');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    checkStatus();
-    
-    return () => {
-      isMounted = false;
-    };
+    checkTrialStatus();
   }, [user]);
 
-  return status;
+  return { 
+    status, 
+    endDate, 
+    isLoading, 
+    error,
+    isActive: status === 'active',
+    isExpired: status === 'expired',
+    isNotStarted: status === 'not_started'
+  };
 }

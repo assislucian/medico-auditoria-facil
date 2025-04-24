@@ -1,9 +1,8 @@
 
-import { Helmet } from 'react-helmet-async';
+import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import Dashboard from "@/components/Dashboard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { GuidedTour } from '@/components/onboarding/GuidedTour';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useOnboarding } from '@/hooks/use-onboarding';
 
 const DashboardPage = () => {
@@ -11,17 +10,10 @@ const DashboardPage = () => {
   const { showTour } = useOnboarding();
 
   return (
-    <>
-      <Helmet>
-        <title>Dashboard | MedCheck</title>
-      </Helmet>
-      <div className="min-h-screen flex">
-        <DashboardLayout isMobile={isMobile}>
-          <Dashboard />
-        </DashboardLayout>
-      </div>
+    <AuthenticatedLayout title="Dashboard">
+      <Dashboard />
       {showTour && <GuidedTour />}
-    </>
+    </AuthenticatedLayout>
   );
 };
 

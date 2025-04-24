@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from './hooks/use-theme';
 import { Toaster } from '@/components/ui/sonner';
@@ -39,8 +39,9 @@ function App() {
       <HelmetProvider>
         <AuthProvider>
           <ThemeProvider>
-            <Toaster position="top-center" />
+            <Toaster position="top-center" richColors closeButton />
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
@@ -48,11 +49,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/update-password" element={<UpdatePassword />} />
-              <Route path="/lock-screen" element={<LockScreen />} />
-              <Route path="/new-audit" element={<NewAudit />} />
               <Route path="/pricing" element={<Pricing />} />
-              <Route path="/checkout" element={<Checkout />} />
               
               {/* Protected routes */}
               <Route element={<PrivateRoute />}>
@@ -65,9 +62,14 @@ function App() {
                 <Route path="/support" element={<Support />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/welcome" element={<Welcome />} />
+                <Route path="/update-password" element={<UpdatePassword />} />
+                <Route path="/lock-screen" element={<LockScreen />} />
+                <Route path="/new-audit" element={<NewAudit />} />
+                <Route path="/checkout" element={<Checkout />} />
                 <Route path="/compare/:id" element={<CompareContracheque />} />
               </Route>
               
+              {/* Fallback route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </ThemeProvider>

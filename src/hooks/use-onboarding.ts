@@ -2,52 +2,91 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
 
 export function useOnboarding() {
+  const [showTour, setShowTour] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
-  const [showTour, setShowTour] = useState(false);
-
+  
   useEffect(() => {
+    // Check if the tour should be shown based on URL state
+    const state = location.state as { startTour?: boolean } | null;
+    if (state?.startTour) {
+      setShowTour(true);
+    }
+    
+    // Check if the user has already completed onboarding
     const checkOnboardingStatus = async () => {
       if (!user) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('onboarding_completed')
-        .eq('id', user.id)
-        .single();
-
-      setShowTour(location.state?.startTour || (profile && !profile.onboarding_completed));
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) throw error;
+        
+        setOnboardingCompleted(!!data?.onboarding_completed);
+        
+        // If the user hasn't completed onboarding and no explicit startTour state
+        // is provided, show the tour
+        if (!data?.onboarding_completed && !state?.hasOwnProperty('startTour')) {
+          setShowTour(true);
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+      }
     };
-
+    
     checkOnboardingStatus();
-  }, [location.state?.startTour, user]);
+  }, [location, user]);
 
-  const updateOnboardingStatus = async (completed: boolean) => {
+  const completeTour = async () => {
+    if (!user) return;
+
     try {
-      const { data, error } = await supabase.rpc('update_onboarding_status', { 
-        completed 
+      const { data, error } = await supabase.rpc('update_onboarding_status', {
+        completed: true
       });
 
       if (error) throw error;
 
-      if (!data) {
-        throw new Error('Failed to update onboarding status');
-      }
-
-      return true;
+      setOnboardingCompleted(true);
+      setShowTour(false);
     } catch (error) {
-      console.error('Error updating onboarding status:', error);
-      toast.error('Erro ao salvar progresso do tour');
-      return false;
+      console.error('Error completing onboarding:', error);
     }
+  };
+
+  const skipTour = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase.rpc('update_onboarding_status', {
+        completed: false
+      });
+
+      if (error) throw error;
+
+      setShowTour(false);
+    } catch (error) {
+      console.error('Error skipping onboarding:', error);
+    }
+  };
+
+  const resetTour = () => {
+    setShowTour(true);
   };
 
   return {
     showTour,
-    updateOnboardingStatus
+    onboardingCompleted,
+    completeTour,
+    skipTour,
+    resetTour
   };
 }

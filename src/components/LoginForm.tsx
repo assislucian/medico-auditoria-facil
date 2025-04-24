@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import ErrorAlert from '@/components/auth/ErrorAlert';
 import EmailField from '@/components/auth/EmailField';
 import PasswordField from '@/components/auth/PasswordField';
 import { z } from 'zod';
+import { LoadingSpinner } from './ui/loading-spinner';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -20,6 +21,11 @@ const LoginForm = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const { signInWithPassword } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Extract redirect URL from query parameters if it exists
+  const searchParams = new URLSearchParams(location.search);
+  const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
   const validateForm = () => {
     try {
@@ -82,21 +88,25 @@ const LoginForm = () => {
         if (profileResult.error) {
           console.error('Erro ao buscar perfil:', profileResult.error);
           // Se não conseguirmos obter o perfil, vamos para o dashboard
-          navigate('/dashboard');
+          toast.success('Login realizado com sucesso!');
+          navigate(redirectUrl);
           return;
         }
 
         if (!profileResult.data?.trial_status || profileResult.data.trial_status === 'not_started') {
           console.log('Usuário sem trial ativo, redirecionando para welcome');
-          navigate('/welcome');
+          toast.success('Login realizado com sucesso!');
+          navigate('/welcome', { state: { returnTo: redirectUrl } });
         } else {
           console.log('Usuário com trial ativo, redirecionando para dashboard');
-          navigate('/dashboard');
+          toast.success('Login realizado com sucesso!');
+          navigate(redirectUrl);
         }
       } catch (profileError) {
         console.error('Erro ou timeout ao buscar perfil:', profileError);
         // Em caso de erro ou timeout na busca do perfil, vamos para o dashboard
-        navigate('/dashboard');
+        toast.success('Login realizado com sucesso!');
+        navigate(redirectUrl);
       }
     } catch (error: any) {
       console.error('Erro ao fazer login:', error);
@@ -108,6 +118,7 @@ const LoginForm = () => {
       } else {
         setAuthError('Erro ao fazer login. Tente novamente mais tarde.');
       }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -136,8 +147,19 @@ const LoginForm = () => {
             error={errors.password}
           />
           
+          <div className="flex justify-end">
+            <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+              Esqueceu a senha?
+            </Link>
+          </div>
+          
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Entrando...' : 'Entrar'}
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <LoadingSpinner size="sm" /> 
+                Entrando...
+              </span>
+            ) : 'Entrar'}
           </Button>
         </form>
       </CardContent>

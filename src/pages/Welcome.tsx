@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTrialStatus } from '@/hooks/use-trial-status';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { PublicLayout } from '@/components/layout/PublicLayout';
 
 interface ActivateTrialResponse {
   success: boolean;
@@ -20,11 +22,16 @@ const WelcomePage = () => {
   const [isActivating, setIsActivating] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { status: trialStatus, isLoading: trialLoading, error: trialError } = useTrialStatus();
   
   // Get return path from location state, or default to dashboard
   const returnTo = location.state?.returnTo || '/dashboard';
+
+  // Redirect if not logged in
+  if (!session && !trialLoading) {
+    return <Navigate to="/login" replace />;
+  }
 
   // Check if trial is already active and redirect if needed
   useEffect(() => {
@@ -92,8 +99,7 @@ const WelcomePage = () => {
   if (trialLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        <span className="ml-3 text-xl font-medium">Verificando status do trial...</span>
+        <LoadingSpinner size="lg" text="Verificando status do trial..." />
       </div>
     );
   }
@@ -103,11 +109,8 @@ const WelcomePage = () => {
   }
 
   return (
-    <>
-      <Helmet>
-        <title>Bem-vindo ao MedCheck | Período Trial</title>
-      </Helmet>
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <PublicLayout title="Bem-vindo ao MedCheck">
+      <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold text-gradient mb-2">
@@ -151,7 +154,7 @@ const WelcomePage = () => {
           </CardContent>
         </Card>
       </div>
-    </>
+    </PublicLayout>
   );
 };
 
