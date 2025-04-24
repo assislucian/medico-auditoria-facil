@@ -2,37 +2,39 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useAuthState } from './useAuthState';
 import { useAuthActions } from './useAuthActions';
-import type { AuthContextProps } from './types';
+import { AuthContextProps } from './types';
 
+// Create context
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+// Provider component
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const { user, session, isAuthenticated, loading } = useAuthState();
+  const actions = useAuthActions(user?.id);
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { session, user, profile, loading, setProfile } = useAuthState();
-  const actions = useAuthActions();
-
-  const value: AuthContextProps = {
-    session,
+  // Combine state and actions to create context value
+  const contextValue: AuthContextProps = {
     user,
-    profile,
+    session,
+    isAuthenticated,
     loading,
-    ...actions,
-    getProfile: async () => {
-      if (!user) return null;
-      return profile;
-    }
+    ...actions
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
+// Hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+  
   return context;
 };

@@ -12,11 +12,13 @@ type ThemeProviderProps = {
 type ThemeProviderState = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
 };
 
 const initialState: ThemeProviderState = {
   theme: "light",
   setTheme: () => null,
+  toggleTheme: () => null,
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
@@ -27,13 +29,26 @@ export function ThemeProvider({
   storageKey = "medcheck-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => {
-      // Forçar o tema light como padrão inicialmente
-      localStorage.setItem(storageKey, defaultTheme);
-      return defaultTheme;
+  const [theme, setTheme] = useState<Theme>(() => {
+    // Try to get the saved theme from localStorage
+    const savedTheme = localStorage.getItem(storageKey);
+    if (savedTheme && (savedTheme === "light" || savedTheme === "dark")) {
+      return savedTheme;
     }
-  );
+    
+    // Check if the user prefers dark mode
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return "dark";
+    }
+    
+    // Default to light mode
+    return defaultTheme;
+  });
+  
+  // Toggle between light and dark themes
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -41,14 +56,27 @@ export function ThemeProvider({
     root.classList.add(theme);
     localStorage.setItem(storageKey, theme);
     
-    // Garantir que o body também tenha a classe do tema
+    // Ensure that the body also has the theme class
     document.body.classList.remove("dark", "light");
     document.body.classList.add(theme);
+    
+    // Set a data-theme attribute for custom styling if needed
+    document.documentElement.setAttribute('data-theme', theme);
+    
+    // Update meta theme-color for mobile browsers
+    const metaThemeColor = document.querySelector("meta[name='theme-color']");
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute(
+        "content",
+        theme === "dark" ? "#1A1A1A" : "#FFFFFF"
+      );
+    }
   }, [theme, storageKey]);
 
   const value = {
     theme,
     setTheme: (theme: Theme) => setTheme(theme),
+    toggleTheme,
   };
 
   return (
