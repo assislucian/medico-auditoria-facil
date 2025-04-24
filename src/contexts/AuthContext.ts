@@ -1,7 +1,11 @@
 
 import { createContext } from 'react';
-import { AuthProvider, useAuth } from './auth/AuthContext';
-import type { AuthContextProps } from './auth/types';
+
+export interface AuthContextProps {
+  session: any | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+}
 
 export const AuthContext = createContext<AuthContextProps>({
   session: null,
@@ -9,6 +13,4 @@ export const AuthContext = createContext<AuthContextProps>({
   isAuthenticated: false
 });
 
-export { AuthProvider, useAuth };
-export type { AuthContextProps };
 export default AuthContext;

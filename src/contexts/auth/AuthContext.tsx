@@ -11,18 +11,14 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { session, user, profile, loading } = useAuthState();
+  const { session, user, profile, loading, setProfile } = useAuthState();
   const actions = useAuthActions();
-  
-  // Calculate isAuthenticated based on session presence
-  const isAuthenticated = !!session;
 
   const value: AuthContextProps = {
     session,
     user,
     profile,
     loading,
-    isAuthenticated,
     ...actions,
     getProfile: async () => {
       if (!user) return null;
