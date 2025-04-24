@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from './auth/AuthContext';
 export interface AuthContextProps {
   session: any | null;
   loading: boolean;
-  isAuthenticated: boolean;
+  isAuthenticated: boolean; // Ensuring this property exists in the interface
   user?: any;
   profile?: any;
   signInWithPassword?: (email: string, password: string) => Promise<any>;
