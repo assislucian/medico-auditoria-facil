@@ -25,6 +25,7 @@ export interface AuthContextProps {
   session: Session | null;
   isAuthenticated: boolean;
   loading: boolean;
+  userProfile?: UserProfile | null;
   signUp: (email: string, password: string) => Promise<any>;
   signInWithPassword: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<any>;
@@ -33,4 +34,5 @@ export interface AuthContextProps {
   updatePassword: (newPassword: string) => Promise<any>;
   resetPassword: (email: string) => Promise<any>;
   isPasswordStrong: (password: string) => boolean;
+  validateUserCRM: (crm: string) => Promise<boolean>;
 }

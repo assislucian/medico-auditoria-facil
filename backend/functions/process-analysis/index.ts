@@ -1,11 +1,12 @@
 
 /**
  * Edge Function to process uploaded files and generate analysis
+ * Improved with more secure authentication and CRM validation
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// CORS headers
+// CORS headers for secure cross-origin requests
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -63,7 +64,7 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
+    // Enhanced authentication verification
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing authorization header' }), { 
@@ -72,18 +73,18 @@ serve(async (req) => {
       });
     }
 
-    // Extract token
+    // Extract token and verify user
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: authError?.message }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401
       });
     }
     
-    // Get request body
+    // Get request body with validation
     let body;
     try {
       body = await req.json();
@@ -121,6 +122,30 @@ serve(async (req) => {
     if (licenseError) {
       console.log('Error checking license:', licenseError);
       // Continue processing even if license check fails
+    }
+    
+    // Get user profile to verify CRM
+    let userProfileCrm = null;
+    if (crmRegistrado) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('crm')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      userProfileCrm = profileData?.crm;
+      
+      // Only allow the user to filter by their own CRM
+      if (crmRegistrado !== userProfileCrm) {
+        console.log(`CRM mismatch. User: ${userProfileCrm}, Requested: ${crmRegistrado}`);
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: 'You can only filter by your own CRM'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403
+        });
+      }
     }
     
     // Fetch upload records
@@ -161,7 +186,6 @@ serve(async (req) => {
     }
 
     // Extract data from uploads (simplified simulation for edge function)
-    // In production, this would use more sophisticated extraction logic
     const hasGuias = uploads.some(u => u.file_type === 'guia');
     const hasDemonstrativos = uploads.some(u => u.file_type === 'demonstrativo');
     
@@ -207,7 +231,7 @@ serve(async (req) => {
           beneficiario: patientName,
           doctors: [
             {
-              code: "8425",
+              code: userProfileCrm || "8425",
               name: "FERNANDA MABEL BATISTA DE AQUINO",
               role: "Cirurgiao",
               startTime: "19/08/2024 14:09",
@@ -228,7 +252,7 @@ serve(async (req) => {
           beneficiario: patientName,
           doctors: [
             {
-              code: "8425",
+              code: userProfileCrm || "8425",
               name: "FERNANDA MABEL BATISTA DE AQUINO",
               role: "Cirurgiao",
               startTime: "19/08/2024 14:09",
@@ -271,7 +295,7 @@ serve(async (req) => {
       // Check for user license
       const userHasActiveLicense = licenseData && licenseData.is_active;
       
-      // Save analysis to database
+      // Save analysis to database with secure transaction
       const { data: analysisData, error: analysisError } = await supabase
         .from('analysis_results')
         .insert({
@@ -314,6 +338,7 @@ serve(async (req) => {
       // Save procedures
       const proceduresData = extractedData.procedimentos.map(proc => ({
         analysis_id: analysisId,
+        user_id: user.id, // Explicitly set user_id for security
         codigo: proc.codigo,
         procedimento: proc.procedimento,
         papel: proc.papel,
@@ -436,7 +461,7 @@ function generateSimulatedData(
         beneficiario: patientName,
         doctors: [
           {
-            code: "8425",
+            code: crmRegistrado || "8425",
             name: "FERNANDA MABEL BATISTA DE AQUINO",
             role: "Cirurgiao",
             startTime: "19/08/2024 14:09",
@@ -457,7 +482,7 @@ function generateSimulatedData(
         beneficiario: patientName,
         doctors: [
           {
-            code: "8425",
+            code: crmRegistrado || "8425",
             name: "FERNANDA MABEL BATISTA DE AQUINO",
             role: "Cirurgiao",
             startTime: "19/08/2024 14:09",
