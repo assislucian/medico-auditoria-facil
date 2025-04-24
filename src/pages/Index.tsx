@@ -5,8 +5,17 @@ import Navbar from "@/components/Navbar";
 import { ArrowRight, Upload, CheckCircle2, ChartBar, Coins, FileStack } from "lucide-react";
 import PricingPlans from "@/components/PricingPlans";
 import { Helmet } from "react-helmet-async";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { user } = useAuth();
+  
+  // Simple redirect function for pricing section
+  const handleCheckoutRedirect = () => {
+    // Always return true on the landing page since we'll handle the redirect in the PricingPlans component
+    return true;
+  };
+  
   return (
     <>
       <Helmet>
@@ -174,7 +183,11 @@ const Index = () => {
         {/* Pricing Plans */}
         <section id="pricing" className="py-20 px-6 bg-secondary/20">
           <div className="container mx-auto max-w-6xl">
-            <PricingPlans />
+            <PricingPlans 
+              isLoggedIn={!!user} 
+              isTrial={false} 
+              onCheckout={handleCheckoutRedirect} 
+            />
           </div>
         </section>
 
