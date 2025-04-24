@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from './hooks/use-theme';
 import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Pages
 import Index from './pages/Index';
@@ -36,39 +37,41 @@ function App() {
   return (
     <Router>
       <HelmetProvider>
-        <ThemeProvider>
-          <Toaster position="top-center" />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/update-password" element={<UpdatePassword />} />
-            <Route path="/lock-screen" element={<LockScreen />} />
-            <Route path="/new-audit" element={<NewAudit />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/checkout" element={<Checkout />} />
-            
-            {/* Protected routes */}
-            <Route element={<PrivateRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/uploads" element={<Uploads />} />
-              <Route path="/history" element={<History />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/help" element={<Help />} />
-              <Route path="/support" element={<Support />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/welcome" element={<Welcome />} />
-              <Route path="/compare/:id" element={<CompareContracheque />} />
-            </Route>
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <Toaster position="top-center" />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/update-password" element={<UpdatePassword />} />
+              <Route path="/lock-screen" element={<LockScreen />} />
+              <Route path="/new-audit" element={<NewAudit />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/checkout" element={<Checkout />} />
+              
+              {/* Protected routes */}
+              <Route element={<PrivateRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/uploads" element={<Uploads />} />
+                <Route path="/history" element={<History />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/welcome" element={<Welcome />} />
+                <Route path="/compare/:id" element={<CompareContracheque />} />
+              </Route>
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ThemeProvider>
+        </AuthProvider>
       </HelmetProvider>
     </Router>
   );
