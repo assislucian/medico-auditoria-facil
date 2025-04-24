@@ -6,6 +6,6 @@
  * com a estrutura de importação existente.
  */
 
-// Re-export from AuthContext.ts to maintain the existing import structure
-export { AuthProvider, useAuth } from './AuthContext';
-export type { AuthContextProps } from './auth/types';
+// Re-export from AuthContext.tsx to maintain the existing import structure
+export { AuthProvider, useAuth, AuthContext } from './AuthContext';
+export type { AuthContextProps } from './AuthContext';
