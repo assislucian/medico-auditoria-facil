@@ -39,7 +39,7 @@ export function useTrialStatus() {
       try {
         const { data, error } = await supabase.rpc('check_trial_status', {
           user_id: user.id
-        }) as { data: CheckTrialStatusResponse, error: any };
+        });
 
         if (error) {
           console.error('Error checking trial status:', error);
@@ -53,12 +53,13 @@ export function useTrialStatus() {
           return;
         }
         
-        console.log('Trial status response:', data);
+        const response = data as CheckTrialStatusResponse;
+        console.log('Trial status response:', response);
         
-        if (data && isMounted) {
+        if (response && isMounted) {
           setStatus({
-            status: data.status,
-            endDate: data.end_date ? new Date(data.end_date) : null,
+            status: response.status,
+            endDate: response.end_date ? new Date(response.end_date) : null,
             isLoading: false,
             error: null
           });

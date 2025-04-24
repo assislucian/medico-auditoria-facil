@@ -29,7 +29,7 @@ const TrialGuard = ({ children }: TrialGuardProps) => {
         console.log('Trial not started, redirecting to welcome page from:', location.pathname);
         setHasNavigated(true);
         navigate('/welcome', { 
-          state: { returnTo: location.pathname + location.search },
+          state: { returnTo: location.pathname },
           replace: true 
         });
       } else if (status === 'expired') {
@@ -60,6 +60,8 @@ const TrialGuard = ({ children }: TrialGuardProps) => {
 
   if (error) {
     console.error('Trial status error:', error);
+    // Don't block the app if there's an error checking trial status
+    // Just log it and continue
   }
 
   if (isChecking || isLoading) {

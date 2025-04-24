@@ -21,7 +21,7 @@ const WelcomePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { status: trialStatus, isLoading: trialLoading } = useTrialStatus();
+  const { status: trialStatus, isLoading: trialLoading, error: trialError } = useTrialStatus();
   
   // Get return path from location state, or default to dashboard
   const returnTo = location.state?.returnTo || '/dashboard';
@@ -48,7 +48,7 @@ const WelcomePage = () => {
       console.log('Activating trial for user:', user.id);
       const { data, error } = await supabase.rpc('activate_trial', {
         user_id: user.id
-      }) as { data: ActivateTrialResponse, error: any };
+      });
 
       if (error) {
         console.error('Error activating trial:', error);
@@ -57,11 +57,12 @@ const WelcomePage = () => {
         return;
       }
       
-      console.log('Trial activation response:', data);
+      const response = data as ActivateTrialResponse;
+      console.log('Trial activation response:', response);
       
-      if (data) {
-        if (!data.success) {
-          toast.error(data.message || 'Erro ao ativar trial');
+      if (response) {
+        if (!response.success) {
+          toast.error(response.message || 'Erro ao ativar trial');
           setIsActivating(false);
           return;
         }
@@ -79,7 +80,7 @@ const WelcomePage = () => {
         toast.error('Resposta vazia ao ativar o trial');
         setIsActivating(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao ativar trial:', error);
       toast.error('Erro ao ativar o trial. Por favor, tente novamente.');
       setIsActivating(false);
@@ -94,6 +95,10 @@ const WelcomePage = () => {
         <span className="ml-3 text-xl font-medium">Verificando status do trial...</span>
       </div>
     );
+  }
+
+  if (trialError) {
+    console.error('Trial status check error:', trialError);
   }
 
   return (
