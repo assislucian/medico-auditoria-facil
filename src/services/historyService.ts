@@ -1,13 +1,23 @@
 
+/**
+ * historyService.ts
+ * 
+ * Serviço para gerenciar operações relacionadas ao histórico de análises.
+ * Manipula a busca, filtragem e processamento dos registros históricos.
+ */
+
 import { supabase } from '@/integrations/supabase/client';
 import { HistoryItem } from '@/components/history/data';
 import { toast } from 'sonner';
 
 /**
- * Busca o histórico de análises do usuário
+ * Busca o histórico completo de análises do usuário
+ * @returns Array com todos os itens do histórico
  */
 export async function fetchHistoryData(): Promise<HistoryItem[]> {
   try {
+    console.log('Iniciando busca de histórico completo');
+    
     // Verificar se o usuário está autenticado
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -17,6 +27,7 @@ export async function fetchHistoryData(): Promise<HistoryItem[]> {
       return [];
     }
     
+    // Buscar registros do histórico
     const { data, error } = await supabase
       .from('analysis_history')
       .select('*')
@@ -29,6 +40,9 @@ export async function fetchHistoryData(): Promise<HistoryItem[]> {
       return [];
     }
     
+    console.log(`Foram encontrados ${data?.length || 0} registros no histórico`);
+    
+    // Mapear dados para o formato esperado pelo frontend
     return data.map((item: any) => ({
       id: item.id,
       date: formatDate(item.date),
@@ -46,14 +60,22 @@ export async function fetchHistoryData(): Promise<HistoryItem[]> {
 }
 
 /**
- * Busca histórico filtrado por texto e datas
+ * Busca histórico filtrado por texto, datas e status
+ * @param searchTerm Termo para busca em descrição e tipo
+ * @param startDate Data inicial (formato YYYY-MM-DD)
+ * @param endDate Data final (formato YYYY-MM-DD)
+ * @param status Status para filtrar (todos, analisado, pendente)
+ * @returns Array de itens históricos filtrados
  */
 export async function searchHistory(
   searchTerm: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  status: string = 'todos'
 ): Promise<HistoryItem[]> {
   try {
+    console.log('Iniciando busca filtrada:', { searchTerm, startDate, endDate, status });
+    
     // Verificar se o usuário está autenticado
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -86,6 +108,11 @@ export async function searchHistory(
       query = query.lt('date', nextDay.toISOString());
     }
     
+    // Adicionar filtro de status se diferente de "todos"
+    if (status && status !== 'todos') {
+      query = query.eq('status', status.charAt(0).toUpperCase() + status.slice(1));
+    }
+    
     // Executar a query com ordenação
     const { data, error } = await query.order('date', { ascending: false });
     
@@ -95,6 +122,9 @@ export async function searchHistory(
       return [];
     }
     
+    console.log(`Foram encontrados ${data?.length || 0} registros filtrados`);
+    
+    // Mapear dados para o formato esperado pelo frontend
     return data.map((item: any) => ({
       id: item.id,
       date: formatDate(item.date),
@@ -113,9 +143,13 @@ export async function searchHistory(
 
 /**
  * Busca os detalhes de uma análise específica
+ * @param analysisId ID da análise a buscar
+ * @returns Detalhes da análise com todos os procedimentos associados
  */
 export async function fetchAnalysisDetails(analysisId: string) {
   try {
+    console.log('Buscando detalhes da análise:', analysisId);
+    
     // Verificar se o usuário está autenticado
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -152,6 +186,9 @@ export async function fetchAnalysisDetails(analysisId: string) {
       return null;
     }
     
+    console.log(`Análise encontrada com ${proceduresData.length} procedimentos`);
+    
+    // Montar objeto completo com análise e procedimentos
     return {
       ...analysisData,
       procedimentos: proceduresData.map((proc: any) => ({
@@ -177,6 +214,8 @@ export async function fetchAnalysisDetails(analysisId: string) {
 
 /**
  * Formata a data para o formato DD/MM/AAAA
+ * @param dateString String de data para formatar
+ * @returns Data formatada em DD/MM/AAAA
  */
 function formatDate(dateString: string): string {
   try {

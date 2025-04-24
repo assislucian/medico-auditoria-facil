@@ -2,7 +2,7 @@
 /**
  * databaseService.ts
  * 
- * Serviço para interagir com o banco de dados do Supabase.
+ * Serviço para interação com o banco de dados do Supabase.
  * Gerencia operações de CRUD para análises, procedimentos e histórico.
  */
 
@@ -23,6 +23,12 @@ export async function saveAnalysisToDatabase(
   extractedData: any
 ): Promise<{success: boolean, analysisId: string | null}> {
   try {
+    console.log('Iniciando salvamento dos resultados no banco de dados', {
+      processMode,
+      fileCount: files.length,
+      hospitalName: extractedData.demonstrativoInfo?.hospital
+    });
+    
     // Obter o ID do usuário atual
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -62,12 +68,13 @@ export async function saveAnalysisToDatabase(
     }
     
     const analysisId = analysisData.id;
+    console.log('Análise criada com ID:', analysisId);
     
     // 2. Inserir procedimentos relacionados
     if (extractedData.procedimentos && extractedData.procedimentos.length > 0) {
       const proceduresForInsert = extractedData.procedimentos.map((proc: any) => ({
         analysis_id: analysisId,
-        user_id: user.id,  // Adicionando user_id para facilitar consultas
+        user_id: user.id,
         codigo: proc.codigo,
         procedimento: proc.procedimento,
         papel: proc.papel,
@@ -81,12 +88,14 @@ export async function saveAnalysisToDatabase(
       }));
       
       const { error: proceduresError } = await supabase
-        .from('procedures')  // Usando a tabela procedures em vez de procedure_results
+        .from('procedures')
         .insert(proceduresForInsert);
         
       if (proceduresError) {
         console.error('Erro ao inserir procedimentos:', proceduresError);
         // Não falharemos toda a operação por erro em procedimentos
+      } else {
+        console.log(`${proceduresForInsert.length} procedimentos inseridos com sucesso`);
       }
     }
     
@@ -107,6 +116,8 @@ export async function saveAnalysisToDatabase(
     if (historyError) {
       console.error('Erro ao inserir no histórico:', historyError);
       // Não falharemos a operação se apenas o histórico falhar
+    } else {
+      console.log('Registro inserido no histórico com sucesso');
     }
     
     return {success: true, analysisId: analysisData.id};
@@ -123,13 +134,17 @@ export async function saveAnalysisToDatabase(
  */
 export async function getAnalysisById(analysisId: string) {
   try {
+    console.log('Buscando análise por ID:', analysisId);
+    
     // Use nossas funções auxiliares
     const analysisData = await fetchAnalysisById(supabase, analysisId);
     if (!analysisData) {
+      console.log('Análise não encontrada');
       return null;
     }
     
     const proceduresData = await fetchProceduresByAnalysisId(supabase, analysisId);
+    console.log(`Encontrados ${proceduresData.length} procedimentos para a análise`);
     
     // Formatar os dados no formato esperado pelo frontend
     return {
@@ -172,6 +187,8 @@ export async function getAnalysisById(analysisId: string) {
  */
 export async function getUserAnalysisHistory() {
   try {
+    console.log('Buscando histórico de análises do usuário');
+    
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -190,6 +207,7 @@ export async function getUserAnalysisHistory() {
       return [];
     }
     
+    console.log(`Encontradas ${data.length} análises no histórico`);
     return data;
   } catch (error) {
     console.error('Erro ao buscar histórico:', error);

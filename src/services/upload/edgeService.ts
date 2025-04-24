@@ -1,4 +1,11 @@
 
+/**
+ * edgeService.ts
+ * 
+ * Serviço para interação com as Edge Functions do Supabase.
+ * Gerencia o envio e processamento de arquivos através das funções de borda.
+ */
+
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { FileType, FileWithStatus, ProcessingStage } from '@/types/upload';
@@ -9,7 +16,14 @@ import { generateFallbackData } from '@/utils/uploadUtils';
 import { determineProcessingMode } from '@/utils/uploadUtils';
 
 /**
- * Processes the uploaded files using edge functions
+ * Processa os arquivos enviados usando as edge functions do Supabase
+ * @param files Arquivos a processar
+ * @param setProgress Função para atualizar o progresso
+ * @param setProcessingStage Função para atualizar o estágio de processamento
+ * @param setProcessingMsg Função para atualizar a mensagem de processamento
+ * @param crmRegistrado CRM para filtrar (opcional)
+ * @param fileTypes Tipos de arquivos presentes
+ * @returns Objeto com sucesso e ID da análise
  */
 export async function processFiles(
   files: FileWithStatus[],
@@ -20,27 +34,32 @@ export async function processFiles(
   fileTypes: FileType[]
 ): Promise<{ success: boolean; analysisId: string | null }> {
   try {
+    // Determinar modo de processamento baseado nos tipos de arquivos
     const processMode = determineProcessingMode(files);
-    console.log(`Processing files in mode: ${processMode}`);
+    console.log(`Processando arquivos no modo: ${processMode}`);
     
+    // Simular etapas de processamento para feedback visual
     await simulateProcessingStages(processMode, setProgress, setProcessingStage, setProcessingMsg);
 
     try {
+      // Verificar autenticação do usuário
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
-        throw new Error('Authentication required for processing files');
+        console.error('Erro de autenticação:', sessionError);
+        throw new Error('Autenticação necessária para processar arquivos');
       }
 
       setProgress(25);
       setProcessingStage('uploading');
       setProcessingMsg('Fazendo upload dos arquivos...');
       
+      // Fazer upload dos arquivos válidos
       const uploadedFiles = await uploadFilesToStorage(files.filter(f => f.status === 'valid'));
-      console.log('Files uploaded:', uploadedFiles);
+      console.log('Arquivos enviados:', uploadedFiles);
 
       if (!uploadedFiles || uploadedFiles.length === 0) {
-        throw new Error('No files were successfully uploaded');
+        throw new Error('Nenhum arquivo foi enviado com sucesso');
       }
 
       const uploadIds = uploadedFiles.map(f => f.id);
@@ -49,6 +68,7 @@ export async function processFiles(
       setProcessingStage('analyzing');
       setProcessingMsg('Processando arquivos...');
 
+      // Invocar a edge function para processar os arquivos
       const { data: processingData, error: processingError } = await supabase.functions.invoke('process-analysis', {
         body: {
           uploadIds,
@@ -58,14 +78,15 @@ export async function processFiles(
       });
 
       if (processingError || !processingData?.success) {
-        console.error('Edge function error:', processingError || 'Unknown processing error');
-        throw new Error(processingError?.message || 'Error processing files');
+        console.error('Erro na função de borda:', processingError || 'Erro de processamento desconhecido');
+        throw new Error(processingError?.message || 'Erro ao processar arquivos');
       }
 
       setProgress(100);
       setProcessingStage('complete');
       setProcessingMsg('Processamento concluído!');
 
+      // Armazenar resultados da análise
       setCurrentAnalysis(processingData.extractedData, processingData.analysisId);
       
       toast.success('Processamento concluído', {
@@ -77,7 +98,8 @@ export async function processFiles(
         analysisId: processingData.analysisId
       };
     } catch (backendError) {
-      console.log('Backend processing failed, using fallback mechanism', backendError);
+      // Se houver erro no backend, usar mecanismo de fallback local
+      console.log('Processamento no backend falhou, usando mecanismo de fallback', backendError);
       
       const fallbackData = generateFallbackData(processMode, files, crmRegistrado);
       const localAnalysisId = `local-${Date.now()}`;
@@ -94,7 +116,8 @@ export async function processFiles(
       };
     }
   } catch (error) {
-    console.error('Error processing files:', error);
+    // Tratar erros gerais do processamento
+    console.error('Erro ao processar arquivos:', error);
     
     setProgress(0);
     setProcessingStage('error');

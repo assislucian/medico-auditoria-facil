@@ -1,50 +1,72 @@
 
-export const mockHistory = [
-  {
-    id: "hist-001",
-    date: "15/04/2025",
-    type: "Guia + Demonstrativo",
-    description: "Hospital Albert Einstein - Abril 2025",
-    procedimentos: 8,
-    glosados: 3,
-    status: "Analisado"
-  },
-  {
-    id: "hist-002",
-    date: "02/04/2025",
-    type: "Demonstrativo",
-    description: "Hospital Sírio-Libanês - Março 2025",
-    procedimentos: 5,
-    glosados: 0,
-    status: "Analisado"
-  },
-  {
-    id: "hist-003",
-    date: "28/03/2025",
-    type: "Guia + Demonstrativo",
-    description: "Hospital Oswaldo Cruz - Março 2025",
-    procedimentos: 12,
-    glosados: 7,
-    status: "Pendente"
-  },
-  {
-    id: "hist-004",
-    date: "15/03/2025",
-    type: "Guia",
-    description: "Hospital Albert Einstein - Fevereiro 2025",
-    procedimentos: 3,
-    glosados: 1,
-    status: "Analisado"
-  },
-  {
-    id: "hist-005",
-    date: "01/03/2025",
-    type: "Demonstrativo",
-    description: "Hospital Sírio-Libanês - Fevereiro 2025",
-    procedimentos: 6,
-    glosados: 2,
-    status: "Analisado"
-  }
-];
+/**
+ * data.ts
+ * 
+ * Define os tipos de dados utilizados nos componentes de histórico.
+ * Estes tipos garantem consistência nos dados exibidos na interface.
+ */
 
-export type HistoryItem = typeof mockHistory[0];
+/**
+ * Representa um item do histórico de análises
+ */
+export interface HistoryItem {
+  /**
+   * Identificador único da análise
+   */
+  id: string;
+  
+  /**
+   * Data de criação da análise (formato DD/MM/YYYY)
+   */
+  date: string;
+  
+  /**
+   * Tipo de análise (Guia, Demonstrativo ou combinação)
+   */
+  type: string;
+  
+  /**
+   * Descrição ou título da análise
+   */
+  description: string;
+  
+  /**
+   * Número total de procedimentos na análise
+   */
+  procedimentos: number;
+  
+  /**
+   * Número de procedimentos glosados (não pagos)
+   */
+  glosados: number;
+  
+  /**
+   * Status atual da análise (Analisado, Pendente)
+   */
+  status: string;
+}
+
+/**
+ * Filtros aplicáveis ao histórico de análises
+ */
+export interface HistoryFilters {
+  /**
+   * Termo de busca textual
+   */
+  searchTerm?: string;
+  
+  /**
+   * Data inicial para filtro
+   */
+  startDate?: string;
+  
+  /**
+   * Data final para filtro
+   */
+  endDate?: string;
+  
+  /**
+   * Status para filtrar (todos, analisado, pendente)
+   */
+  status?: string;
+}

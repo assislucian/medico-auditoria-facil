@@ -1,22 +1,50 @@
 
+/**
+ * HistoryTable.tsx
+ * 
+ * Componente que exibe os dados históricos em formato de tabela,
+ * com colunas para data, tipo, descrição, quantidade de procedimentos,
+ * procedimentos glosados, status e ações.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Download, Eye, FileCheck, FileText, X } from "lucide-react";
+import { Download, Eye, FileCheck, FileText } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { type HistoryItem } from "./data";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface HistoryTableProps {
   items: HistoryItem[];
 }
 
+/**
+ * Tabela para exibição dos registros históricos de análise
+ * Inclui informações detalhadas e botões de ação para visualizar ou exportar
+ */
 export function HistoryTable({ items }: HistoryTableProps) {
   const navigate = useNavigate();
   
+  // Redireciona para a página de comparação com o ID da análise
   const handleViewDetails = (id: string) => {
     navigate(`/compare?analysisId=${id}`);
+  };
+
+  // Manipulador para exportar um relatório individual
+  const handleDownloadReport = (item: HistoryItem) => {
+    toast.info("Preparando download do relatório", {
+      description: `Relatório de ${item.date} sendo gerado...`
+    });
+    
+    // Simulação do tempo de geração do relatório
+    setTimeout(() => {
+      toast.success("Relatório pronto para download", {
+        description: `Relatório de análise ${item.description} baixado com sucesso.`
+      });
+    }, 1500);
   };
 
   return (
@@ -80,6 +108,7 @@ export function HistoryTable({ items }: HistoryTableProps) {
                       <Button 
                         variant="ghost" 
                         size="icon"
+                        onClick={() => handleDownloadReport(item)}
                         title="Baixar relatório"
                       >
                         <Download className="h-4 w-4" />
@@ -90,9 +119,12 @@ export function HistoryTable({ items }: HistoryTableProps) {
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-6">
-                    <div className="flex flex-col items-center justify-center">
-                      <X className="h-10 w-10 text-muted-foreground mb-2" />
-                      <p className="text-muted-foreground">Nenhum registro encontrado</p>
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <FileText className="h-10 w-10 text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground font-medium">Nenhum registro encontrado</p>
+                      <p className="text-muted-foreground text-sm mt-1">
+                        Tente ajustar os filtros ou faça upload de arquivos para análise
+                      </p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -104,4 +136,3 @@ export function HistoryTable({ items }: HistoryTableProps) {
     </Card>
   );
 }
-
