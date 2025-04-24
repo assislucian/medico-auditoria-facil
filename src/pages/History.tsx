@@ -7,7 +7,7 @@
  */
 
 import { Helmet } from 'react-helmet-async';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DateRange } from "react-day-picker";
 import { format } from 'date-fns';
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
@@ -30,68 +30,84 @@ const HistoryPage = () => {
   const [filterStatus, setFilterStatus] = useState("todos");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [loading, setLoading] = useState(true);
+  const [loadingFailed, setLoadingFailed] = useState(false);
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
   const { user, loading: authLoading } = useAuth();
   
   /**
-   * Efeito para carregar o histórico de análises
-   * Busca os dados baseados nos filtros aplicados
+   * Carrega dados do histórico baseado nos filtros aplicados
    */
-  useEffect(() => {
-    const loadHistoryData = async () => {
-      if (authLoading) return;
-      
-      if (!user) {
-        toast.error("Faça login para visualizar seu histórico");
-        return;
-      }
-      
-      setLoading(true);
-      try {
-        console.log("Carregando histórico com filtros:", { 
-          searchTerm, 
-          dateRange, 
-          filterStatus 
-        });
-        
-        // Se houver filtros ativos, usa a função de busca filtrada
-        if (searchTerm || dateRange?.from || filterStatus !== "todos") {
-          const startDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined;
-          const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined;
-          const data = await searchHistory(searchTerm, startDate, endDate, filterStatus);
-          
-          console.log("Dados filtrados recebidos:", data);
-          setHistoryData(data);
-        } else {
-          // Caso contrário, busca todos os registros
-          const data = await fetchHistoryData();
-          console.log("Todos os dados recebidos:", data);
-          setHistoryData(data);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar o histórico:", error);
-        toast.error("Não foi possível carregar seu histórico de análises", {
-          description: "Verifique sua conexão de internet e tente novamente."
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadHistoryData = useCallback(async () => {
+    if (authLoading) return;
     
-    loadHistoryData();
+    if (!user) {
+      toast.error("Faça login para visualizar seu histórico");
+      return;
+    }
+    
+    setLoading(true);
+    setLoadingFailed(false);
+    
+    try {
+      console.log("Carregando histórico com filtros:", { 
+        searchTerm, 
+        dateRange, 
+        filterStatus 
+      });
+      
+      // Se houver filtros ativos, usa a função de busca filtrada
+      if (searchTerm || dateRange?.from || filterStatus !== "todos") {
+        const startDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined;
+        const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined;
+        const data = await searchHistory(searchTerm, startDate, endDate, filterStatus);
+        
+        console.log("Dados filtrados recebidos:", data);
+        setHistoryData(data);
+      } else {
+        // Caso contrário, busca todos os registros
+        const data = await fetchHistoryData();
+        console.log("Todos os dados recebidos:", data);
+        setHistoryData(data);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar o histórico:", error);
+      setLoadingFailed(true);
+      toast.error("Não foi possível carregar seu histórico de análises", {
+        description: "Verifique sua conexão de internet e tente novamente."
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [user, authLoading, searchTerm, dateRange, filterStatus]);
+  
+  // Carregar histórico quando os filtros mudarem
+  useEffect(() => {
+    loadHistoryData();
+  }, [loadHistoryData]);
   
   /**
    * Manipulador para exportação do histórico para Excel
    */
   const handleExport = () => {
     try {
+      if (historyData.length === 0) {
+        toast.warning("Nenhum dado para exportar");
+        return;
+      }
+      
       exportToExcel(historyData, 'historico-analises');
       toast.success("Histórico exportado com sucesso");
     } catch (error) {
       console.error("Erro ao exportar histórico:", error);
       toast.error("Falha ao exportar histórico");
     }
+  };
+  
+  /**
+   * Manipulador para recarregar os dados
+   */
+  const handleRefresh = () => {
+    loadHistoryData();
   };
 
   return (
@@ -113,12 +129,23 @@ const HistoryPage = () => {
           onExport={handleExport}
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
+          onRefresh={handleRefresh}
         />
         
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <span className="ml-2 text-lg">Carregando histórico...</span>
+          </div>
+        ) : loadingFailed ? (
+          <div className="text-center py-10 bg-gray-50 rounded-lg">
+            <p className="text-gray-600">Não foi possível carregar o histórico.</p>
+            <button 
+              onClick={handleRefresh}
+              className="mt-4 text-primary hover:underline"
+            >
+              Tentar novamente
+            </button>
           </div>
         ) : historyData.length === 0 ? (
           <div className="text-center py-10 bg-gray-50 rounded-lg">

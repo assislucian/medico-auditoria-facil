@@ -1,106 +1,147 @@
-import { Button } from '@/components/ui/button';
-import { FileUp, AlertCircle, FileText, Info } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { FileType } from '@/types/upload';
-
-type FileDropZoneProps = {
-  type: FileType;
-  onDropFiles: (type: FileType, files: FileList) => Promise<void>;
-  disabled: boolean;
-  hasFiles?: boolean;
-};
 
 /**
- * FileDropZone Component
+ * FileDropZone.tsx
  * 
- * Fornece uma área para upload de documentos PDF, seja guias médicas (TISS)
- * ou demonstrativos de pagamento das operadoras de saúde.
- * 
- * @param type - O tipo de documento para upload ('guia' ou 'demonstrativo')
- * @param onFileChange - Função para tratar eventos de seleção de arquivo
- * @param disabled - Se o componente está desativado (ex: durante uploads)
- * @param hasFiles - Se arquivos deste tipo já foram adicionados
+ * Componente de área de upload para arrastar e soltar arquivos.
+ * Suporta upload específico por tipo de arquivo (guias ou demonstrativos).
  */
-const FileDropZone = ({ type, onDropFiles, disabled, hasFiles = false }: FileDropZoneProps) => {
-  const isGuia = type === 'guia';
-  const inputId = `${type}PdfInput`;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    onDropFiles(type, e.target.files);
+import { useState, useRef } from 'react';
+import { FileText, Upload, X, CheckCircle2 } from 'lucide-react';
+import { FileType } from '@/types/upload';
+
+interface FileDropZoneProps {
+  type: FileType;
+  onDropFiles: (type: FileType, files: FileList) => Promise<void>;
+  disabled?: boolean;
+  hasFiles?: boolean;
+}
+
+/**
+ * Componente para área de upload de arquivos
+ */
+const FileDropZone = ({
+  type,
+  onDropFiles,
+  disabled = false,
+  hasFiles = false
+}: FileDropZoneProps) => {
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Determinar título e descrição com base no tipo
+  const title = type === 'guia' 
+    ? 'Guias TISS (Médicas)' 
+    : 'Demonstrativos de Pagamento';
+  
+  const description = type === 'guia'
+    ? 'Arraste arquivos PDF das guias médicas'
+    : 'Arraste arquivos PDF dos demonstrativos';
+
+  // Manipuladores de eventos para arrastar e soltar
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (!disabled) setDragOver(true);
   };
+
+  const handleDragLeave = () => {
+    setDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOver(false);
+    
+    if (disabled) return;
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      await onDropFiles(type, e.dataTransfer.files);
+    }
+  };
+  
+  // Manipulador para clique no botão de upload
+  const handleButtonClick = () => {
+    if (disabled) return;
+    fileInputRef.current?.click();
+  };
+  
+  // Manipulador para seleção de arquivos via input
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      await onDropFiles(type, e.target.files);
+    }
+  };
+
+  // Classes condicionais
+  const boxClasses = `
+    relative 
+    rounded-lg 
+    border-2 
+    border-dashed 
+    p-6 
+    flex 
+    flex-col 
+    items-center 
+    justify-center 
+    h-48
+    transition-all
+    ${dragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'}
+    ${disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}
+    ${hasFiles ? 'bg-green-50 border-green-200' : ''}
+  `;
 
   return (
     <div
-      className={
-        `flex flex-col items-center p-4 border border-dashed rounded-lg 
-      ${disabled ? 'bg-muted/30 border-muted cursor-not-allowed' : 'hover:border-primary/50 transition-colors border-border cursor-pointer'} 
-      ${isGuia ? 'hover:bg-medblue-600/5' : 'hover:bg-green-600/5'}
-      ${hasFiles ? (isGuia ? 'bg-medblue-600/10' : 'bg-green-600/10') : ''}`
-      }
-      onClick={() => {
-        if (!disabled) document.getElementById(inputId)?.click();
-      }}
+      className={boxClasses}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      onClick={handleButtonClick}
     >
       <input
         type="file"
-        id={inputId}
+        ref={fileInputRef}
         className="hidden"
+        onChange={handleFileChange}
         accept=".pdf"
-        multiple
-        onChange={handleInputChange}
+        multiple={true}
         disabled={disabled}
-        aria-label={isGuia ? "Selecionar guias médicas em PDF" : "Selecionar demonstrativos em PDF"}
       />
-      {isGuia ? (
-        <FileUp className={`h-10 w-10 ${hasFiles ? 'text-medblue-600' : 'text-primary'} mb-2`} />
-      ) : (
-        <FileText className={`h-10 w-10 ${hasFiles ? 'text-green-600' : 'text-primary'} mb-2`} />
-      )}
-      <label
-        htmlFor={inputId}
-        className="text-center cursor-pointer"
-      >
-        <span className={`font-medium mb-1 block ${disabled ? 'text-muted-foreground' : ''}`}>
-          {isGuia ? 'Guias TISS' : 'Demonstrativos de Pagamento'}
-        </span>
-        <span className="text-sm text-muted-foreground">
-          {hasFiles ? 'Clique para adicionar mais' : 'Arraste ou clique para selecionar PDFs'}
-        </span>
-      </label>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="mt-2"
-              tabIndex={0}
-              type="button"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Info className="h-4 w-4" />
-              <span className="sr-only">Informações sobre {isGuia ? 'guias' : 'demonstrativos'}</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" align="center" className="max-w-xs">
-            <p>
-              {isGuia 
-                ? 'Guias TISS: Documentos que contêm os procedimentos realizados com detalhes como código do procedimento, beneficiário, data e médicos participantes. Servem como comprovante do serviço prestado.'
-                : 'Demonstrativos: Documentos emitidos pelos planos de saúde que detalham o pagamento realizado para os procedimentos. Contêm informações sobre valores pagos, glosas e códigos dos procedimentos.'}
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
       
-      {hasFiles && (
-        <div className="mt-1 px-2 py-0.5 bg-muted rounded-full text-xs text-muted-foreground">
-          Arquivos adicionados
+      {hasFiles ? (
+        // Exibir ícone de confirmação quando arquivos foram selecionados
+        <div className="text-center">
+          <CheckCircle2 className="h-10 w-10 mx-auto mb-4 text-green-500" />
+          <p className="text-green-700 font-medium">Arquivos selecionados</p>
+          <p className="text-sm text-green-600 mt-1">
+            Clique para adicionar mais arquivos
+          </p>
+        </div>
+      ) : (
+        // Exibir ícones e instruções para upload
+        <>
+          <div className="rounded-full bg-muted p-3 mb-3">
+            {type === 'guia' ? (
+              <FileText className="h-6 w-6 text-primary" />
+            ) : (
+              <Upload className="h-6 w-6 text-primary" />
+            )}
+          </div>
+          <p className="font-medium text-lg mb-1">{title}</p>
+          <p className="text-sm text-muted-foreground text-center mb-2">
+            {description}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            ou <span className="underline text-primary">clique para selecionar</span>
+          </p>
+        </>
+      )}
+      
+      {disabled && (
+        <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-lg">
+          <div className="bg-background/90 px-3 py-1 rounded-md text-sm">
+            Upload em progresso...
+          </div>
         </div>
       )}
     </div>

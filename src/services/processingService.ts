@@ -1,11 +1,19 @@
 
+/**
+ * processingService.ts
+ * 
+ * Serviço para simulação do processamento de arquivos.
+ * Fornece feedback visual durante o upload e processamento.
+ */
+
 import { ProcessingStage, ProcessMode } from '@/types/upload';
-import { getAnalysisMessage, getCompletionMessage } from './messageUtils';
 
 /**
- * Simula os estágios de processamento dos arquivos
- * Esta função mantém a experiência do usuário enquanto aguarda os processos reais
- * de backend ocorrerem.
+ * Simula etapas de processamento para feedback visual 
+ * @param processMode Modo de processamento (completo, somente guia, somente demonstrativo)
+ * @param setProgress Função para atualizar o progresso
+ * @param setProcessingStage Função para atualizar o estágio de processamento
+ * @param setProcessingMsg Função para atualizar a mensagem de processamento
  */
 export async function simulateProcessingStages(
   processMode: ProcessMode,
@@ -13,58 +21,48 @@ export async function simulateProcessingStages(
   setProcessingStage: (stage: ProcessingStage) => void,
   setProcessingMsg: (msg: string) => void
 ): Promise<void> {
-  try {
-    // Estágio 1: Extração de dados
-    setProcessingMsg('Extraindo dados dos documentos...');
-    setProcessingStage('extracting');
-    await simulateProgress(1, 30, setProgress);
-    
-    // Estágio 2: Análise de procedimentos
+  // Etapa 1: Extração
+  setProgress(5);
+  setProcessingStage('extracting');
+  setProcessingMsg('Extraindo dados dos documentos...');
+  await delay(1000);
+  
+  // Etapa 2: Upload
+  setProgress(20);
+  setProcessingStage('uploading');
+  setProcessingMsg('Enviando arquivos para processamento...');
+  await delay(1000);
+  
+  // Etapa 3: Análise (somente para guia ou completo)
+  if (processMode === 'guia-only' || processMode === 'complete') {
+    setProgress(40);
     setProcessingStage('analyzing');
-    setProcessingMsg(getAnalysisMessage(processMode));
-    await simulateProgress(31, 60, setProgress);
-    
-    // Estágio 3: Comparação (apenas para modo completo)
-    if (processMode === 'complete') {
-      setProcessingStage('comparing');
-      setProcessingMsg('Comparando valores pagos com referência CBHPM e calculando diferenças...');
-      await simulateProgress(61, 95, setProgress);
-    } else {
-      await simulateProgress(61, 95, setProgress);
-    }
-    
-    // Finalizar processamento
-    setProgress(100);
-    setProcessingStage('complete');
-    setProcessingMsg(getCompletionMessage(processMode));
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  } catch (error) {
-    console.error('Error during processing simulation:', error);
-    // Continue without throwing to ensure UI doesn't break
-    setProgress(100);
-    setProcessingStage('complete');
-    setProcessingMsg('Processamento concluído com alertas.');
+    setProcessingMsg('Analisando procedimentos com tabela CBHPM...');
+    await delay(1500);
   }
+  
+  // Etapa 4: Comparação (somente para modo completo)
+  if (processMode === 'complete') {
+    setProgress(60);
+    setProcessingStage('comparing');
+    setProcessingMsg('Comparando valores entre guia e demonstrativo...');
+    await delay(1500);
+  }
+  
+  // Progresso até etapa final
+  setProgress(85);
+  setProcessingMsg('Finalizando processamento...');
+  await delay(500);
+  
+  // Etapa final: concluído
+  setProgress(95); // Não vai até 100%, isso será feito pela função chamadora
 }
 
 /**
- * Simula o progresso do processamento
- * Utilizado apenas para feedback visual ao usuário
+ * Utilitário para criar atrasos controlados
+ * @param ms Tempo em milissegundos
+ * @returns Promise resolvida após o tempo especificado
  */
-export async function simulateProgress(
-  start: number,
-  end: number,
-  setProgress: (progress: number) => void
-): Promise<void> {
-  try {
-    for (let i = start; i <= end; i++) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-      setProgress(i);
-    }
-  } catch (error) {
-    console.error('Error during progress simulation:', error);
-    // Set to end value as fallback
-    setProgress(end);
-  }
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

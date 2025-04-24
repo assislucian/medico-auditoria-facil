@@ -2,227 +2,271 @@
 /**
  * historyService.ts
  * 
- * Serviço para gerenciar operações relacionadas ao histórico de análises.
- * Manipula a busca, filtragem e processamento dos registros históricos.
+ * Serviço para gerenciamento do histórico de análises.
+ * Busca, filtra e exporta registros históricos de análises feitas.
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { HistoryItem } from '@/components/history/data';
+import { HistoryItem, HistoryFilters } from '@/components/history/data';
 import { toast } from 'sonner';
+import { format, parse, isValid } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 /**
- * Busca o histórico completo de análises do usuário
- * @returns Array com todos os itens do histórico
+ * Busca dados do histórico de análises do usuário
+ * @returns Array de itens do histórico
  */
 export async function fetchHistoryData(): Promise<HistoryItem[]> {
   try {
-    console.log('Iniciando busca de histórico completo');
+    console.log('Buscando dados do histórico...');
     
-    // Verificar se o usuário está autenticado
-    const { data: { user } } = await supabase.auth.getUser();
+    // Verifica a autenticação do usuário
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (!user) {
-      console.error('Usuário não está autenticado');
-      toast.error('Você precisa estar autenticado para acessar o histórico');
-      return [];
+    if (authError || !user) {
+      console.error('Erro de autenticação:', authError);
+      throw new Error('Autenticação necessária para acessar o histórico');
     }
     
-    // Buscar registros do histórico
-    const { data, error } = await supabase
+    // Buscar dados do histórico no Supabase
+    const { data: historyData, error: historyError } = await supabase
       .from('analysis_history')
       .select('*')
       .eq('user_id', user.id)
       .order('date', { ascending: false });
     
-    if (error) {
-      console.error('Erro ao buscar histórico:', error);
-      toast.error('Erro ao carregar histórico de análises');
-      return [];
+    if (historyError) {
+      console.error('Erro ao buscar histórico:', historyError);
+      throw historyError;
     }
     
-    console.log(`Foram encontrados ${data?.length || 0} registros no histórico`);
+    console.log('Dados brutos do histórico:', historyData);
     
-    // Mapear dados para o formato esperado pelo frontend
-    return data.map((item: any) => ({
+    // Transformar dados do Supabase para o formato da UI
+    const transformedData: HistoryItem[] = historyData.map(item => ({
       id: item.id,
-      date: formatDate(item.date),
+      date: format(new Date(item.date), 'dd/MM/yyyy'),
       type: item.type,
       description: item.description,
       procedimentos: item.procedimentos || 0,
       glosados: item.glosados || 0,
       status: item.status
     }));
+    
+    console.log('Dados transformados do histórico:', transformedData);
+    return transformedData;
   } catch (error) {
-    console.error('Erro ao processar histórico:', error);
-    toast.error('Erro ao processar dados do histórico');
+    console.error('Erro no serviço de histórico:', error);
+    toast.error('Erro ao carregar histórico');
     return [];
   }
 }
 
 /**
- * Busca histórico filtrado por texto, datas e status
- * @param searchTerm Termo para busca em descrição e tipo
+ * Busca histórico com filtros aplicados
+ * @param searchTerm Termo para busca textual
  * @param startDate Data inicial (formato YYYY-MM-DD)
  * @param endDate Data final (formato YYYY-MM-DD)
- * @param status Status para filtrar (todos, analisado, pendente)
- * @returns Array de itens históricos filtrados
+ * @param status Status para filtrar
+ * @returns Array de itens do histórico filtrados
  */
 export async function searchHistory(
-  searchTerm: string,
+  searchTerm?: string,
   startDate?: string,
   endDate?: string,
-  status: string = 'todos'
+  status?: string
 ): Promise<HistoryItem[]> {
   try {
-    console.log('Iniciando busca filtrada:', { searchTerm, startDate, endDate, status });
+    console.log('Buscando histórico com filtros:', { searchTerm, startDate, endDate, status });
     
-    // Verificar se o usuário está autenticado
-    const { data: { user } } = await supabase.auth.getUser();
+    // Verifica a autenticação do usuário
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (!user) {
-      console.error('Usuário não está autenticado');
-      toast.error('Você precisa estar autenticado para pesquisar o histórico');
-      return [];
+    if (authError || !user) {
+      console.error('Erro de autenticação:', authError);
+      throw new Error('Autenticação necessária para acessar o histórico');
     }
     
-    // Construir a query
+    // Iniciar consulta base
     let query = supabase
       .from('analysis_history')
       .select('*')
       .eq('user_id', user.id);
     
-    // Adicionar filtro de texto se fornecido
-    if (searchTerm && searchTerm.trim() !== '') {
+    // Aplicar filtros
+    if (searchTerm) {
       query = query.or(`description.ilike.%${searchTerm}%,type.ilike.%${searchTerm}%,hospital.ilike.%${searchTerm}%`);
     }
     
-    // Adicionar filtros de data se fornecidos
     if (startDate) {
       query = query.gte('date', startDate);
     }
     
     if (endDate) {
-      // Adicionar um dia para incluir o dia final completo
+      // Adiciona um dia à data final para incluir todo o dia
       const nextDay = new Date(endDate);
       nextDay.setDate(nextDay.getDate() + 1);
-      query = query.lt('date', nextDay.toISOString());
+      query = query.lt('date', nextDay.toISOString().split('T')[0]);
     }
     
-    // Adicionar filtro de status se diferente de "todos"
     if (status && status !== 'todos') {
-      query = query.eq('status', status.charAt(0).toUpperCase() + status.slice(1));
+      query = query.eq('status', status);
     }
     
-    // Executar a query com ordenação
-    const { data, error } = await query.order('date', { ascending: false });
+    // Executar consulta
+    const { data: historyData, error: historyError } = await query.order('date', { ascending: false });
     
-    if (error) {
-      console.error('Erro ao pesquisar histórico:', error);
-      toast.error('Erro ao pesquisar histórico de análises');
-      return [];
+    if (historyError) {
+      console.error('Erro ao buscar histórico com filtros:', historyError);
+      throw historyError;
     }
     
-    console.log(`Foram encontrados ${data?.length || 0} registros filtrados`);
+    console.log('Dados filtrados do histórico:', historyData);
     
-    // Mapear dados para o formato esperado pelo frontend
-    return data.map((item: any) => ({
+    // Transformar dados do Supabase para o formato da UI
+    const transformedData: HistoryItem[] = historyData.map(item => ({
       id: item.id,
-      date: formatDate(item.date),
+      date: format(new Date(item.date), 'dd/MM/yyyy'),
       type: item.type,
       description: item.description,
       procedimentos: item.procedimentos || 0,
       glosados: item.glosados || 0,
       status: item.status
     }));
+    
+    console.log('Dados transformados e filtrados do histórico:', transformedData);
+    return transformedData;
   } catch (error) {
-    console.error('Erro ao processar pesquisa de histórico:', error);
-    toast.error('Erro ao processar pesquisa do histórico');
+    console.error('Erro na busca de histórico com filtros:', error);
+    toast.error('Erro ao filtrar histórico');
     return [];
   }
 }
 
 /**
- * Busca os detalhes de uma análise específica
- * @param analysisId ID da análise a buscar
- * @returns Detalhes da análise com todos os procedimentos associados
+ * Busca detalhes de uma análise pelo ID
+ * @param analysisId ID da análise
+ * @returns Dados detalhados da análise
  */
 export async function fetchAnalysisDetails(analysisId: string) {
   try {
     console.log('Buscando detalhes da análise:', analysisId);
     
-    // Verificar se o usuário está autenticado
-    const { data: { user } } = await supabase.auth.getUser();
+    // Verificar autenticação
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (!user) {
-      console.error('Usuário não está autenticado');
-      toast.error('Você precisa estar autenticado para acessar detalhes da análise');
-      return null;
+    if (authError || !user) {
+      console.error('Erro de autenticação:', authError);
+      throw new Error('Autenticação necessária para acessar os detalhes');
     }
     
-    // Buscar os dados da análise
+    // Buscar dados da análise
     const { data: analysisData, error: analysisError } = await supabase
       .from('analysis_results')
       .select('*')
       .eq('id', analysisId)
-      .eq('user_id', user.id) // Garantir que o usuário só veja suas próprias análises
+      .eq('user_id', user.id)
       .single();
     
     if (analysisError) {
-      console.error('Erro ao buscar detalhes da análise:', analysisError);
-      toast.error('Erro ao carregar detalhes da análise');
-      return null;
+      console.error('Erro ao buscar análise:', analysisError);
+      throw analysisError;
     }
     
-    // Buscar os procedimentos relacionados
+    // Buscar procedimentos relacionados
     const { data: proceduresData, error: proceduresError } = await supabase
       .from('procedures')
       .select('*')
-      .eq('analysis_id', analysisId)
-      .eq('user_id', user.id); // Garantir que o usuário só veja seus próprios procedimentos
+      .eq('analysis_id', analysisId);
     
     if (proceduresError) {
       console.error('Erro ao buscar procedimentos:', proceduresError);
-      toast.error('Erro ao carregar procedimentos da análise');
-      return null;
+      throw proceduresError;
     }
     
-    console.log(`Análise encontrada com ${proceduresData.length} procedimentos`);
+    console.log('Detalhes da análise recuperados:', { analysis: analysisData, procedures: proceduresData });
     
-    // Montar objeto completo com análise e procedimentos
+    // Retornar dados combinados
     return {
-      ...analysisData,
-      procedimentos: proceduresData.map((proc: any) => ({
-        id: proc.id,
-        codigo: proc.codigo,
-        procedimento: proc.procedimento,
-        papel: proc.papel,
-        valorCBHPM: proc.valor_cbhpm,
-        valorPago: proc.valor_pago,
-        diferenca: proc.diferenca,
-        pago: proc.pago,
-        guia: proc.guia,
-        beneficiario: proc.beneficiario,
-        doctors: proc.doctors || []
-      }))
+      analysis: analysisData,
+      procedures: proceduresData
     };
   } catch (error) {
-    console.error('Erro ao processar detalhes da análise:', error);
-    toast.error('Erro ao processar detalhes da análise');
+    console.error('Erro ao buscar detalhes da análise:', error);
+    toast.error('Erro ao carregar detalhes');
     return null;
   }
 }
 
 /**
- * Formata a data para o formato DD/MM/AAAA
- * @param dateString String de data para formatar
- * @returns Data formatada em DD/MM/AAAA
+ * Formatar data no formato brasileiro
+ * @param dateString String da data para formatar
+ * @returns Data formatada ou string original se inválida
  */
-function formatDate(dateString: string): string {
+export function formatDateBR(dateString: string): string {
   try {
+    if (!dateString) return '';
+    
+    // Tenta interpretar como ISO date
     const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
+    
+    if (isValid(date)) {
+      return format(date, 'dd/MM/yyyy', { locale: ptBR });
+    }
+    
+    // Tenta interpretar outros formatos comuns
+    const formats = ['yyyy-MM-dd', 'dd/MM/yyyy', 'MM/dd/yyyy'];
+    
+    for (const formatStr of formats) {
+      const parsedDate = parse(dateString, formatStr, new Date());
+      if (isValid(parsedDate)) {
+        return format(parsedDate, 'dd/MM/yyyy', { locale: ptBR });
+      }
+    }
+    
+    return dateString; // Retorna original se não conseguir formatar
   } catch (error) {
     console.error('Erro ao formatar data:', error);
-    return dateString || '';
+    return dateString;
+  }
+}
+
+/**
+ * Exporta os dados de histórico para Excel
+ * @param items Itens do histórico para exportar
+ * @param filename Nome do arquivo a ser exportado
+ */
+export function exportToExcel(items: HistoryItem[], filename: string = 'historico-analises') {
+  try {
+    // Importação dinâmica do xlsx
+    import('xlsx').then(XLSX => {
+      // Preparar dados para exportação
+      const exportData = items.map(item => ({
+        Data: item.date,
+        Tipo: item.type,
+        Descrição: item.description,
+        Procedimentos: item.procedimentos,
+        Glosados: item.glosados,
+        Status: item.status
+      }));
+      
+      // Criar workbook e adicionar worksheet
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Histórico');
+      
+      // Exportar para Excel
+      XLSX.writeFile(wb, `${filename}.xlsx`);
+      
+      toast.success('Histórico exportado com sucesso', {
+        description: `O arquivo ${filename}.xlsx foi baixado`
+      });
+    }).catch(error => {
+      console.error('Erro ao carregar biblioteca xlsx:', error);
+      toast.error('Erro ao exportar histórico');
+    });
+  } catch (error) {
+    console.error('Erro ao exportar para Excel:', error);
+    toast.error('Erro ao exportar histórico');
   }
 }
