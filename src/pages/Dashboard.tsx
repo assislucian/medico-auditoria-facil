@@ -1,4 +1,12 @@
 
+/**
+ * Dashboard.tsx
+ * 
+ * Página principal do dashboard que exibe o resumo das informações do usuário,
+ * incluindo estatísticas, gráficos e atividades recentes.
+ * Também gerencia a exibição do tour guiado quando necessário.
+ */
+
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import Dashboard from "@/components/Dashboard";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,8 +19,12 @@ const DashboardPage = () => {
   const isMobile = useIsMobile();
   const { showTour, onboardingCompleted } = useOnboarding();
   
+  /**
+   * Efeito que exibe uma mensagem de boas-vindas quando o usuário
+   * completa o tour pela primeira vez
+   */
   useEffect(() => {
-    // Show welcome toast only when user first completes the tour
+    // Exibe toast de boas-vindas apenas quando o usuário finaliza o tour
     if (onboardingCompleted) {
       toast.success("Bem-vindo ao MedCheck!", {
         description: "Seu dashboard está pronto para uso."
@@ -23,6 +35,7 @@ const DashboardPage = () => {
   return (
     <AuthenticatedLayout title="Dashboard">
       <Dashboard />
+      {/* Exibe o tour guiado se necessário */}
       {showTour && <GuidedTour />}
     </AuthenticatedLayout>
   );

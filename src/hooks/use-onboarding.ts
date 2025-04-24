@@ -1,4 +1,11 @@
 
+/**
+ * use-onboarding.ts
+ * 
+ * Custom hook que gerencia o estado de onboarding do usuário.
+ * Controla a exibição do tour guiado e gerencia o status de onboarding no Supabase.
+ */
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,19 +17,24 @@ export function useOnboarding() {
   const location = useLocation();
   const { user } = useAuth();
   
+  /**
+   * Efeito que verifica se o tour deve ser mostrado com base no estado de URL
+   * ou no status de onboarding do usuário no banco de dados.
+   */
   useEffect(() => {
-    // Check if the tour should be shown based on URL state
+    // Verifica se há um parâmetro na URL indicando para iniciar o tour
     const state = location.state as { startTour?: boolean } | null;
     if (state?.startTour) {
       setShowTour(true);
       return;
     }
     
-    // Check if the user has already completed onboarding
+    // Verifica o status de onboarding no banco de dados para o usuário atual
     const checkOnboardingStatus = async () => {
       if (!user) return;
       
       try {
+        // Busca o status de onboarding do usuário no Supabase
         const { data, error } = await supabase
           .from('profiles')
           .select('onboarding_completed')
@@ -31,9 +43,10 @@ export function useOnboarding() {
         
         if (error) throw error;
         
+        // Atualiza o estado com base no valor do banco de dados
         setOnboardingCompleted(!!data?.onboarding_completed);
         
-        // If the user hasn't completed onboarding, show the tour
+        // Mostra o tour se o usuário não completou o onboarding
         if (!data?.onboarding_completed) {
           setShowTour(true);
         }
@@ -45,10 +58,15 @@ export function useOnboarding() {
     checkOnboardingStatus();
   }, [location, user]);
 
+  /**
+   * Atualiza o status de onboarding no banco de dados
+   * @param completed - Indica se o onboarding foi completado
+   */
   const updateOnboardingStatus = async (completed: boolean) => {
     if (!user) return;
 
     try {
+      // Utiliza a função RPC definida no Supabase para atualizar o status
       const { data, error } = await supabase.rpc('update_onboarding_status', {
         completed
       });
@@ -63,6 +81,10 @@ export function useOnboarding() {
     }
   };
 
+  /**
+   * Marca o tour como completo e opcionalmente atualiza o status no banco
+   * @param dontShowAgain - Se verdadeiro, atualiza o status no banco
+   */
   const completeTour = async (dontShowAgain = false) => {
     if (dontShowAgain) {
       await updateOnboardingStatus(true);
@@ -70,6 +92,10 @@ export function useOnboarding() {
     setShowTour(false);
   };
 
+  /**
+   * Pula o tour e opcionalmente atualiza o status no banco
+   * @param dontShowAgain - Se verdadeiro, atualiza o status no banco
+   */
   const skipTour = async (dontShowAgain = false) => {
     if (dontShowAgain) {
       await updateOnboardingStatus(true);
@@ -77,6 +103,9 @@ export function useOnboarding() {
     setShowTour(false);
   };
 
+  /**
+   * Reinicia o tour, definindo o status de onboarding como false
+   */
   const resetTour = () => {
     updateOnboardingStatus(false);
     setShowTour(true);

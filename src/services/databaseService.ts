@@ -1,4 +1,11 @@
 
+/**
+ * databaseService.ts
+ * 
+ * Serviço para interagir com o banco de dados do Supabase.
+ * Gerencia operações de CRUD para análises, procedimentos e histórico.
+ */
+
 import { FileWithStatus, ProcessMode } from '@/types/upload';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAnalysisById, fetchProceduresByAnalysisId } from '@/utils/supabaseHelpers';
@@ -116,7 +123,7 @@ export async function saveAnalysisToDatabase(
  */
 export async function getAnalysisById(analysisId: string) {
   try {
-    // Use our helper functions
+    // Use nossas funções auxiliares
     const analysisData = await fetchAnalysisById(supabase, analysisId);
     if (!analysisData) {
       return null;

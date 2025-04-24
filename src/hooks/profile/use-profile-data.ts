@@ -1,4 +1,11 @@
 
+/**
+ * use-profile-data.ts
+ * 
+ * Custom hook para gerenciar os dados do perfil do usuário.
+ * Fornece funcionalidades para buscar e atualizar informações do perfil.
+ */
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types";
@@ -7,18 +14,28 @@ import { getProfile, updateProfile as updateProfileHelper } from "@/utils/supaba
 import { useProfileAvatar } from "./use-profile-avatar";
 import { Json } from '@/integrations/supabase/types';
 
-// Define the ProfileData interface that was missing
+/**
+ * Interface que define a estrutura dos dados do perfil
+ */
 interface ProfileData {
   name: string;
   email: string;
   especialidade?: string;
-  [key: string]: any; // To allow for additional properties
+  [key: string]: any; // Para permitir propriedades adicionais
 }
 
+/**
+ * Hook que fornece funcionalidades para gerenciar os dados do perfil do usuário
+ * @returns Objeto com estados e funções para manipulação do perfil
+ */
 export const useProfileData = () => {
   const [loading, setLoading] = useState(false);
   const { uploadAvatar } = useProfileAvatar();
 
+  /**
+   * Busca os dados do perfil do usuário atual
+   * @returns Dados do perfil ou null em caso de erro
+   */
   const fetchProfile = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -35,6 +52,12 @@ export const useProfileData = () => {
     }
   };
 
+  /**
+   * Atualiza os dados do perfil do usuário
+   * @param data Novos dados do perfil
+   * @param avatarFile Arquivo de avatar opcional
+   * @returns Boolean indicando sucesso ou falha
+   */
   const updateProfile = async (data: ProfileData, avatarFile?: File | null): Promise<boolean> => {
     setLoading(true);
     try {
@@ -44,6 +67,7 @@ export const useProfileData = () => {
         throw new Error('Não autenticado');
       }
       
+      // Processa o upload do avatar se fornecido
       let avatarUrl = null;
       if (avatarFile) {
         avatarUrl = await uploadAvatar(avatarFile);
@@ -52,6 +76,7 @@ export const useProfileData = () => {
         }
       }
       
+      // Obtém dados atuais do perfil para preservar preferências
       const profileData = await getProfile(supabase, session.user.id);
       
       const currentNotificationPrefs = profileData && 
@@ -59,12 +84,13 @@ export const useProfileData = () => {
         ? profileData.notification_preferences
         : {};
       
+      // Mescla preferências existentes com novas informações
       const updatedNotificationPrefs = {
         ...currentNotificationPrefs,
         ...(avatarUrl ? { avatar_url: avatarUrl } : {})
       };
       
-      // Fix the call to updateProfileHelper with correct arguments
+      // Atualiza o perfil com os novos dados
       const success = await updateProfileHelper(supabase, session.user.id, {
         name: data.name,
         email: data.email,
@@ -76,12 +102,14 @@ export const useProfileData = () => {
         throw new Error('Erro ao atualizar o perfil');
       }
       
+      // Notifica o usuário sobre o sucesso
       toast.success("Perfil atualizado", {
         description: "Suas informações foram atualizadas com sucesso."
       });
       
       return true;
     } catch (error) {
+      // Notifica o usuário sobre o erro
       toast.error("Erro ao atualizar", {
         description: "Não foi possível atualizar suas informações. Tente novamente."
       });

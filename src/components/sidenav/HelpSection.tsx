@@ -1,4 +1,11 @@
 
+/**
+ * HelpSection.tsx
+ * 
+ * Componente que renderiza a seção de ajuda na barra lateral.
+ * Inclui links para a página de ajuda e a opção para reiniciar o tour guiado.
+ */
+
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HelpCircle, PlayCircle } from "lucide-react";
@@ -9,6 +16,10 @@ export function HelpSection() {
   const location = useLocation();
   const { resetTour } = useOnboarding();
 
+  /**
+   * Manipulador para o botão de reiniciar o tour
+   * Chama a função resetTour do hook useOnboarding
+   */
   const handleResetTour = () => {
     resetTour();
   };
@@ -19,6 +30,7 @@ export function HelpSection() {
         Ajuda
       </h2>
       <div className="space-y-1">
+        {/* Link para a página de ajuda */}
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -37,6 +49,7 @@ export function HelpSection() {
           </Tooltip>
         </TooltipProvider>
         
+        {/* Botão para reiniciar o tour guiado */}
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>

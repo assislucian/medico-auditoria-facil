@@ -1,20 +1,35 @@
+
 # MedCheck - Documentação Completa
 
 ## Visão Geral do Projeto
 
 MedCheck é uma aplicação web desenvolvida para médicos e profissionais de saúde que visa simplificar o processo de auditoria de pagamentos médicos. A aplicação permite que os usuários façam upload de documentos como guias médicas e demonstrativos de pagamento, compare os valores recebidos com tabelas de referência, e identifique possíveis divergências nos pagamentos.
 
-## Tecnologias Utilizadas
+## Arquitetura do Sistema
 
-- **Frontend**: React, TypeScript, Vite
-- **UI/Design**: Tailwind CSS, shadcn/ui
-- **Roteamento**: React Router
-- **Gerenciamento de Estado**: React Query
-- **Ícones**: Lucide React
-- **Formulários**: React Hook Form
-- **Validação**: Zod
-- **Gráficos**: Recharts
-- **Notificações**: Sonner
+### Frontend
+- **Tecnologia Principal**: React com TypeScript e Vite
+- **UI/Design**: Tailwind CSS combinado com shadcn/ui para componentes consistentes
+- **Roteamento**: React Router v6
+- **Gerenciamento de Estado**: 
+  - React Query para dados da API
+  - Context API para estados globais (autenticação, tema)
+  - useState para estados locais de componentes
+- **Formulários**: React Hook Form com validação Zod
+- **Visualização de Dados**: Recharts para gráficos
+- **Notificações**: Sistema de toast com Sonner
+
+### Backend (Supabase)
+- **Banco de Dados**: PostgreSQL gerenciado pelo Supabase
+- **Autenticação**: Sistema nativo do Supabase
+- **Armazenamento**: Supabase Storage para arquivos
+- **Edge Functions**: Para processamento de dados e lógica de negócio
+- **Row-Level Security (RLS)**: Políticas para controle de acesso aos dados
+- **Procedimentos Armazenados**: Funções PostgreSQL para lógica no banco de dados
+
+### Integração Frontend-Backend
+- Cliente Supabase para JavaScript
+- Tipagem forte com TypeScript para todas as interações com o banco
 
 ## Estrutura de Arquivos
 
@@ -22,362 +37,203 @@ MedCheck é uma aplicação web desenvolvida para médicos e profissionais de sa
 src/
   ├── components/       # Componentes reutilizáveis 
   │   ├── ui/           # Componentes de UI base (shadcn)
-  │   ├── history/      # Componentes relacionados à página de histórico
-  │   ├── profile/      # Componentes relacionados à página de perfil
-  │   ├── reports/      # Componentes relacionados à página de relatórios
-  │   ├── settings/     # Componentes relacionados à página de configurações
-  │   └── upload/       # Componentes relacionados ao upload de documentos
+  │   ├── dashboard/    # Componentes do dashboard
+  │   ├── about/        # Componentes da página sobre
+  │   ├── history/      # Componentes da página de histórico
+  │   ├── profile/      # Componentes da página de perfil
+  │   ├── onboarding/   # Componentes do processo de onboarding
+  │   ├── comparison/   # Componentes da página de comparativo
+  │   ├── settings/     # Componentes da página de configurações
+  │   └── upload/       # Componentes de upload de documentos
+  ├── contexts/         # Contextos React (AuthContext, etc)
+  │   └── auth/         # Contexto de autenticação
   ├── hooks/            # Custom hooks
+  │   ├── profile/      # Hooks relacionados ao perfil
+  │   └── use-*.ts      # Outros hooks específicos
+  ├── integrations/     # Integrações com serviços externos
+  │   └── supabase/     # Cliente e tipos do Supabase
   ├── lib/              # Funções utilitárias
   ├── pages/            # Páginas da aplicação
-  └── data/             # Dados estáticos ou mocks
+  ├── services/         # Serviços para lógica de negócio
+  ├── types/            # Definições de tipos TypeScript
+  └── utils/            # Utilitários diversos
 ```
 
-## Páginas da Aplicação
+## Backend (Supabase)
 
-### 1. Página Inicial (`/`)
-- Página de apresentação do MedCheck, com informações sobre o serviço
-- Permite navegação para Login, Registro e Preços
-- Componente: `src/pages/Index.tsx`
+### Estrutura do Banco de Dados
+O banco de dados é estruturado para suportar as seguintes funcionalidades chave:
 
-### 2. Login (`/login`)
-- Página de autenticação dos usuários
-- Formulário com email e senha
-- Componente: `src/pages/Login.tsx`
+#### Tabelas Principais
+1. **profiles**: Dados do perfil do usuário
+   - Vinculado à tabela `auth.users` do Supabase
+   - Armazena preferências, especialidade médica, CRM, etc.
+   - Controla status de onboarding e trial
 
-### 3. Registro (`/register`)
-- Página para novos usuários criarem uma conta
-- Formulário de cadastro com dados pessoais e profissionais
-- Componente: `src/pages/Register.tsx`
+2. **analysis_results**: Resultados de análises de documentos
+   - Armazena informações sobre cada análise realizada
+   - Vinculada ao usuário que realizou a análise
+   - Contém resumo dos resultados (valorCBHPM, valorPago, diferença)
 
-### 4. Dashboard (`/dashboard`)
-- Visão geral das atividades do usuário
-- Gráficos, métricas e indicadores importantes
-- Acesso rápido às principais funcionalidades
-- Componente: `src/pages/Dashboard.tsx`
+3. **procedures**: Procedimentos médicos de cada análise
+   - Detalhes dos procedimentos identificados
+   - Valores CBHPM, valores pagos, diferenças
+   - Metadados como guia, beneficiário, papel do médico
 
-### 5. Upload de Documentos (`/uploads`)
-- Interface para envio de guias médicas e demonstrativos de pagamento
-- Processamento e análise dos documentos enviados
-- Comparação de valores
-- Componente: `src/pages/Uploads.tsx`
+4. **analysis_history**: Histórico de análises
+   - Registro simplificado de todas as análises realizadas
+   - Facilita listagem e filtros na interface de histórico
 
-### 6. Histórico de Análises (`/history`)
-- Listagem de todas as análises realizadas anteriormente
-- Filtros por tipo, status, período, etc.
-- Visualização detalhada dos resultados
-- Componente: `src/pages/History.tsx`
+5. **CBHPM2015**: Tabela de referência CBHPM
+   - Valores de referência para comparação
+   - Códigos de procedimentos e valores
 
-### 7. Relatórios (`/reports`)
-- Relatórios detalhados sobre pagamentos, procedimentos, operadoras, etc.
-- Gráficos e tabelas para análise visual
-- Opções para exportar dados
-- Componente: `src/pages/Reports.tsx`
+#### Tabelas de Suporte
+1. **support_tickets**: Tickets de suporte
+2. **support_messages**: Mensagens em tickets de suporte
+3. **help_articles**: Artigos de ajuda para usuários
+4. **activity_logs**: Registro de atividades dos usuários
 
-### 8. Planos e Preços (`/pricing`)
-- Informações sobre os planos disponíveis
-- Comparação de recursos entre planos
-- Funcionalidade para assinatura
-- Componente: `src/pages/Pricing.tsx`
+#### Tabelas de Pagamento
+1. **subscription_plans**: Planos disponíveis
+2. **user_subscriptions**: Assinaturas dos usuários
+3. **payment_transactions**: Transações de pagamento
 
-### 9. Perfil do Usuário (`/profile`)
-- Informações do perfil do médico
-- Resumo de atividades
-- Especialidades registradas
-- Operadoras mais frequentes
-- Componente: `src/pages/Profile.tsx`
+### Row-Level Security (RLS)
+Políticas de segurança implementadas para garantir que:
+- Usuários só possam acessar seus próprios dados
+- Análises, procedimentos e uploads são protegidos por usuário
+- Dados sensíveis são acessíveis apenas aos donos
 
-### 10. Configurações (`/settings`)
-- Gerenciamento de informações do perfil
-- Preferências de notificações
-- Configuração de tabelas de referência
-- Componente: `src/pages/Settings.tsx`
+### Edge Functions
+1. **upload-files**: Processamento de uploads de arquivos
+2. **process-analysis**: Análise e extração de dados dos documentos
+3. **get-analysis**: Recuperação de análises armazenadas
+4. **generate-report**: Geração de relatórios personalizados
+5. **generate-compare**: Geração de comparativos detalhados
 
-### 11. Ajuda (`/help`)
-- FAQ e recursos de suporte
-- Tutoriais e guias
-- Componente: `src/pages/Help.tsx`
-
-### 12. Contato (`/contact`)
-- Formulário de contato
-- Informações para suporte
-- Componente: `src/pages/Contact.tsx`
-
-### 13. Sobre (`/about`)
-- Informações sobre a empresa/plataforma
-- Componente: `src/pages/About.tsx`
-
-### 14. Comparativo Contracheque (`/compare`)
-- Comparação detalhada entre procedimentos e valores pagos
-- Verificação com tabela CBHPM 2015
-- Análise por papel médico (cirurgião, auxiliares)
-- Identificação de pagamentos conforme, abaixo, ou acima da tabela
-- Componente: `src/pages/CompareContracheque.tsx`
-
-## Componentes Principais
-
-### Navegação
-
-#### 1. Navbar (`src/components/Navbar.tsx`)
-- Barra de navegação superior
-- Muda dependendo do estado de autenticação do usuário
-- Links para as principais seções do site
-
-#### 2. SideNav (`src/components/SideNav.tsx`)
-- Menu lateral para navegação entre as principais funcionalidades
-- Visível apenas para usuários autenticados
-- Agrupa funcionalidades por categorias
-- Inclui seções:
-  - Principal (Dashboard, Uploads, Histórico, Relatórios, Planos)
-  - Notificações
-  - Conta (Perfil, Configurações)
-  - Ajuda
-  - Sair
-
-### Autenticação
-
-#### 1. LoginForm (`src/components/LoginForm.tsx`)
-- Formulário de login com validação
-- Opções para lembrar usuário e recuperar senha
-
-#### 2. RegisterForm (`src/components/RegisterForm.tsx`)
-- Formulário de cadastro completo
-- Validação de dados e termos de uso
-
-### Dashboard
-
-#### 1. Dashboard (`src/components/Dashboard.tsx`)
-- Visão geral das métricas e atividades
-- Componentes de resumo
-
-### Upload
-
-#### 1. UploadSection (`src/components/UploadSection.tsx`)
-- Interface para upload de documentos
-- Suporte para guias médicas e demonstrativos de pagamento
-- Controle de progresso e status do upload
-
-#### 2. FileDropZone (`src/components/upload/FileDropZone.tsx`)
-- Área para arrastar e soltar arquivos
-- Seletor de tipo de documento (guia ou demonstrativo)
-
-#### 3. FileList (`src/components/upload/FileList.tsx`)
-- Lista de arquivos selecionados
-- Opção para remover arquivos
-
-#### 4. UploadProgress (`src/components/upload/UploadProgress.tsx`)
-- Barra de progresso para uploads
-- Indicação visual do status
-
-#### 5. ComparisonView (`src/components/ComparisonView.tsx`)
-- Visualização comparativa dos valores encontrados
-- Detecção de divergências entre o pago e o esperado
-
-### Histórico
-
-#### 1. HistorySearch (`src/components/history/HistorySearch.tsx`)
-- Busca e filtros para o histórico de análises
-
-#### 2. HistoryTable (`src/components/history/HistoryTable.tsx`)
-- Tabela de análises realizadas
-- Ordenação e paginação
-
-#### 3. StatusBadge (`src/components/history/StatusBadge.tsx`)
-- Indicador visual do status das análises
-
-### Relatórios
-
-#### 1. ReportsHeader (`src/components/reports/ReportsHeader.tsx`)
-- Cabeçalho com filtros de período e outros controles
-
-#### 2. StatusCardsSection (`src/components/reports/StatusCardsSection.tsx`)
-- Cards com métricas principais
-
-#### 3. OverviewCharts (`src/components/reports/OverviewCharts.tsx`)
-- Gráficos e visualizações de dados
-
-#### 4. HospitalsTable (`src/components/reports/HospitalsTable.tsx`)
-- Tabela com informações por hospital/clínica
-
-### Perfil
-
-#### 1. ProfileSidebar (`src/components/profile/ProfileSidebar.tsx`)
-- Sidebar com dados do usuário
-- Foto, nome, especialidade e CRM
-
-#### 2. ProfileTabs (`src/components/profile/ProfileTabs.tsx`)
-- Abas para diferentes seções do perfil
-
-#### 3. ActivitySummary (`src/components/profile/ActivitySummary.tsx`)
-- Resumo de atividades
-- Operadoras frequentes
-- Especialidades registradas
-- Métricas de uso
-
-### Configurações
-
-#### 1. ProfileSettings (`src/components/settings/ProfileSettings.tsx`)
-- Formulário para edição de dados do perfil
-- Configurações de conta
-
-#### 2. NotificationsSettings (`src/components/settings/NotificationsSettings.tsx`)
-- Preferências de notificações por email e SMS
-
-#### 3. ReferenceTablesSettings (`src/components/settings/ReferenceTablesSettings.tsx`)
-- Configuração das tabelas de referência para análise de pagamentos
-
-### Comparativo Contracheque
-
-#### 1. CBHPMComparisonTable (`src/components/comparison/CBHPMComparisonTable.tsx`)
-- Tabela detalhada do comparativo CBHPM
-- Colunas: código, descrição, quantidade, valor CBHPM, valor pago, diferença, status, papel
-- Filtros por papel médico e status de pagamento
-
-#### 2. CBHPMSummaryCards (`src/components/comparison/CBHPMSummaryCards.tsx`)
-- Cards de resumo para o comparativo
-- Total de procedimentos
-- Procedimentos conforme tabela
-- Procedimentos abaixo da tabela
-- Procedimentos acima da tabela
-
-## Hooks Personalizados
-
-### 1. useProfile (`src/hooks/use-profile.ts`)
-- Gerencia dados do perfil do usuário
-- Funções para atualizar perfil, preferências de notificação, etc.
-
-### 2. useTheme (`src/hooks/use-theme.tsx`)
-- Controla o tema da aplicação (claro/escuro)
-
-### 3. useMobile (`src/hooks/use-mobile.tsx`)
-- Detecta se o dispositivo é mobile para ajustes de layout
-
-### 4. useToast (`src/hooks/use-toast.ts`)
-- Interface para mostrar notificações toast
+### Funções do Banco
+1. **update_onboarding_status**: Atualiza o status de onboarding do usuário
+2. **create_profile_for_user**: Cria perfil automaticamente para novos usuários
+3. **get_dashboard_stats**: Gera estatísticas para o dashboard
+4. **check_trial_status**: Verifica status da versão de teste
+5. **process_subscription_payment**: Processa pagamentos de assinaturas
 
 ## Fluxos de Usuário Principais
 
-### 1. Fluxo de Autenticação
-- Usuário acessa a página inicial
-- Navega para login ou registro
-- Após autenticação, é direcionado ao Dashboard
+### Onboarding
+1. Usuário registra-se na plataforma
+2. Completa informações do perfil (CRM, especialidade)
+3. Visualiza tour guiado das funcionalidades
+4. Recebe confirmação de ativação do período de teste
 
-### 2. Fluxo de Análise de Documentos
-- Usuário acessa a página de Upload
-- Seleciona e faz upload dos arquivos (guias e demonstrativos)
-- O sistema processa os arquivos e exibe comparação
-- Os resultados são salvos no histórico
+### Upload e Análise
+1. Usuário acessa página de uploads
+2. Faz upload de guia médica e/ou demonstrativo
+3. Sistema processa os documentos (edge function)
+4. Resultados são exibidos com comparação CBHPM
+5. Análise é salva no histórico
 
-### 3. Fluxo de Visualização de Relatórios
-- Usuário acessa a página de Relatórios
-- Seleciona filtros desejados
-- Visualiza os dados em formato de tabelas e gráficos
-- Pode exportar os relatórios, se necessário
+### Comparativo de Pagamentos
+1. Usuário seleciona análise no histórico
+2. Acessa página de comparativo detalhado
+3. Visualiza procedimentos agrupados por papel médico
+4. Identifica divergências entre valor pago e CBHPM
+5. Pode exportar dados para contestação
 
-### 4. Fluxo de Gerenciamento de Perfil
-- Usuário acessa a página de Perfil
-- Visualiza suas informações e estatísticas
-- Pode navegar para Configurações para editar dados
+### Gerenciamento de Perfil
+1. Usuário acessa página de perfil
+2. Atualiza dados pessoais, preferências
+3. Configura notificações e tabelas de referência
+4. Gerencia assinatura e informações de pagamento
 
-### 5. Fluxo de Comparativo Contracheque
-- Usuário faz upload de guias e demonstrativos
-- Sistema processa os arquivos e identifica procedimentos
-- Usuário acessa a página de Comparativo
-- Sistema compara valores pagos com referência CBHPM 2015
-- Os resultados são exibidos agrupados por papel médico (cirurgião, auxiliar)
-- Usuário pode filtrar por papel ou status (conforme, abaixo, acima)
+## Integração Frontend-Backend
 
-## Integração de Dados
+### Cliente Supabase
+Configurado em `src/integrations/supabase/client.ts` com:
+- Persistência de sessões
+- Atualização automática de tokens
+- Detecção de sessão na URL
+- Headers globais
 
-O sistema utiliza React Query para gerenciamento de estado e comunicação com APIs. Atualmente, os dados são simulados, mas a estrutura está preparada para integração com uma API real.
+### Helpers de Supabase
+Implementados em `src/utils/supabaseHelpers.ts`:
+- Funções tipadas para operações comuns
+- Extração segura de dados
+- Gerenciamento de perfis
+- Tratamento de tickets e mensagens
+- Funções de acesso a artigos e análises
 
-### Principais Fontes de Dados
-1. **Dados do Usuário**: Perfil, preferências, configurações
-2. **Análises**: Resultados do processamento de documentos
-3. **Histórico**: Registro de todas as análises realizadas
-4. **Tabelas de Referência**: Valores padrão para comparação de pagamentos
+## Processo de Autenticação
 
-## Componentes de UI
+### Fluxo de Login/Registro
+1. Usuário acessa página de login ou registro
+2. Insere credenciais (email/senha ou provedor OAuth)
+3. AuthContext valida e armazena a sessão
+4. Roteamento condicional baseado em autenticação
+5. PrivateRoute protege rotas que exigem autenticação
 
-A aplicação utiliza componentes do shadcn/ui, que é uma coleção de componentes React reutilizáveis construídos com Radix UI e estilizados com Tailwind CSS.
+### Gerenciamento de Sessão
+- Verificação automática de sessão existente
+- Listeners para mudanças de estado de autenticação
+- Armazenamento local para persistência de sessão
+- Lógica de redirecionamento para rotas protegidas
 
-Principais componentes UI utilizados:
-- Card, CardContent, CardHeader, CardTitle
-- Button
-- Badge
-- Input, Textarea, Select, Checkbox
-- Form (React Hook Form)
-- Tabs
-- Dialog
-- Toast
-- Sheet (menu lateral móvel)
-- Avatar
-- Tooltips
-- Skeleton (loading states)
-- etc.
+## Responsividade e UI/UX
 
-## Gerenciamento de Estado
+### Estratégia de Responsividade
+- Design mobile-first com Tailwind CSS
+- Breakpoints consistentes para diferentes tamanhos de tela
+- Componentes adaptáveis que reorganizam conforme o espaço
+- Menu lateral colapsável em dispositivos móveis
 
-1. **Estado Local**: Gerenciado via React useState para componentes específicos
-2. **Estado Global da API**: Gerenciado via React Query para dados da API
-3. **Estado de Tema**: Gerenciado via ThemeProvider
+### Componentes de UI
+- Shadcn/UI como base para componentes consistentes
+- Paleta de cores profissional para ambientes médicos
+- Componentes acessíveis e testáveis
+- Sistema de tema claro/escuro
 
-## Responsividade
+## Manutenção e Desenvolvimento
 
-A aplicação é totalmente responsiva, adaptando-se a diferentes tamanhos de tela:
-- Em dispositivos móveis, o menu lateral é substituído por um menu hamburger
-- Componentes se reorganizam para se adequar ao espaço disponível
-- Media queries do Tailwind são usadas para ajustar layouts (md:, lg:, etc.)
+### Boas Práticas
+- Componentização para facilitar manutenção
+- Hooks personalizados para lógica reutilizável
+- Tipagem forte com TypeScript
+- Comentários em seções críticas do código
+- Estrutura de pasta organizada por domínio
 
-## Próximos Passos e Possíveis Melhorias
+### Próximos Passos
+1. Implementar integração com sistemas hospitalares
+2. Adicionar reconhecimento OCR mais avançado
+3. Expandir relatórios e dashboards analíticos
+4. Desenvolver aplicativo móvel complementar
+5. Implementar recursos de colaboração entre médicos
 
-1. **Autenticação Real**: Implementar um sistema de autenticação completo
-2. **Backend**: Integrar com um backend real para armazenamento e processamento de dados
-3. **OCR**: Adicionar reconhecimento óptico de caracteres para extração automática de dados de PDFs
-4. **Exportação de Dados**: Adicionar funcionalidades para exportação em diferentes formatos
-5. **Integrações**: Conectar com sistemas de gestão médica e hospitalar
-6. **Notificações Push**: Implementar notificações em tempo real
-7. **Dashboard Personalizado**: Permitir que o usuário customize seu dashboard
-8. **App Mobile**: Desenvolver uma versão mobile nativa
-9. **Aprimorar Comparativo CBHPM**: Adicionar opção para diferentes tabelas CBHPM e personalização de parâmetros
-10. **Relatório por Operadora**: Segmentar análises por operadora de saúde
-11. **Exportação de Comparativo**: Permitir exportação do comparativo CBHPM em PDF ou Excel
+## Enviromento e Deployment
 
-## Considerações para Desenvolvimento
+### Requisitos
+- Node.js 18+ e npm 8+
+- Acesso ao projeto Supabase
+- Chaves e URLs de API configuradas
 
-1. **Manter a Consistência de UI**: Seguir os padrões estabelecidos para componentes UI
-2. **Componentização**: Continuar dividindo componentes grandes em unidades menores e reutilizáveis
-3. **TypeScript**: Garantir tipagem correta em todas as adições
-4. **Testes**: Adicionar testes para garantir a estabilidade da aplicação
-5. **Performance**: Monitorar o desempenho, especialmente em operações pesadas como upload de arquivos
-6. **Acessibilidade**: Garantir que todos os novos componentes sigam as diretrizes de acessibilidade
+### Deployment
+- Configuração de CI/CD para deploy automático
+- Ambientes de staging e produção
+- Backups regulares do banco de dados
+- Monitoramento de Edge Functions
 
-## Conclusão
+## Segurança
 
-O MedCheck é uma aplicação robusta para auditoria de pagamentos médicos, oferecendo uma interface moderna e funcional para que médicos e profissionais de saúde identifiquem e recuperem valores pagos incorretamente pelas operadoras de saúde. A arquitetura do projeto é modular e extensível, permitindo fácil manutenção e adição de novas funcionalidades.
+### Medidas Implementadas
+- Autenticação JWT via Supabase Auth
+- Row-Level Security para proteção de dados
+- Validação de entrada com Zod
+- Verificação de CRM contra registros de usuário
+- Armazenamento seguro de chaves API
+- CORS configurado corretamente nas Edge Functions
 
-## Comparativo Contracheque
+## Considerações Finais
 
-### Visão Geral
-O módulo de comparativo contracheque permite comparar valores pagos com a tabela de referência CBHPM 2015. Ele identifica pagamentos em conformidade, abaixo ou acima da tabela, e separa por papel (Cirurgião, Primeiro Auxiliar, Segundo Auxiliar).
+O MedCheck foi arquitetado como uma aplicação robusta e escalável, com foco na experiência do usuário médico e na segurança dos dados. A combinação de React no frontend e Supabase no backend proporciona um desenvolvimento ágil sem comprometer a qualidade ou segurança.
 
-### Como Utilizar
-1. Envie guias médicas e demonstrativos de pagamento na página de Upload
-2. Após o processamento, acesse a página de Comparativo no menu lateral
-3. Visualize o resumo geral nos cards no topo da página
-4. Analise os detalhes na tabela, podendo filtrar por papel médico ou status
-5. Identifique valores em desacordo com a tabela CBHPM 2015 para possíveis contestações
-
-### Filtros Disponíveis
-- **Por Papel**: Cirurgião, Primeiro Auxiliar, Segundo Auxiliar, ou Todos
-- **Por Status**: Conforme, Abaixo, Acima, Não Pago, ou Todos
-
-### Campos da Tabela
-- **Código**: Código do procedimento
-- **Descrição**: Nome do procedimento
-- **Quantidade**: Quantidade realizada
-- **CBHPM**: Valor de referência da tabela CBHPM 2015
-- **Pago**: Valor efetivamente pago pelo plano
-- **Diferença**: Diferença entre valor pago e valor CBHPM
-- **Status**: Categorização (Conforme, Abaixo, Acima, Não Pago)
-- **Papel**: Função do médico no procedimento
+Para desenvolvedores que estão começando a trabalhar com este projeto, recomenda-se familiarizar-se primeiro com a estrutura de arquivos e os principais componentes, bem como entender a arquitetura do banco de dados Supabase e as políticas de segurança implementadas.

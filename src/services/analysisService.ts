@@ -1,11 +1,18 @@
 
+/**
+ * analysisService.ts
+ * 
+ * Serviço para gerenciar a análise de documentos médicos.
+ * Manipula a recuperação, processamento e armazenamento de dados de análise.
+ */
+
 import { supabase } from '@/integrations/supabase/client';
 import { ExtractedData, DoctorParticipation } from '@/types/upload';
 import { toast } from 'sonner';
 
 /**
- * Generate simulated data for demonstration purposes when backend is not available
- * @returns Mocked extracted data
+ * Gera dados simulados para demonstração quando o backend não está disponível
+ * @returns Dados extraídos simulados
  */
 const generateMockData = (): ExtractedData => {
   return {
@@ -102,21 +109,25 @@ const generateMockData = (): ExtractedData => {
 };
 
 /**
- * Set the current analysis in storage for later retrieval
+ * Armazena a análise atual no localStorage para recuperação posterior
+ * @param extractedData Dados extraídos da análise
+ * @param analysisId ID da análise
  */
 export const setCurrentAnalysis = (extractedData: ExtractedData, analysisId: string) => {
-  // Store in localStorage
+  // Armazena no localStorage
   localStorage.setItem('currentAnalysisId', analysisId);
   localStorage.setItem('currentAnalysisTimestamp', Date.now().toString());
   
-  // For local analysis, store the full data too
+  // Para análises locais, armazena os dados completos também
   if (analysisId.startsWith('local-')) {
     localStorage.setItem(`extractedData-${analysisId}`, JSON.stringify(extractedData));
   }
 };
 
 /**
- * Get a local analysis from localStorage
+ * Recupera uma análise local do localStorage
+ * @param analysisId ID da análise
+ * @returns Dados da análise ou null se não encontrada
  */
 export const getLocalAnalysis = (analysisId: string): ExtractedData | null => {
   try {
@@ -131,7 +142,9 @@ export const getLocalAnalysis = (analysisId: string): ExtractedData | null => {
 };
 
 /**
- * Type guard to check if the value is a valid DoctorParticipation array
+ * Type guard para verificar se o valor é um array válido de DoctorParticipation
+ * @param value Valor a ser verificado
+ * @returns Verdadeiro se o valor é um array de DoctorParticipation
  */
 const isDoctorParticipationArray = (value: any): value is DoctorParticipation[] => {
   if (!Array.isArray(value)) return false;
@@ -149,7 +162,10 @@ const isDoctorParticipationArray = (value: any): value is DoctorParticipation[] 
 };
 
 /**
- * Helper function to safely extract numeric values from JSON summary
+ * Função auxiliar para extrair valores numéricos com segurança de um objeto JSON
+ * @param summary Objeto JSON de resumo
+ * @param key Chave do valor a ser extraído
+ * @returns Valor numérico ou 0 se inválido
  */
 const getSafeNumericValue = (summary: any, key: string): number => {
   if (!summary || typeof summary !== 'object') return 0;
@@ -162,29 +178,29 @@ const getSafeNumericValue = (summary: any, key: string): number => {
 };
 
 /**
- * Get the extracted data from the server
- * @param analysisId Optional analysis ID to fetch specific data
- * @returns The extracted data
+ * Obtém os dados extraídos do servidor
+ * @param analysisId ID opcional da análise para buscar dados específicos
+ * @returns Os dados extraídos
  */
 export const getExtractedData = async (analysisId?: string | null): Promise<ExtractedData> => {
   console.log('Getting extracted data with analysisId:', analysisId);
   
   try {
-    // For "local-" prefixed IDs, retrieve from localStorage
+    // Para IDs prefixados com "local-", recupera do localStorage
     if (analysisId && analysisId.startsWith('local-')) {
       console.log('Retrieving local analysis data');
       const localData = getLocalAnalysis(analysisId);
       if (localData) {
         return localData;
       }
-      // If local data not found, continue with mock data as fallback
+      // Se os dados locais não forem encontrados, continua com os dados simulados como fallback
     }
 
-    // If there's a valid analysisId, try to fetch it from the server
+    // Se houver um analysisId válido, tenta buscá-lo do servidor
     if (analysisId && !analysisId.startsWith('local-')) {
       console.log('Attempting to fetch analysis from database...');
       
-      // First query the analysis_results table
+      // Primeiro consulta a tabela analysis_results
       const { data: analysisData, error: analysisError } = await supabase
         .from('analysis_results')
         .select('*')
@@ -198,7 +214,7 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
       
       console.log('Fetched analysis:', analysisData);
       
-      // Then query the related procedure_results
+      // Depois consulta os procedure_results relacionados
       const { data: proceduresData, error: proceduresError } = await supabase
         .from('procedure_results')
         .select('*')
@@ -212,7 +228,7 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
       console.log(`Fetched ${proceduresData.length} procedures`);
       
       if (analysisData && proceduresData && proceduresData.length > 0) {
-        // Transform database data to ExtractedData format
+        // Transforma os dados do banco no formato ExtractedData
         const extractedData: ExtractedData = {
           demonstrativoInfo: {
             numero: analysisData.numero || '',
@@ -222,14 +238,14 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
             beneficiario: proceduresData[0]?.beneficiario || 'Paciente'
           },
           procedimentos: proceduresData.map(proc => {
-            // Process doctors with proper type safety
+            // Processa médicos com segurança de tipos
             let doctors: DoctorParticipation[] = [];
             
             if (proc.doctors) {
               if (isDoctorParticipationArray(proc.doctors)) {
                 doctors = proc.doctors;
               } else if (Array.isArray(proc.doctors)) {
-                // Convert each item to the expected format with explicit type casting
+                // Converte cada item para o formato esperado com cast explícito de tipo
                 doctors = (proc.doctors as any[])
                   .filter(d => 
                     typeof d === 'object' && 
