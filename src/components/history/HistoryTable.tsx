@@ -30,7 +30,6 @@ export function HistoryTable({ items }: HistoryTableProps) {
   
   // Redireciona para a página de comparação com o ID da análise
   const handleViewDetails = (id: string) => {
-    console.log('Redirecionando para comparação, ID:', id);
     navigate(`/compare?analysisId=${id}`);
   };
 

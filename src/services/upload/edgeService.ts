@@ -34,9 +34,6 @@ export async function processFiles(
   fileTypes: FileType[]
 ): Promise<{ success: boolean; analysisId: string | null }> {
   try {
-    // Log files to be processed for debugging
-    console.log('Arquivos a processar:', files.map(f => ({ name: f.name, type: f.type, status: f.status })));
-    
     // Determinar modo de processamento baseado nos tipos de arquivos
     const processMode = determineProcessingMode(files);
     console.log(`Processando arquivos no modo: ${processMode}`);
@@ -85,8 +82,6 @@ export async function processFiles(
         throw new Error(processingError?.message || 'Erro ao processar arquivos');
       }
 
-      console.log('Dados processados:', processingData);
-      
       setProgress(100);
       setProcessingStage('complete');
       setProcessingMsg('Processamento concluído!');
@@ -95,7 +90,7 @@ export async function processFiles(
       setCurrentAnalysis(processingData.extractedData, processingData.analysisId);
       
       toast.success('Processamento concluído', {
-        description: `Foram processados ${processingData.extractedData.procedimentos.length || 0} procedimentos.`
+        description: `Foram processados ${processingData.proceduresCount || 0} procedimentos.`
       });
       
       return {
