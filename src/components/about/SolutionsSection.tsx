@@ -1,5 +1,6 @@
 
 import { Check, Award, Star } from "lucide-react";
+import { SolutionCard } from "./solutions/SolutionCard";
 
 export function SolutionsSection() {
   const solutions = [
@@ -26,13 +27,7 @@ export function SolutionsSection() {
         <h2 className="text-3xl font-bold text-center mb-12">Nossas Soluções</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {solutions.map((solution, index) => (
-            <div key={index} className="flex flex-col items-center text-center p-6">
-              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                <solution.icon className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">{solution.title}</h3>
-              <p className="text-muted-foreground">{solution.description}</p>
-            </div>
+            <SolutionCard key={index} {...solution} />
           ))}
         </div>
       </div>

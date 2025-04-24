@@ -1,5 +1,5 @@
 
-import { CircleCheck } from "lucide-react";
+import { BenefitItem } from "./benefits/BenefitItem";
 
 export function BenefitsSection() {
   const benefits = [
@@ -17,10 +17,7 @@ export function BenefitsSection() {
         <h2 className="text-3xl font-bold text-center mb-12">Benefícios do MedCheck</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 max-w-4xl mx-auto">
           {benefits.map((benefit, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <CircleCheck className="w-6 h-6 text-primary shrink-0 mt-0.5" />
-              <span className="text-lg">{benefit}</span>
-            </div>
+            <BenefitItem key={index} text={benefit} />
           ))}
         </div>
       </div>
