@@ -102,7 +102,16 @@ function formatDoctorsData(doctorsData: any): DoctorParticipation[] {
 const getSafeNumericValue = (summary: any, key: string): number => {
   if (!summary || typeof summary !== 'object') return 0;
   
-  const value = summary[key];
+  // Handle both object and array cases
+  let value;
+  if (Array.isArray(summary)) {
+    // If it's an array, we can't easily access by key
+    return 0;
+  } else {
+    // It's an object, we can access by key
+    value = summary[key];
+  }
+  
   if (value === undefined || value === null) return 0;
   
   const num = Number(value);
