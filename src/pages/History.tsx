@@ -1,23 +1,22 @@
-
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
 import { DateRange } from "react-day-picker";
+import { format, parseISO } from 'date-fns';
 import Navbar from "@/components/Navbar";
 import { HistorySearch } from "@/components/history/HistorySearch";
 import { HistoryTable } from "@/components/history/HistoryTable";
-import { fetchHistoryData } from '@/services/historyService';
+import { fetchHistoryData, searchHistory } from '@/services/historyService';
 import { HistoryItem } from '@/components/history/data';
 import { Loader2 } from 'lucide-react';
 import { exportToExcel } from '@/services/exportService';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { isWithinInterval, parseISO } from 'date-fns';
 
 const HistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
-  const [dateRange, setDateRange] = useState<DateRange>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [loading, setLoading] = useState(true);
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
   const { user, loading: authLoading } = useAuth();
@@ -28,8 +27,17 @@ const HistoryPage = () => {
       
       setLoading(true);
       try {
-        const data = await fetchHistoryData();
-        setHistoryData(data);
+        // If there's an active search or date filter, use the search endpoint
+        if (searchTerm || dateRange?.from || filterStatus !== "todos") {
+          const startDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined;
+          const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined;
+          const data = await searchHistory(searchTerm, startDate, endDate);
+          setHistoryData(data);
+        } else {
+          // Otherwise use the regular fetch endpoint
+          const data = await fetchHistoryData();
+          setHistoryData(data);
+        }
       } catch (error) {
         console.error("Erro ao carregar o histórico:", error);
         toast.error("Não foi possível carregar seu histórico de análises");
@@ -41,23 +49,12 @@ const HistoryPage = () => {
     if (!authLoading) {
       loadHistoryData();
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, searchTerm, dateRange, filterStatus]);
   
   const filteredHistory = historyData.filter(item => {
-    const matchesSearch = 
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      item.type.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === "todos" || 
+    // Additional client-side filtering by status if needed
+    return filterStatus === "todos" || 
       item.status.toLowerCase() === filterStatus.toLowerCase();
-    
-    const matchesDateRange = !dateRange?.from || !dateRange?.to || 
-      isWithinInterval(parseISO(item.date), {
-        start: dateRange.from,
-        end: dateRange.to
-      });
-    
-    return matchesSearch && matchesStatus && matchesDateRange;
   });
   
   const handleExport = () => {
@@ -114,4 +111,3 @@ const HistoryPage = () => {
 };
 
 export default HistoryPage;
-
