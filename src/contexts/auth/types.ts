@@ -9,4 +9,5 @@ export interface AuthContextProps {
   signUp?: (email: string, password: string) => Promise<any>;
   signOut?: () => Promise<any>;
   getProfile?: () => Promise<any>;
+  updatePassword?: (password: string) => Promise<any>;
 }
