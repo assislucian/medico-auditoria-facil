@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { HistoryTable } from '@/components/history/HistoryTable';
 import { HistorySearch } from '@/components/history/HistorySearch';
@@ -101,6 +102,7 @@ const HistoryPage = () => {
           onFilterChange={handleFilterChange}
           dateRange={dateRange}
           onDateRangeChange={handleDateRangeChange}
+          onExport={handleExport}
         />
         
         <HistoryTable 
