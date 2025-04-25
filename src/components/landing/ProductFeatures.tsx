@@ -1,5 +1,6 @@
 
-import { CheckCircle2, ChartBar, FileStack, ShieldCheck } from "lucide-react";
+import { CheckCircle, ChartBar, FileStack, ShieldCheck } from "lucide-react";
+import { motion } from "framer-motion";
 
 const features = [
   {
@@ -13,7 +14,7 @@ const features = [
     description: "Visualize análises completas de pagamentos e glosas em dashboards interativos"
   },
   {
-    icon: CheckCircle2,
+    icon: CheckCircle,
     title: "Detecção de Inconsistências",
     description: "Identificação automática de divergências entre valores CBHPM e pagamentos"
   },
@@ -26,22 +27,46 @@ const features = [
 
 export function ProductFeatures() {
   return (
-    <section className="py-20 px-6">
+    <section className="py-24 px-6 bg-secondary/5 relative overflow-hidden">
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom_right,rgba(var(--primary),0.03),transparent_70%)]" />
+      </div>
+      
       <div className="container mx-auto max-w-6xl">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          Recursos Principais
-        </h2>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Recursos <span className="text-primary">Premium</span>
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Ferramentas avançadas para otimizar seu processo de auditoria médica
+          </p>
+        </motion.div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
-            <div
+            <motion.div
               key={feature.title}
-              className="p-6 rounded-xl bg-card border hover:border-primary/50 transition-all duration-300 animate-fade-in"
-              style={{ animationDelay: `${index * 150}ms` }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="group p-6 rounded-xl bg-card hover:bg-accent/5 border border-border/50 hover:border-primary/20 transition-all duration-300"
             >
-              <feature.icon className="h-12 w-12 text-primary mb-4" />
+              <div className="relative mb-4">
+                <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-primary/20 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity blur" />
+                <div className="relative bg-background rounded-lg p-4 w-fit">
+                  <feature.icon className="h-8 w-8 text-primary" />
+                </div>
+              </div>
               <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
               <p className="text-muted-foreground">{feature.description}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

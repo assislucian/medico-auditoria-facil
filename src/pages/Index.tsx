@@ -5,20 +5,27 @@ import { ProductFeatures } from "@/components/landing/ProductFeatures";
 import { BenefitsSection } from "@/components/landing/BenefitsSection";
 import { DemoSection } from "@/components/landing/DemoSection";
 import { PricingSection } from "@/components/landing/PricingSection";
+import { motion } from "framer-motion";
 
 const Index = () => {
   return (
     <PublicLayout 
-      title="Auditoria médica automatizada"
-      description="MedCheck - A solução definitiva para automatizar a auditoria médica e maximizar a recuperação de valores glosados."
+      title="MedCheck | Auditoria médica automatizada"
+      description="A solução definitiva para automatizar a auditoria médica e maximizar a recuperação de valores glosados."
+      showGradientBackground={true}
     >
-      <div className="flex flex-col">
+      <motion.div 
+        className="flex flex-col"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <HeroSection />
         <ProductFeatures />
         <BenefitsSection />
         <PricingSection />
         <DemoSection />
-      </div>
+      </motion.div>
     </PublicLayout>
   );
 };
