@@ -45,61 +45,22 @@ function App() {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/" element={<LoginPage />} />
-                    <Route path="/dashboard" element={
-                      <PrivateRoute>
-                        <DashboardPage />
-                      </PrivateRoute>
-                    } />
-                    <Route path="/uploads" element={
-                      <PrivateRoute>
-                        <UploadPage />
-                      </PrivateRoute>
-                    } />
-                    <Route path="/history" element={
-                      <PrivateRoute>
-                        <HistoryPage />
-                      </PrivateRoute>
-                    } />
-                    <Route path="/reports" element={
-                      <PrivateRoute>
-                        <ReportsPage />
-                      </PrivateRoute>
-                    } />
-                    <Route path="/compare" element={
-                      <PrivateRoute>
-                        <ComparePage />
-                      </PrivateRoute>
-                    } />
-                    <Route path="/pricing" element={
-                      <PrivateRoute>
-                        <PricingPage />
-                      </PrivateRoute>
-                    } />
-                    <Route path="/profile" element={
-                      <PrivateRoute>
-                        <ProfilePage />
-                      </PrivateRoute>
-                    } />
-                    <Route path="/settings" element={
-                      <PrivateRoute>
-                        <SettingsPage />
-                      </PrivateRoute>
-                    } />
-                    <Route path="/support" element={
-                      <PrivateRoute>
-                        <SupportPage />
-                      </PrivateRoute>
-                    } />
-                    <Route path="/help" element={
-                      <PrivateRoute>
-                        <HelpPage />
-                      </PrivateRoute>
-                    } />
-                    <Route path="/notifications" element={
-                      <PrivateRoute>
-                        <NotificationsPage />
-                      </PrivateRoute>
-                    } />
+                    
+                    {/* Private routes - use element prop with PrivateRoute component */}
+                    <Route element={<PrivateRoute />}>
+                      <Route path="/dashboard" element={<DashboardPage />} />
+                      <Route path="/uploads" element={<UploadPage />} />
+                      <Route path="/history" element={<HistoryPage />} />
+                      <Route path="/reports" element={<ReportsPage />} />
+                      <Route path="/compare" element={<ComparePage />} />
+                      <Route path="/pricing" element={<PricingPage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/support" element={<SupportPage />} />
+                      <Route path="/help" element={<HelpPage />} />
+                      <Route path="/notifications" element={<NotificationsPage />} />
+                    </Route>
+                    
                     <Route path="*" element={<NotFoundPage />} />
                   </Routes>
                   <Toaster position="top-right" expand={true} richColors closeButton />
