@@ -27,10 +27,8 @@ const features = [
 
 export function ProductFeatures() {
   return (
-    <section className="py-24 px-6 bg-secondary/5 relative overflow-hidden">
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom_right,rgba(var(--primary),0.03),transparent_70%)]" />
-      </div>
+    <section className="py-24 px-6 bg-gradient-to-b from-background to-secondary/5 relative overflow-hidden">
+      <div className="absolute inset-0 -z-10 bg-grid-pattern opacity-[0.02]" />
       
       <div className="container mx-auto max-w-6xl">
         <motion.div
@@ -40,10 +38,10 @@ export function ProductFeatures() {
           transition={{ duration: 0.7 }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Recursos <span className="text-primary">Premium</span>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            Recursos <span className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">Premium</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-xl max-w-2xl mx-auto">
             Ferramentas avançadas para otimizar seu processo de auditoria médica
           </p>
         </motion.div>
@@ -56,15 +54,15 @@ export function ProductFeatures() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group p-6 rounded-xl bg-card hover:bg-accent/5 border border-border/50 hover:border-primary/20 transition-all duration-300"
+              className="group p-8 rounded-xl bg-card hover:bg-accent/5 border border-border/50 hover:border-primary/20 transition-all duration-300"
             >
-              <div className="relative mb-4">
+              <div className="relative mb-6">
                 <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-primary/20 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity blur" />
                 <div className="relative bg-background rounded-lg p-4 w-fit">
                   <feature.icon className="h-8 w-8 text-primary" />
                 </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
               <p className="text-muted-foreground">{feature.description}</p>
             </motion.div>
           ))}

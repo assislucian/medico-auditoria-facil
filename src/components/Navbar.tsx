@@ -66,10 +66,12 @@ const Navbar = ({ isLoggedIn: propIsLoggedIn }: { isLoggedIn?: boolean }) => {
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-20">
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="text-xl font-bold text-gradient">MedCheck</span>
+              <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent">
+                MedCheck
+              </span>
             </Link>
           </div>
           
