@@ -8,6 +8,20 @@ import { PasswordChangeForm } from "./security/PasswordChangeForm";
 export const ProfileTabs = () => {
   const { loading, updateProfile, updateSecurity } = useProfile();
 
+  // Create wrapper functions to handle the void return type expected by the form components
+  const handleUpdateProfile = async (
+    data: { name: string; email: string; telefone: string; crm: string; especialidade: string; hospital: string; bio: string; }, 
+    selectedImage: File | null
+  ) => {
+    await updateProfile(data, selectedImage);
+  };
+
+  const handleUpdateSecurity = async (
+    data: { currentPassword: string; newPassword: string; confirmPassword: string; }
+  ) => {
+    await updateSecurity(data);
+  };
+
   return (
     <Tabs defaultValue="info" className="w-full">
       <TabsList className="grid w-full md:grid-cols-2 h-auto">
@@ -24,7 +38,7 @@ export const ProfileTabs = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ProfileForm loading={loading} onSubmit={updateProfile} />
+            <ProfileForm loading={loading} onSubmit={handleUpdateProfile} />
           </CardContent>
         </Card>
       </TabsContent>
@@ -40,7 +54,7 @@ export const ProfileTabs = () => {
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <h4 className="text-sm font-medium">Alterar Senha</h4>
-              <PasswordChangeForm loading={loading} onSubmit={updateSecurity} />
+              <PasswordChangeForm loading={loading} onSubmit={handleUpdateSecurity} />
             </div>
           </CardContent>
         </Card>
