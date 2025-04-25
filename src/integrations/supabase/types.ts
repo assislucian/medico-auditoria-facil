@@ -444,6 +444,30 @@ export type Database = {
         }
         Relationships: []
       }
+      standard_responses: {
+        Row: {
+          created_at: string
+          id: string
+          reason_type: string
+          response_text: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason_type: string
+          response_text: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason_type?: string
+          response_text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscription_plans: {
         Row: {
           created_at: string

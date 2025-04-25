@@ -53,12 +53,17 @@ export const generateContestation = async (params: ContestationParams): Promise<
     detectedReason = 'nao_justificado';
   }
 
-  // Buscar resposta padrão para o motivo da glosa
-  const { data: standardResponse } = await supabase
+  // Get response template from database
+  const { data: standardResponse, error } = await supabase
     .from('standard_responses')
-    .select('response_text')
+    .select('*')
     .eq('reason_type', detectedReason)
     .single();
+
+  if (error) {
+    console.error('Error fetching standard response:', error);
+    return getDefaultResponse(detectedReason);
+  }
 
   const standardResponseText = standardResponse?.response_text || getDefaultResponse(detectedReason);
 
