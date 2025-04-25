@@ -69,13 +69,12 @@ const Navbar = ({ isLoggedIn: propIsLoggedIn }: { isLoggedIn?: boolean }) => {
         <div className="flex justify-between h-20">
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent">
+              <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent">
                 MedCheck
               </span>
             </Link>
           </div>
           
-          {/* Desktop menu */}
           <div className="hidden md:flex md:items-center md:space-x-4">
             {isLoggedIn ? (
               <>
@@ -96,7 +95,6 @@ const Navbar = ({ isLoggedIn: propIsLoggedIn }: { isLoggedIn?: boolean }) => {
             )}
           </div>
           
-          {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             {isLoggedIn && (
               <>
@@ -121,7 +119,6 @@ const Navbar = ({ isLoggedIn: propIsLoggedIn }: { isLoggedIn?: boolean }) => {
         </div>
       </div>
       
-      {/* Mobile menu */}
       <MobileMenu 
         isLoggedIn={isLoggedIn}
         isOpen={mobileMenuOpen}

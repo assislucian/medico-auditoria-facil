@@ -10,6 +10,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { Shield } from "lucide-react";
 
 export function SecurityCard() {
   const navigate = useNavigate();
@@ -26,14 +27,17 @@ export function SecurityCard() {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Segurança</CardTitle>
-        <CardDescription>
-          Gerencie suas configurações de segurança
-        </CardDescription>
+    <Card className="w-full bg-card hover:bg-accent/5 transition-colors">
+      <CardHeader className="flex flex-row items-center gap-2">
+        <Shield className="h-5 w-5 text-primary" />
+        <div>
+          <CardTitle className="text-xl">Segurança</CardTitle>
+          <CardDescription>
+            Gerencie suas configurações de segurança
+          </CardDescription>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div>
           <Button 
             variant="outline" 
@@ -43,11 +47,11 @@ export function SecurityCard() {
             Alterar Senha
           </Button>
         </div>
-        <div className="border-t pt-4">
+        <div className="pt-4 border-t">
           <Button 
-            variant="destructive" 
+            variant="outline"
             onClick={handleSignOut}
-            className="w-full md:w-auto"
+            className="w-full md:w-auto text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border-red-200"
           >
             Sair (Logout)
           </Button>
