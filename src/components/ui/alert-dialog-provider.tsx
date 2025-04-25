@@ -59,7 +59,7 @@ export const AlertDialogProvider: React.FC<{ children: React.ReactNode }> = ({ c
       description,
       confirmLabel,
       cancelLabel,
-      variant,
+      variant: variant as 'default' | 'destructive', // Fix the type casting here
       onConfirm,
       onCancel,
     });

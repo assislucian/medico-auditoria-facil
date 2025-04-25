@@ -59,74 +59,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     }
 
-    // Then fetch from database if available
-    const fetchNotifications = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(30);
-        
-        if (error) throw error;
-        
-        if (data) {
-          const formattedNotifications: Notification[] = data.map(item => ({
-            id: item.id,
-            title: item.title,
-            description: item.description,
-            time: item.created_at,
-            read: item.read,
-            type: item.type as NotificationType,
-            link: item.link,
-            data: item.data
-          }));
-          
-          setNotifications(formattedNotifications);
-          // Save to localStorage for offline access
-          localStorage.setItem('medcheck_notifications', JSON.stringify(formattedNotifications));
-        }
-      } catch (error) {
-        console.error("Failed to fetch notifications", error);
-      }
-    };
-
-    fetchNotifications();
+    // For the MVP, we'll just use localStorage to store notifications
+    // In the future, this would be replaced with actual database calls
     
-    // Set up realtime subscriptions for new notifications
-    const channel = supabase
-      .channel('notification_changes')
-      .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        payload => {
-          const newNotification = {
-            id: payload.new.id,
-            title: payload.new.title,
-            description: payload.new.description,
-            time: payload.new.created_at,
-            read: payload.new.read,
-            type: payload.new.type as NotificationType,
-            link: payload.new.link,
-            data: payload.new.data
-          };
-          
-          setNotifications(prev => [newNotification, ...prev]);
-          
-          // Show toast for new notification
-          toast(newNotification.title, {
-            description: newNotification.description,
-            action: newNotification.link ? {
-              label: "Visualizar",
-              onClick: () => window.location.href = newNotification.link!
-            } : undefined
-          });
-        }
-      )
-      .subscribe();
-      
+    // Simulating a real-time notification for demo purposes
+    const interval = setInterval(() => {
+      // This would normally come from a Supabase real-time subscription
+    }, 30000);
+    
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, [user]);
 
@@ -153,10 +95,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       } : undefined
     });
     
-    // If user is logged in and we have database access, save to database
+    // When database is ready, uncomment this code:
+    /*
     if (user) {
       try {
-        supabase.from('notifications').insert({
+        supabase.from('user_notifications').insert({
           user_id: user.id,
           title: notification.title,
           description: notification.description,
@@ -170,6 +113,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.error("Failed to save notification", error);
       }
     }
+    */
   };
 
   const markAsRead = (id: string) => {
@@ -185,11 +129,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     );
     localStorage.setItem('medcheck_notifications', JSON.stringify(updatedNotifications));
     
-    // Update database if available
+    // Update database if available (future implementation)
+    /*
     if (user) {
       try {
         supabase
-          .from('notifications')
+          .from('user_notifications')
           .update({ read: true })
           .eq('id', id)
           .eq('user_id', user.id)
@@ -200,6 +145,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.error("Failed to mark notification as read", error);
       }
     }
+    */
   };
 
   const markAllAsRead = () => {
@@ -211,11 +157,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const updatedNotifications = notifications.map(notif => ({ ...notif, read: true }));
     localStorage.setItem('medcheck_notifications', JSON.stringify(updatedNotifications));
     
-    // Update database if available
+    // Update database if available (future implementation)
+    /*
     if (user) {
       try {
         supabase
-          .from('notifications')
+          .from('user_notifications')
           .update({ read: true })
           .eq('user_id', user.id)
           .in('id', notifications.filter(n => !n.read).map(n => n.id))
@@ -226,6 +173,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.error("Failed to mark all notifications as read", error);
       }
     }
+    */
   };
 
   const removeNotification = (id: string) => {
@@ -235,11 +183,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const updatedNotifications = notifications.filter(notif => notif.id !== id);
     localStorage.setItem('medcheck_notifications', JSON.stringify(updatedNotifications));
     
-    // Remove from database if available
+    // Remove from database if available (future implementation)
+    /*
     if (user) {
       try {
         supabase
-          .from('notifications')
+          .from('user_notifications')
           .delete()
           .eq('id', id)
           .eq('user_id', user.id)
@@ -250,6 +199,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.error("Failed to remove notification", error);
       }
     }
+    */
   };
 
   const clearNotifications = () => {
@@ -258,11 +208,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Clear localStorage
     localStorage.removeItem('medcheck_notifications');
     
-    // Clear database notifications if available
+    // Clear database notifications if available (future implementation)
+    /*
     if (user) {
       try {
         supabase
-          .from('notifications')
+          .from('user_notifications')
           .delete()
           .eq('user_id', user.id)
           .then(({ error }) => {
@@ -272,6 +223,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.error("Failed to clear notifications", error);
       }
     }
+    */
   };
 
   return (

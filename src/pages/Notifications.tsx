@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import { NotificationsList } from '@/components/notifications/NotificationsList';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { CheckCheck, Trash2 } from 'lucide-react';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { 
