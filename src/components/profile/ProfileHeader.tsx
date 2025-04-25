@@ -8,6 +8,7 @@ import { UserCog, Edit } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Json } from '@/integrations/supabase/types';
 
 export const ProfileHeader = () => {
   const { fetchProfile } = useProfile();
@@ -25,11 +26,16 @@ export const ProfileHeader = () => {
     const loadProfile = async () => {
       const profileData = await fetchProfile();
       if (profileData) {
+        // Safely extract avatar URL using type guard
+        const avatarUrl = profileData.notification_preferences 
+          ? (profileData.notification_preferences as Record<string, any>)['avatar_url'] || ''
+          : '';
+
         setProfile({
           name: profileData.name || "Usuário",
           specialty: profileData.specialty || "Não informado",
           crm: profileData.crm || "Não informado",
-          avatarUrl: profileData.notification_preferences?.avatar_url || "",
+          avatarUrl: avatarUrl,
           email: profileData.email || user?.email || ""
         });
       }
