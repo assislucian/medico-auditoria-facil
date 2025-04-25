@@ -1,68 +1,109 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { FileText, UploadCloud, AlertCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { BarChart2, Clock, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useDashboardStats } from "@/hooks/use-dashboard-stats";
+
+interface ActivityItem {
+  id: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  type: 'upload' | 'analysis' | 'payment' | 'gloss';
+}
 
 export function RecentActivities() {
+  // For demo purposes, we'll create some mock activities
+  // In a production app, these would come from an API
+  const activities: ActivityItem[] = [
+    {
+      id: "1",
+      title: "Análise Concluída",
+      description: "Demonstrativo do Hospital Mater Dei processado",
+      timestamp: "Há 2 horas",
+      type: "analysis"
+    },
+    {
+      id: "2",
+      title: "Glosa Detectada",
+      description: "Procedimento 30602246 glosado em R$ 450,00",
+      timestamp: "Há 4 horas",
+      type: "gloss"
+    },
+    {
+      id: "3",
+      title: "Pagamento Recebido",
+      description: "Unimed liquidou o pagamento de Dezembro/2024",
+      timestamp: "Há 2 dias",
+      type: "payment"
+    },
+    {
+      id: "4",
+      title: "Arquivo Enviado",
+      description: "Novo demonstrativo da Unimed enviado",
+      timestamp: "Há 3 dias",
+      type: "upload"
+    }
+  ];
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'upload':
+        return <FileText className="h-4 w-4" />;
+      case 'analysis':
+        return <BarChart2 className="h-4 w-4" />;
+      case 'payment':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'gloss':
+        return <AlertCircle className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'upload':
+        return "bg-blue-100 text-blue-700";
+      case 'analysis':
+        return "bg-purple-100 text-purple-700";
+      case 'payment':
+        return "bg-green-100 text-green-700";
+      case 'gloss':
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Atividade Recente</CardTitle>
-            <CardDescription>Últimos uploads e análises</CardDescription>
-          </div>
-        </div>
+        <CardTitle>Atividades Recentes</CardTitle>
+        <CardDescription>O que aconteceu nos últimos dias</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full p-2 bg-secondary">
-              <FileText className="h-4 w-4 text-foreground" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Hospital Albert Einstein - Abril 2025</p>
-              <p className="text-xs text-muted-foreground">Análise concluída hoje</p>
-              <div className="flex gap-2 mt-1">
-                <div className="text-xs bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full">8 procedimentos</div>
-                <div className="text-xs bg-red-500/10 text-red-600 px-2 py-0.5 rounded-full">3 glosas</div>
+        <div className="relative pl-6 border-l border-dashed border-gray-200">
+          {activities.map((activity, index) => (
+            <div 
+              key={activity.id} 
+              className={cn(
+                "mb-6 last:mb-0 relative"
+              )}
+            >
+              <div className={cn(
+                "w-6 h-6 rounded-full absolute -left-[14px] flex items-center justify-center",
+                getActivityColor(activity.type)
+              )}>
+                {getActivityIcon(activity.type)}
+              </div>
+              <div className="pl-4">
+                <h4 className="font-medium text-sm">{activity.title}</h4>
+                <p className="text-sm text-muted-foreground">{activity.description}</p>
+                <p className="text-xs text-muted-foreground mt-1">{activity.timestamp}</p>
               </div>
             </div>
-          </div>
-          
-          <div className="flex items-start gap-3">
-            <div className="rounded-full p-2 bg-secondary">
-              <UploadCloud className="h-4 w-4 text-foreground" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Hospital Sírio-Libanês - Março 2025</p>
-              <p className="text-xs text-muted-foreground">Documentos enviados ontem</p>
-              <div className="flex gap-2 mt-1">
-                <div className="text-xs bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded-full">Pendente</div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-3">
-            <div className="rounded-full p-2 bg-secondary">
-              <AlertCircle className="h-4 w-4 text-foreground" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Hospital Oswaldo Cruz - Março 2025</p>
-              <p className="text-xs text-muted-foreground">5 dias atrás</p>
-              <div className="flex gap-2 mt-1">
-                <div className="text-xs bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full">12 procedimentos</div>
-                <div className="text-xs bg-red-500/10 text-red-600 px-2 py-0.5 rounded-full">7 glosas</div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex justify-center mt-4">
-            <Link to="/history">
-              <Button variant="outline" size="sm">Ver histórico completo</Button>
-            </Link>
-          </div>
+          ))}
         </div>
       </CardContent>
     </Card>

@@ -3,10 +3,11 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Copy, Download, FileText } from "lucide-react";
+import { Loader2, Copy, Download, FileText, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { generateContestation } from "@/services/contestationService";
 import { jsPDF } from "jspdf";
+import { Card } from "@/components/ui/card";
 
 interface ContestationDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function ContestationDialog({
   const [contestationText, setContestationText] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
 
   const handleGenerateContestation = async () => {
     setLoading(true);
@@ -60,6 +62,8 @@ export function ContestationDialog({
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(contestationText);
+      setCopiedText(true);
+      setTimeout(() => setCopiedText(false), 2000);
       toast.success("Texto copiado para a área de transferência");
     } catch (error) {
       toast.error("Erro ao copiar texto");
@@ -105,77 +109,116 @@ export function ContestationDialog({
     }
   };
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Contestação de Glosa - Procedimento {procedureDetails.codigo}</DialogTitle>
+          <DialogTitle>Contestação de Glosa</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 my-4">
-          <div className="flex flex-col space-y-2 mb-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-sm font-medium mb-1">Código do Procedimento</p>
-                <p className="text-sm text-muted-foreground">{procedureDetails.codigo}</p>
+          {!generated ? (
+            <Card className="p-6 border-2 border-blue-100 bg-blue-50/30">
+              <div className="flex flex-col space-y-4">
+                <div className="flex flex-col space-y-2">
+                  <h3 className="text-lg font-semibold text-primary">
+                    {procedureDetails.procedimento}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Código: {procedureDetails.codigo}
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 my-2">
+                  <div className="bg-secondary/20 p-3 rounded-md">
+                    <p className="text-xs text-muted-foreground">Valor CBHPM</p>
+                    <p className="font-semibold">{formatCurrency(procedureDetails.valorCBHPM)}</p>
+                  </div>
+                  <div className="bg-secondary/20 p-3 rounded-md">
+                    <p className="text-xs text-muted-foreground">Valor Pago</p>
+                    <p className="font-semibold">{formatCurrency(procedureDetails.valorPago)}</p>
+                  </div>
+                </div>
+                
+                <div className={`p-4 rounded-md ${procedureDetails.diferenca < 0 ? "bg-red-100 border border-red-200" : "bg-green-100 border border-green-200"}`}>
+                  <h4 className="font-medium">
+                    {procedureDetails.diferenca < 0 
+                      ? `Detectamos uma diferença de ${formatCurrency(Math.abs(procedureDetails.diferenca))}`
+                      : `Detectamos um pagamento excedente de ${formatCurrency(procedureDetails.diferenca)}`
+                    }
+                  </h4>
+                  <p className="text-sm mt-1">
+                    {procedureDetails.diferenca < 0 
+                      ? "Pronto para contestar com apenas 1 clique?"
+                      : "O valor pago foi maior que o valor da CBHPM."
+                    }
+                  </p>
+                </div>
+                
+                <Button 
+                  onClick={handleGenerateContestation} 
+                  disabled={loading}
+                  className="w-full mt-4"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Gerando contestação...
+                    </>
+                  ) : (
+                    'Gerar Contestação Automática'
+                  )}
+                </Button>
               </div>
-              <div>
-                <p className="text-sm font-medium mb-1">Procedimento</p>
-                <p className="text-sm text-muted-foreground">{procedureDetails.procedimento}</p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-md mb-4">
+                <p className="text-sm">
+                  Use este texto no portal da operadora para contestar a glosa. Esta contestação foi gerada com base na 
+                  tabela CBHPM e na legislação vigente.
+                </p>
               </div>
-              <div>
-                <p className="text-sm font-medium mb-1">Valor CBHPM</p>
-                <p className="text-sm text-muted-foreground">R$ {procedureDetails.valorCBHPM.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-1">Valor Pago</p>
-                <p className="text-sm text-muted-foreground">R$ {procedureDetails.valorPago.toFixed(2)}</p>
-              </div>
-            </div>
-            
-            {!generated ? (
-              <Button 
-                onClick={handleGenerateContestation} 
-                disabled={loading}
-                className="w-full"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Gerando contestação...
-                  </>
-                ) : (
-                  'Gerar Contestação Automática'
-                )}
-              </Button>
-            ) : (
+              
               <Textarea
                 className="h-[300px] font-mono text-sm"
                 value={contestationText}
                 onChange={(e) => setContestationText(e.target.value)}
               />
-            )}
-          </div>
-        </div>
-        
-        {generated && (
-          <DialogFooter>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:justify-end">
-              <Button onClick={handleCopy} variant="outline">
-                <Copy className="mr-2 h-4 w-4" />
-                Copiar Texto
-              </Button>
-              <Button onClick={handleDownloadText} variant="outline">
-                <FileText className="mr-2 h-4 w-4" />
-                Baixar .TXT
-              </Button>
-              <Button onClick={handleDownloadPDF}>
-                <Download className="mr-2 h-4 w-4" />
-                Baixar PDF
-              </Button>
+              
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:justify-end">
+                <Button onClick={handleCopy} variant="outline" className="flex-1 sm:flex-none">
+                  {copiedText ? (
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+                      Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copiar Texto
+                    </>
+                  )}
+                </Button>
+                <Button onClick={handleDownloadText} variant="outline" className="flex-1 sm:flex-none">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Baixar .TXT
+                </Button>
+                <Button onClick={handleDownloadPDF} className="flex-1 sm:flex-none">
+                  <Download className="mr-2 h-4 w-4" />
+                  Baixar PDF
+                </Button>
+              </div>
             </div>
-          </DialogFooter>
-        )}
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
