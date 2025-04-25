@@ -17,7 +17,7 @@ import { type HistoryItem } from "./data";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-interface HistoryTableProps {
+export interface HistoryTableProps {
   items: HistoryItem[];
 }
 

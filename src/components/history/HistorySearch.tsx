@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
 
-interface HistorySearchProps {
+export interface HistorySearchProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   filterStatus: string;
@@ -27,8 +27,6 @@ export function HistorySearch({
   dateRange,
   onDateRangeChange
 }: HistorySearchProps) {
-  const [showDateFilter, setShowDateFilter] = useState(false);
-  
   const handleExport = () => {
     onExport();
     toast.success("Exportação iniciada", {
@@ -77,4 +75,3 @@ export function HistorySearch({
     </div>
   );
 }
-

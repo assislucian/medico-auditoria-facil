@@ -3,22 +3,79 @@ import { useEffect, useState } from 'react';
 import { HistoryTable } from '@/components/history/HistoryTable';
 import { HistorySearch } from '@/components/history/HistorySearch';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { HistoryItem, type HistoryFilters } from '@/components/history/data';
+import { DateRange } from 'react-day-picker';
+import { fetchHistoryData, searchHistory } from '@/services/historyService';
 
 const HistoryPage = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('todos');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
+  // Fetch history data on component mount
   useEffect(() => {
-    // Simulação de carregamento dos dados
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    const loadHistoryData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await fetchHistoryData();
+        setHistoryItems(data);
+      } catch (error) {
+        console.error('Error loading history data:', error);
+        toast.error('Erro ao carregar histórico');
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    return () => clearTimeout(timer);
+    loadHistoryData();
   }, []);
   
+  // Handle search and filter changes
+  const handleSearchChange = async (value: string) => {
+    setSearchTerm(value);
+    await filterHistoryData(value, filterStatus, dateRange);
+  };
+  
+  const handleFilterChange = async (value: string) => {
+    setFilterStatus(value);
+    await filterHistoryData(searchTerm, value, dateRange);
+  };
+  
+  const handleDateRangeChange = async (range: DateRange | undefined) => {
+    setDateRange(range);
+    await filterHistoryData(searchTerm, filterStatus, range);
+  };
+  
+  // Apply filters to history data
+  const filterHistoryData = async (
+    search: string, 
+    status: string, 
+    dates: DateRange | undefined
+  ) => {
+    setIsLoading(true);
+    
+    try {
+      // Convert dates to ISO strings for backend filtering
+      const startDate = dates?.from ? dates.from.toISOString().split('T')[0] : undefined;
+      const endDate = dates?.to ? dates.to.toISOString().split('T')[0] : undefined;
+      
+      const filteredData = await searchHistory(search, startDate, endDate, status);
+      setHistoryItems(filteredData);
+    } catch (error) {
+      console.error('Error filtering history data:', error);
+      toast.error('Erro ao filtrar histórico');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Handle export functionality
   const handleExport = () => {
     toast.info("Função em desenvolvimento", {
       description: "A exportação do histórico estará disponível em breve."
@@ -32,22 +89,30 @@ const HistoryPage = () => {
       loadingMessage="Carregando histórico..."
     >
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Histórico de Análises</h1>
-            <p className="text-muted-foreground mt-1">
-              Consulte todas as análises realizadas e seus resultados
-            </p>
-          </div>
-          
-          <Button variant="outline" onClick={handleExport} className="self-start">
-            <Download className="mr-2 h-4 w-4" />
-            Exportar Excel
-          </Button>
-        </div>
+        <PageHeader
+          title="Histórico de Análises"
+          description="Consulte todas as análises realizadas e seus resultados"
+          actions={
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" />
+              Exportar Excel
+            </Button>
+          }
+        />
         
-        <HistorySearch />
-        <HistoryTable />
+        <HistorySearch 
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
+          filterStatus={filterStatus}
+          onFilterChange={handleFilterChange}
+          onExport={handleExport}
+          dateRange={dateRange}
+          onDateRangeChange={handleDateRangeChange}
+        />
+        
+        <HistoryTable 
+          items={historyItems} 
+        />
       </div>
     </MainLayout>
   );
