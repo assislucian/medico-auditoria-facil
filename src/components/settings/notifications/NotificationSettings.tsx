@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +16,7 @@ import {
 } from "./types";
 import { Profile, ProfileWithUUID } from '@/types';
 import { getProfile, updateProfile, toJson } from "@/utils/supabaseHelpers";
+import { useAlert } from '@/utils/alertUtils';
 
 /**
  * NotificationsSettings Component
@@ -30,6 +30,7 @@ export const NotificationSettings = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [notifications, setNotifications] = useState<NotificationPreferences>(defaultNotificationPreferences);
+  const { showSuccess, showError } = useAlert();
 
   // Fetch user's notification preferences on component mount
   useEffect(() => {
@@ -85,10 +86,16 @@ export const NotificationSettings = () => {
         throw new Error("Não foi possível atualizar o perfil");
       }
       
-      toast.success('Preferências de notificação atualizadas');
+      showSuccess(
+        'Preferências salvas',
+        'Suas preferências de notificação foram atualizadas com sucesso!'
+      );
     } catch (error) {
       console.error('Error saving notification preferences:', error);
-      toast.error('Erro ao salvar preferências de notificação');
+      showError(
+        'Erro ao salvar',
+        'Não foi possível salvar suas preferências de notificação.'
+      );
     } finally {
       setSaving(false);
     }

@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfileAvatar } from "@/hooks/use-profile-avatar";
 import { Camera, User } from "lucide-react";
 import { useState } from "react";
+import { useAlert } from "@/utils/alertUtils";
 
 interface ProfileAvatarProps {
   name: string;
@@ -13,6 +14,7 @@ interface ProfileAvatarProps {
 export const ProfileAvatar = ({ name, avatarUrl, onAvatarUpdate }: ProfileAvatarProps) => {
   const { uploading, handleAvatarChange } = useProfileAvatar();
   const [isHovering, setIsHovering] = useState(false);
+  const { showSuccess, showError } = useAlert();
 
   // Get initials from name
   const getInitials = (name: string) => {
@@ -20,9 +22,21 @@ export const ProfileAvatar = ({ name, avatarUrl, onAvatarUpdate }: ProfileAvatar
   };
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const url = await handleAvatarChange(event);
-    if (url) {
-      onAvatarUpdate(url);
+    try {
+      const url = await handleAvatarChange(event);
+      if (url) {
+        onAvatarUpdate(url);
+        showSuccess(
+          'Avatar atualizado',
+          'Sua imagem de perfil foi atualizada com sucesso!'
+        );
+      }
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      showError(
+        'Falha ao atualizar avatar',
+        'Não foi possível atualizar sua imagem de perfil. Tente novamente.'
+      );
     }
   };
 
