@@ -3,7 +3,6 @@ import { ReactNode } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import { Footer } from './Footer';
-import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
 
 interface PublicLayoutProps {
@@ -11,16 +10,16 @@ interface PublicLayoutProps {
   title: string;
   description?: string;
   showGradientBackground?: boolean;
+  showFooter?: boolean;
 }
 
 export function PublicLayout({
   children,
   title,
   description,
-  showGradientBackground = false
+  showGradientBackground = false,
+  showFooter = true
 }: PublicLayoutProps) {
-  const { session } = useAuth();
-
   return (
     <>
       <Helmet>
@@ -30,7 +29,7 @@ export function PublicLayout({
       <div className={`min-h-screen flex flex-col bg-background ${
         showGradientBackground ? 'bg-gradient-to-b from-background to-muted/50' : ''
       }`}>
-        <Navbar isLoggedIn={!!session} />
+        <Navbar isLoggedIn={false} />
         <motion.main 
           className="flex-1 flex flex-col"
           initial={{ opacity: 0, y: 20 }}
@@ -39,7 +38,7 @@ export function PublicLayout({
         >
           {children}
         </motion.main>
-        <Footer />
+        {showFooter && <Footer />}
       </div>
     </>
   );

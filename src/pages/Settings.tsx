@@ -1,53 +1,47 @@
 
-import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Navbar from "@/components/Navbar";
-import { SideNav } from "@/components/SideNav";
 import { NotificationsSettings } from '@/components/settings/NotificationsSettings';
 import { ReferenceTablesSettings } from '@/components/settings/ReferenceTablesSettings';
+import { MainLayout } from "@/components/layout/MainLayout";
 
 const Settings = () => {
   return (
-    <>
-      <Helmet>
-        <title>Configurações | MedCheck</title>
-      </Helmet>
-      <div className="flex min-h-screen bg-background">
-        <SideNav className="hidden md:flex" />
-        <div className="flex-1">
-          <Navbar isLoggedIn={true} />
-          <div className="container py-8">
-            <h1 className="text-3xl font-bold mb-6">Configurações</h1>
-            
-            <Tabs defaultValue="notificacoes" className="space-y-6">
-              <TabsList className="grid w-full md:w-auto md:inline-flex grid-cols-2 md:grid-cols-none h-auto">
-                <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
-                <TabsTrigger value="tabelas">Tabelas de Referência</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="notificacoes">
-                <NotificationsSettings />
-              </TabsContent>
-              
-              <TabsContent value="tabelas">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Tabelas de Referência</CardTitle>
-                    <CardDescription>
-                      Configure quais tabelas de valores médicos você deseja usar como referência para análises de pagamentos
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ReferenceTablesSettings />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
+    <MainLayout title="Configurações">
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Configurações</h1>
+          <p className="text-muted-foreground mt-1">
+            Personalize suas preferências e configure as opções do sistema
+          </p>
         </div>
+        
+        <Tabs defaultValue="notificacoes" className="space-y-6">
+          <TabsList className="grid w-full md:w-auto md:inline-flex grid-cols-2 md:grid-cols-none h-auto">
+            <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
+            <TabsTrigger value="tabelas">Tabelas de Referência</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="notificacoes">
+            <NotificationsSettings />
+          </TabsContent>
+          
+          <TabsContent value="tabelas">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tabelas de Referência</CardTitle>
+                <CardDescription>
+                  Configure quais tabelas de valores médicos você deseja usar como referência para análises de pagamentos
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ReferenceTablesSettings />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-    </>
+    </MainLayout>
   );
 };
 

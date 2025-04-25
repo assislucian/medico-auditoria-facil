@@ -1,137 +1,55 @@
 
-/**
- * History.tsx
- * 
- * Página que exibe o histórico de análises realizadas pelo usuário.
- * Oferece funcionalidades de filtro, exportação e visualização detalhada.
- */
-
-import { Helmet } from 'react-helmet-async';
-import { useState, useEffect } from 'react';
-import { DateRange } from "react-day-picker";
-import { format } from 'date-fns';
-import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
-import { HistorySearch } from "@/components/history/HistorySearch";
-import { HistoryTable } from "@/components/history/HistoryTable";
-import { fetchHistoryData, searchHistory } from '@/services/historyService';
-import { HistoryItem } from '@/components/history/data';
-import { Loader2 } from 'lucide-react';
-import { exportToExcel } from '@/services/exportService';
+import { useEffect, useState } from 'react';
+import { HistoryTable } from '@/components/history/HistoryTable';
+import { HistorySearch } from '@/components/history/HistorySearch';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
 
-/**
- * Página de histórico de análises
- * Gerencia a exibição, busca e filtragem de análises anteriores
- */
 const HistoryPage = () => {
-  // Estados para controle dos filtros e resultados
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("todos");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [loading, setLoading] = useState(true);
-  const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
-  const { user, loading: authLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
   
-  /**
-   * Efeito para carregar o histórico de análises
-   * Busca os dados baseados nos filtros aplicados
-   */
   useEffect(() => {
-    const loadHistoryData = async () => {
-      if (authLoading) return;
-      
-      if (!user) {
-        toast.error("Faça login para visualizar seu histórico");
-        return;
-      }
-      
-      setLoading(true);
-      try {
-        console.log("Carregando histórico com filtros:", { 
-          searchTerm, 
-          dateRange, 
-          filterStatus 
-        });
-        
-        // Se houver filtros ativos, usa a função de busca filtrada
-        if (searchTerm || dateRange?.from || filterStatus !== "todos") {
-          const startDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined;
-          const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined;
-          const data = await searchHistory(searchTerm, startDate, endDate, filterStatus);
-          
-          console.log("Dados filtrados recebidos:", data);
-          setHistoryData(data);
-        } else {
-          // Caso contrário, busca todos os registros
-          const data = await fetchHistoryData();
-          console.log("Todos os dados recebidos:", data);
-          setHistoryData(data);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar o histórico:", error);
-        toast.error("Não foi possível carregar seu histórico de análises", {
-          description: "Verifique sua conexão de internet e tente novamente."
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Simulação de carregamento dos dados
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
     
-    loadHistoryData();
-  }, [user, authLoading, searchTerm, dateRange, filterStatus]);
+    return () => clearTimeout(timer);
+  }, []);
   
-  /**
-   * Manipulador para exportação do histórico para Excel
-   */
   const handleExport = () => {
-    try {
-      exportToExcel(historyData, 'historico-analises');
-      toast.success("Histórico exportado com sucesso");
-    } catch (error) {
-      console.error("Erro ao exportar histórico:", error);
-      toast.error("Falha ao exportar histórico");
-    }
+    toast.info("Função em desenvolvimento", {
+      description: "A exportação do histórico estará disponível em breve."
+    });
   };
 
   return (
-    <AuthenticatedLayout title="Histórico de Análises">
-      <Helmet>
-        <title>Histórico de Análises | MedCheck</title>
-      </Helmet>
-      
+    <MainLayout 
+      title="Histórico de Análises" 
+      isLoading={isLoading}
+      loadingMessage="Carregando histórico..."
+    >
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Histórico de Análises</h1>
-        </div>
-        
-        <HistorySearch 
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          filterStatus={filterStatus}
-          onFilterChange={setFilterStatus}
-          onExport={handleExport}
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-        />
-        
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2 text-lg">Carregando histórico...</span>
-          </div>
-        ) : historyData.length === 0 ? (
-          <div className="text-center py-10 bg-gray-50 rounded-lg">
-            <p className="text-gray-600">Nenhum histórico de análise encontrado.</p>
-            <p className="text-gray-500 text-sm mt-1">
-              Faça upload de arquivos para gerar análises ou ajuste os filtros de busca.
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Histórico de Análises</h1>
+            <p className="text-muted-foreground mt-1">
+              Consulte todas as análises realizadas e seus resultados
             </p>
           </div>
-        ) : (
-          <HistoryTable items={historyData} />
-        )}
+          
+          <Button variant="outline" onClick={handleExport} className="self-start">
+            <Download className="mr-2 h-4 w-4" />
+            Exportar Excel
+          </Button>
+        </div>
+        
+        <HistorySearch />
+        <HistoryTable />
       </div>
-    </AuthenticatedLayout>
+    </MainLayout>
   );
 };
 

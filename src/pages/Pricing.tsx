@@ -5,11 +5,10 @@ import PricingPlans from "@/components/PricingPlans";
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useTrialStatus } from '@/hooks/use-trial-status';
-import { PublicLayout } from '@/components/layout/PublicLayout';
-import { AuthenticatedLayout } from '@/components/layout/AuthenticatedLayout';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 const PricingPage = () => {
-  const { user, session } = useAuth();
+  const { session } = useAuth();
   const { status } = useTrialStatus();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -27,20 +26,27 @@ const PricingPage = () => {
     }
     return true;
   };
-
-  // Use the appropriate layout based on authentication status
-  const Layout = session ? AuthenticatedLayout : PublicLayout;
   
   return (
-    <Layout title="Planos e Preços">
-      <div className="py-8 md:py-12">
+    <MainLayout 
+      title="Planos e Preços"
+      showSideNav={!!session}
+    >
+      <div className="py-4 md:py-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Planos MedCheck</h1>
+          <p className="text-muted-foreground mt-1">
+            Escolha o plano ideal para suas necessidades e comece a recuperar valores glosados hoje mesmo
+          </p>
+        </div>
+        
         <PricingPlans 
           isLoggedIn={!!session}
           isTrial={status === 'active'} 
           onCheckout={handleCheckoutRedirect}
         />
       </div>
-    </Layout>
+    </MainLayout>
   );
 };
 
