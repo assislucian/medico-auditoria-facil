@@ -51,20 +51,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return true;
       }
       
-      // Otherwise verify with the database using a direct query instead of RPC
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('crm', crmToCheck)
-        .eq('id', user.id)
-        .maybeSingle();
+      // Otherwise verify with RPC function
+      const { data, error } = await supabase.rpc('verify_crm', { crm_to_verify: crmToCheck });
       
       if (error) {
         console.error('Error validating CRM:', error);
         return false;
       }
       
-      return !!data;
+      return data || false;
     } catch (error) {
       console.error('Exception during CRM validation:', error);
       return false;

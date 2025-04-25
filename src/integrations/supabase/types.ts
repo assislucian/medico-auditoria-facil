@@ -686,6 +686,10 @@ export type Database = {
         Args: { completed: boolean }
         Returns: Json
       }
+      verify_crm: {
+        Args: { crm_to_verify: string }
+        Returns: boolean
+      }
     }
     Enums: {
       payment_method_type: "credit_card" | "bank_slip" | "pix"
