@@ -1,13 +1,14 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { BasicInfoFields } from "../form-fields/BasicInfoFields";
 import { ProfessionalFields } from "../form-fields/ProfessionalFields";
 import { ProfileImageUpload } from "../image/ProfileImageUpload";
-import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const profileFormSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -27,8 +28,8 @@ interface ProfileFormProps {
 }
 
 export const ProfileForm = ({ loading, onSubmit }: ProfileFormProps) => {
-  // Use the useForm hook directly in this component instead of through useProfileForm
   const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
     defaultValues: {
       name: "Lucian",
       email: "dr.anasilva@exemplo.med.br",
@@ -53,7 +54,7 @@ export const ProfileForm = ({ loading, onSubmit }: ProfileFormProps) => {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = async (data: ProfileFormValues) => {
+  const handleFormSubmit = async (data: ProfileFormValues) => {
     // Map the form values to the expected structure for the API
     await onSubmit({
       name: data.name,
@@ -64,8 +65,13 @@ export const ProfileForm = ({ loading, onSubmit }: ProfileFormProps) => {
       hospital: data.hospital,
       bio: data.bio
     }, selectedImage);
+    
     setSelectedImage(null);
     setImagePreview(null);
+    
+    toast.success("Perfil atualizado", {
+      description: "Suas alterações foram salvas com sucesso."
+    });
   };
 
   const handleCancel = () => {
@@ -79,14 +85,21 @@ export const ProfileForm = ({ loading, onSubmit }: ProfileFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <BasicInfoFields form={form} />
-        <ProfessionalFields form={form} />
-        <ProfileImageUpload
-          imagePreview={imagePreview}
-          onImageUpload={handleImageUpload}
-        />
-        <div className="flex justify-end gap-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
+        <div className="grid md:grid-cols-[1fr_2fr] gap-6">
+          <div>
+            <ProfileImageUpload
+              imagePreview={imagePreview}
+              onImageUpload={handleImageUpload}
+            />
+          </div>
+          <div className="space-y-6">
+            <BasicInfoFields form={form} />
+            <ProfessionalFields form={form} />
+          </div>
+        </div>
+        
+        <div className="flex justify-end gap-4 pt-4 border-t">
           <Button type="button" variant="outline" onClick={handleCancel}>
             Cancelar
           </Button>

@@ -1,6 +1,8 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfileAvatar } from "@/hooks/use-profile-avatar";
+import { Camera, User } from "lucide-react";
+import { useState } from "react";
 
 interface ProfileAvatarProps {
   name: string;
@@ -10,6 +12,7 @@ interface ProfileAvatarProps {
 
 export const ProfileAvatar = ({ name, avatarUrl, onAvatarUpdate }: ProfileAvatarProps) => {
   const { uploading, handleAvatarChange } = useProfileAvatar();
+  const [isHovering, setIsHovering] = useState(false);
 
   // Get initials from name
   const getInitials = (name: string) => {
@@ -24,34 +27,30 @@ export const ProfileAvatar = ({ name, avatarUrl, onAvatarUpdate }: ProfileAvatar
   };
 
   return (
-    <div className="relative">
-      <Avatar className="h-24 w-24">
+    <div 
+      className="relative cursor-pointer group"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      <Avatar className="h-24 w-24 border-2 border-muted">
         {avatarUrl ? (
-          <AvatarImage src={avatarUrl} alt={name} />
+          <AvatarImage src={avatarUrl} alt={name} className="object-cover" />
         ) : (
-          <AvatarFallback className="text-lg">
-            {getInitials(name)}
+          <AvatarFallback className="text-lg bg-primary/10 text-primary">
+            <User className="h-8 w-8" />
           </AvatarFallback>
         )}
       </Avatar>
+      
       <label 
         htmlFor="avatar-upload"
-        className="absolute bottom-0 right-0 p-1 bg-primary text-primary-foreground rounded-full cursor-pointer hover:bg-primary/90"
+        className={`absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 transition-opacity duration-200 ${isHovering || uploading ? 'opacity-100' : ''}`}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-          <path d="m15 5 4 4"/>
-        </svg>
+        {uploading ? (
+          <div className="h-8 w-8 border-2 border-t-white border-r-transparent border-b-white border-l-transparent rounded-full animate-spin" />
+        ) : (
+          <Camera className="h-6 w-6 text-white" />
+        )}
         <input
           id="avatar-upload"
           type="file"
