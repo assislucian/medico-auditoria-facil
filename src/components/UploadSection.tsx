@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
 import ComparisonView from './ComparisonView';
 import UploadAlerts from './upload/UploadAlerts';
@@ -37,7 +37,6 @@ const UploadSection = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
 
-  // Handler para os dropzones
   const onDropFiles = async (type: FileType, fileList: FileList) => {
     setError(null);
     await handleFileChangeByType(type, fileList);
@@ -88,13 +87,7 @@ const UploadSection = () => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Upload de Documentos</CardTitle>
-          <CardDescription>
-            Envie suas guias médicas e demonstrativos para análise automática com referência CBHPM 2015
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-6">
           {error && (
             <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
               {error}

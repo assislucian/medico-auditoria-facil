@@ -1,3 +1,4 @@
+
 import UploadSection from "@/components/UploadSection";
 import { Card } from "@/components/ui/card";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -13,7 +14,7 @@ const UploadsPage = () => {
       
       <div className="grid grid-cols-1 gap-6">
         <UploadSection />
-          
+        
         <Card className="p-6">
           <h2 className="text-xl font-bold mb-4">Instruções de Upload</h2>
           <div className="space-y-4">

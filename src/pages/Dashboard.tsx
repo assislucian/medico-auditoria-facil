@@ -1,4 +1,3 @@
-
 import Dashboard from "@/components/Dashboard";
 import { GuidedTour } from '@/components/onboarding/GuidedTour';
 import { useOnboarding } from '@/hooks/use-onboarding';
@@ -48,7 +47,6 @@ const DashboardPage = () => {
           </Button>
         }
       />
-      
       <Dashboard />
       {showTour && <GuidedTour />}
     </MainLayout>
