@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { HistoryTable } from '@/components/history/HistoryTable';
 import { HistorySearch } from '@/components/history/HistorySearch';
@@ -18,7 +17,6 @@ const HistoryPage = () => {
   const [filterStatus, setFilterStatus] = useState('todos');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
-  // Fetch history data on component mount
   useEffect(() => {
     const loadHistoryData = async () => {
       setIsLoading(true);
@@ -36,7 +34,6 @@ const HistoryPage = () => {
     loadHistoryData();
   }, []);
   
-  // Handle search and filter changes
   const handleSearchChange = async (value: string) => {
     setSearchTerm(value);
     await filterHistoryData(value, filterStatus, dateRange);
@@ -52,7 +49,6 @@ const HistoryPage = () => {
     await filterHistoryData(searchTerm, filterStatus, range);
   };
   
-  // Apply filters to history data
   const filterHistoryData = async (
     search: string, 
     status: string, 
@@ -61,7 +57,6 @@ const HistoryPage = () => {
     setIsLoading(true);
     
     try {
-      // Convert dates to ISO strings for backend filtering
       const startDate = dates?.from ? dates.from.toISOString().split('T')[0] : undefined;
       const endDate = dates?.to ? dates.to.toISOString().split('T')[0] : undefined;
       
@@ -75,7 +70,6 @@ const HistoryPage = () => {
     }
   };
   
-  // Handle export functionality
   const handleExport = () => {
     toast.info("Função em desenvolvimento", {
       description: "A exportação do histórico estará disponível em breve."
@@ -105,7 +99,6 @@ const HistoryPage = () => {
           onSearchChange={handleSearchChange}
           filterStatus={filterStatus}
           onFilterChange={handleFilterChange}
-          onExport={handleExport}
           dateRange={dateRange}
           onDateRangeChange={handleDateRangeChange}
         />

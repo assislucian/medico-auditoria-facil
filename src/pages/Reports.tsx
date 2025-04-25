@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ReportsHeader } from "@/components/reports/ReportsHeader";
 import { StatusCardsSection } from "@/components/reports/StatusCardsSection";
 import { OverviewCharts } from "@/components/reports/OverviewCharts";
 import { HospitalsTable } from "@/components/reports/HospitalsTable";
@@ -12,6 +10,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const ReportsPage = () => {
   const [currentYear, setCurrentYear] = useState("2025");
@@ -113,72 +112,57 @@ const ReportsPage = () => {
       isLoading={loading} 
       loadingMessage="Carregando relatórios..."
     >
-      <div className="flex flex-col gap-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Relatórios</h1>
-            <p className="text-muted-foreground mt-1">
-              Visualize e exporte resumos de pagamentos e procedimentos
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  Exportar
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleExport('excel')}>
-                  Exportar como Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('tiss')}>
-                  Exportar como TISS (XML)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('fhir')}>
-                  Exportar como HL7 FHIR
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+      <PageHeader
+        title="Relatórios"
+        description="Visualize e exporte resumos de pagamentos e procedimentos"
+        actions={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">Exportar</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                Exportar como Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('tiss')}>
+                Exportar como TISS (XML)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('fhir')}>
+                Exportar como HL7 FHIR
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      />
+      
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="hospitals">Por Hospital</TabsTrigger>
+          <TabsTrigger value="procedures">Por Procedimento</TabsTrigger>
+        </TabsList>
         
-        <ReportsHeader 
-          onExport={() => handleExport('excel')}
-          onYearChange={handleYearChange}
-          onFilterPeriod={handleFilterPeriod}
-        />
-        <StatusCardsSection />
+        <TabsContent value="overview" className="space-y-4">
+          <OverviewCharts />
+        </TabsContent>
         
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="hospitals">Por Hospital</TabsTrigger>
-            <TabsTrigger value="procedures">Por Procedimento</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="overview" className="space-y-4">
-            <OverviewCharts />
-          </TabsContent>
-          
-          <TabsContent value="hospitals">
-            <HospitalsTable />
-          </TabsContent>
-          
-          <TabsContent value="procedures">
-            <Card>
-              <CardHeader>
-                <CardTitle>Análise por Procedimento</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-center text-muted-foreground py-12">
-                  Esta funcionalidade será disponibilizada em breve.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+        <TabsContent value="hospitals">
+          <HospitalsTable />
+        </TabsContent>
+        
+        <TabsContent value="procedures">
+          <Card>
+            <CardHeader>
+              <CardTitle>Análise por Procedimento</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-muted-foreground py-12">
+                Esta funcionalidade será disponibilizada em breve.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </MainLayout>
   );
 };
