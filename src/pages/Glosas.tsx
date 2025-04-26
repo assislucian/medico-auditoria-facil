@@ -23,7 +23,7 @@ const mockGlosas = [
     guia: "10467539", 
     procedimento: "Vitrectomia posterior",
     data: "20/04/2025", 
-    valorGlosa: 892.44, 
+    valorGlosado: 892.44, 
     motivoGlosa: "Documentação incompleta",
     contestada: true 
   },
@@ -47,6 +47,9 @@ const glosaColumns = [
     headerName: 'Valor Glosado', 
     width: 150,
     valueFormatter: (params: any) => {
+      if (params.value === undefined || params.value === null) {
+        return 'R$ 0,00';
+      }
       return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
@@ -58,7 +61,7 @@ const glosaColumns = [
     field: 'contestada', 
     headerName: 'Status', 
     width: 150,
-    renderCell: ({ value }) => {
+    renderCell: ({ value }: { value: boolean }) => {
       return value ? 
         <Badge variant="warning">Contestada</Badge> : 
         <Badge variant="destructive">Não Contestada</Badge>;
@@ -68,7 +71,7 @@ const glosaColumns = [
     field: 'actions',
     headerName: 'Ações',
     width: 120,
-    renderCell: ({ row }) => {
+    renderCell: ({ row }: { row: any }) => {
       return (
         <Button 
           variant="outline" 
