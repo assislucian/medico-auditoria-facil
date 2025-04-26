@@ -7,7 +7,8 @@
   "scripts": {
     "test": "jest",
     "migrate": "node scripts/migrate.js",
-    "deploy:functions": "node scripts/deploy-functions.js"
+    "deploy:functions": "node scripts/deploy-functions.js",
+    "lint": "eslint . --ext .js,.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
