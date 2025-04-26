@@ -1,5 +1,5 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   LineChart, 
@@ -13,6 +13,8 @@ import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/comp
 
 export function MainNavigation() {
   const location = useLocation();
+  const navigate = useNavigate();
+  
   const navItems = [
     {
       name: "Dashboard",
@@ -46,6 +48,10 @@ export function MainNavigation() {
     },
   ];
 
+  const handleNavigate = (href: string) => {
+    navigate(href);
+  };
+
   return (
     <div className="px-3 py-2">
       <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
@@ -60,12 +66,10 @@ export function MainNavigation() {
                   variant={location.pathname === item.href ? "secondary" : "ghost"}
                   size="sm"
                   className="w-full justify-start"
-                  asChild
+                  onClick={() => handleNavigate(item.href)}
                 >
-                  <Link to={item.href}>
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.name}
-                  </Link>
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.name}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">{item.name}</TooltipContent>

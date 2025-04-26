@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Bell } from 'lucide-react';
+import { Menu, X, Bell, ChevronLeft } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -13,7 +14,12 @@ import { HelpMenu } from './navbar/HelpMenu';
 import { UserMenu } from './navbar/UserMenu';
 import { MobileMenu } from './navbar/MobileMenu';
 
-const Navbar = ({ isLoggedIn: propIsLoggedIn }: { isLoggedIn?: boolean }) => {
+interface NavbarProps {
+  isLoggedIn?: boolean;
+  showBackButton?: boolean;
+}
+
+const Navbar = ({ isLoggedIn: propIsLoggedIn, showBackButton = false }: NavbarProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, signOut, getProfile } = useAuth();
   const navigate = useNavigate();
@@ -63,11 +69,26 @@ const Navbar = ({ isLoggedIn: propIsLoggedIn }: { isLoggedIn?: boolean }) => {
     }
   };
 
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
           <div className="flex-shrink-0 flex items-center">
+            {showBackButton ? (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="mr-2" 
+                onClick={handleGoBack}
+                title="Voltar"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            ) : null}
             <Link to="/" className="flex items-center">
               <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent">
                 MedCheck

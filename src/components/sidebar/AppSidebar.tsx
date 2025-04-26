@@ -10,7 +10,8 @@ import {
   Bell,
   HelpCircle,
   User,
-  Play
+  Play,
+  LogOut
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -28,10 +29,22 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 export function AppSidebar() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Logout realizado com sucesso");
+      navigate("/login");
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast.error("Erro ao fazer logout");
+    }
+  };
 
   const mainMenuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -125,6 +138,17 @@ export function AppSidebar() {
             >
               <Play className="h-4 w-4" />
               <span>Ver Tour Novamente</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleSignOut}
+              variant="outline"
+              className="mt-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              tooltip="Sair"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sair</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

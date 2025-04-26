@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for formatting and validation
  */
@@ -12,7 +11,13 @@ export const formatCurrency = (value: number | undefined | null): string => {
   if (value === undefined || value === null) {
     return 'R$ 0,00';
   }
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  
+  try {
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  } catch (error) {
+    console.error('Erro ao formatar valor:', error);
+    return 'R$ 0,00';
+  }
 };
 
 /**

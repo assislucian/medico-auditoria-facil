@@ -29,6 +29,12 @@ export function DataGrid({
   // Make sure rows is always an array, even if undefined is passed
   const safeRows = Array.isArray(rows) ? rows : [];
   
+  // Função para obter o valor de uma célula com segurança
+  const getCellValue = (row: any, field: string) => {
+    if (!row) return null;
+    return row[field];
+  };
+  
   return (
     <div className={className}>
       <Table>
@@ -50,17 +56,21 @@ export function DataGrid({
         <TableBody>
           {safeRows.slice(0, pageSize).map((row, rowIndex) => (
             <TableRow key={row?.id || rowIndex}>
-              {columns.map((column) => (
-                <TableCell key={`${row?.id || rowIndex}-${column.field}`}>
-                  {column.renderCell ? (
-                    column.renderCell({ value: row?.[column.field], row })
-                  ) : column.valueFormatter ? (
-                    column.valueFormatter({ value: row?.[column.field] })
-                  ) : (
-                    row?.[column.field]
-                  )}
-                </TableCell>
-              ))}
+              {columns.map((column) => {
+                const cellValue = getCellValue(row, column.field);
+                
+                return (
+                  <TableCell key={`${row?.id || rowIndex}-${column.field}`}>
+                    {column.renderCell ? (
+                      column.renderCell({ value: cellValue, row })
+                    ) : column.valueFormatter ? (
+                      column.valueFormatter({ value: cellValue })
+                    ) : (
+                      cellValue
+                    )}
+                  </TableCell>
+                );
+              })}
             </TableRow>
           ))}
           {safeRows.length === 0 && (
@@ -77,7 +87,7 @@ export function DataGrid({
         <Button
           variant="outline"
           size="sm"
-          disabled={true}
+          disabled={safeRows.length <= pageSize}
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
           Anterior
@@ -85,7 +95,7 @@ export function DataGrid({
         <Button
           variant="outline"
           size="sm"
-          disabled={true}
+          disabled={safeRows.length <= pageSize}
         >
           Próximo
           <ChevronRight className="h-4 w-4 ml-1" />
