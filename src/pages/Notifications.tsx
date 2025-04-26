@@ -1,108 +1,115 @@
 
-import { Helmet } from 'react-helmet-async';
-import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
-import { NotificationsList } from '@/components/notifications/NotificationsList';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CheckCheck, Trash2 } from 'lucide-react';
-import { useNotifications } from '@/contexts/NotificationContext';
-import { 
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from '@/components/ui/tabs';
+import { MainLayout } from "@/components/layout/MainLayout";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Card } from "@/components/ui/card";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { BellRing, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const NotificationsPage = () => {
-  const { notifications, unreadCount, markAllAsRead, clearNotifications } = useNotifications();
-  const unreadNotifications = notifications.filter(n => !n.read);
-  const readNotifications = notifications.filter(n => n.read);
+  const { notifications, markAsRead, markAllAsRead } = useNotifications();
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <>
-      <Helmet>
-        <title>Notificações | MedCheck</title>
-      </Helmet>
-      <AuthenticatedLayout title="Notificações">
-        <div className="container mx-auto py-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-            <div>
-              <h1 className="text-2xl font-bold">Notificações</h1>
-              <p className="text-muted-foreground mt-1">
-                Gerencie suas notificações e atualizações do sistema
-              </p>
-            </div>
-            <div className="flex items-center gap-2 self-end">
-              {unreadCount > 0 && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-2"
-                  onClick={() => markAllAsRead()}
-                >
-                  <CheckCheck className="h-4 w-4" />
-                  Marcar todas como lidas
-                </Button>
-              )}
-              {notifications.length > 0 && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-2 border-destructive/30 hover:border-destructive/50 hover:bg-destructive/10 text-destructive"
-                  onClick={() => clearNotifications()}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Limpar tudo
-                </Button>
-              )}
-            </div>
-          </div>
+    <MainLayout title="Notificações">
+      <PageHeader
+        title="Notificações"
+        description="Acompanhe todas as notificações do sistema"
+      />
 
-          <Tabs defaultValue="all" className="w-full">
-            <div className="border-b mb-6">
-              <TabsList className="mb-[-1px]">
-                <TabsTrigger value="all">
-                  Todas
-                  {notifications.length > 0 && (
-                    <Badge variant="secondary" className="ml-2">
-                      {notifications.length}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="unread">
-                  Não lidas
-                  {unreadNotifications.length > 0 && (
-                    <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground">
-                      {unreadNotifications.length}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="read">
-                  Lidas
-                  {readNotifications.length > 0 && (
-                    <Badge variant="secondary" className="ml-2">
-                      {readNotifications.length}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <TabsContent value="all">
-              <NotificationsList notifications={notifications} />
-            </TabsContent>
-            
-            <TabsContent value="unread">
-              <NotificationsList notifications={unreadNotifications} />
-            </TabsContent>
-            
-            <TabsContent value="read">
-              <NotificationsList notifications={readNotifications} />
-            </TabsContent>
-          </Tabs>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
+          <BellRing className="h-5 w-5" />
+          <span className="text-lg font-medium">
+            {notifications.length} Notificações
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="ml-2">
+                {unreadCount} não lidas
+              </Badge>
+            )}
+          </span>
         </div>
-      </AuthenticatedLayout>
-    </>
+        {unreadCount > 0 && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => markAllAsRead()}
+          >
+            Marcar todas como lidas
+          </Button>
+        )}
+      </div>
+
+      {notifications.length === 0 ? (
+        <Card className="p-8 text-center">
+          <div className="flex flex-col items-center gap-2">
+            <BellRing className="h-10 w-10 text-muted-foreground" />
+            <h3 className="text-xl font-medium mt-2">Nenhuma notificação</h3>
+            <p className="text-muted-foreground">
+              Você não possui nenhuma notificação no momento.
+            </p>
+          </div>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {notifications.map((notification) => (
+            <Card 
+              key={notification.id}
+              className={`p-4 ${!notification.read ? 'border-l-4 border-l-primary' : ''}`}
+            >
+              <div className="flex justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium">{notification.title}</h3>
+                    {notification.type && (
+                      <Badge variant={
+                        notification.type === 'success' ? 'success' : 
+                        notification.type === 'warning' ? 'warning' : 
+                        notification.type === 'error' ? 'destructive' : 
+                        'default'
+                      }>
+                        {notification.type}
+                      </Badge>
+                    )}
+                    {!notification.read && (
+                      <Badge variant="outline" className="bg-primary/10">Nova</Badge>
+                    )}
+                  </div>
+                  <p className="mt-1">{notification.message}</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {notification.createdAt && formatDistanceToNow(notification.createdAt, { 
+                      addSuffix: true,
+                      locale: ptBR
+                    })}
+                  </p>
+                </div>
+                {!notification.read && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => markAsRead(notification.id)}
+                  >
+                    <Check className="h-4 w-4" />
+                    <span className="sr-only">Marcar como lida</span>
+                  </Button>
+                )}
+              </div>
+              {notification.link && (
+                <div className="mt-2">
+                  <Button variant="link" className="p-0 h-auto" asChild>
+                    <a href={notification.link}>Ver detalhes</a>
+                  </Button>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
+    </MainLayout>
   );
 };
 

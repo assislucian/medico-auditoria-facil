@@ -370,22 +370,29 @@ export class MedicalDataService {
               codigo: '',
               nome: 'Prestador não especificado'
             },
-            procedimentos: procs.map((proc: any) => ({
-              codigo: proc.codigo,
-              descricao: proc.procedimento,
-              dataExecucao: proc.created_at ? new Date(proc.created_at).toLocaleDateString('pt-BR') : '',
-              quantidade: 1,
-              status: proc.pago ? 'Fechada' : 'Aberta',
-              valorPago: proc.valor_pago,
-              participacoes: proc.doctors ? proc.doctors.map((doctor: any) => ({
-                funcao: doctor.role,
-                crm: doctor.code,
-                nome: doctor.name,
-                dataInicio: doctor.startTime,
-                dataFim: doctor.endTime,
-                status: doctor.status
-              })) : []
-            }))
+            procedimentos: procs.map((proc: any) => {
+              // Create a safe version of participacoes that won't cause infinite recursion
+              const safeParticipacoes = Array.isArray(proc.doctors) 
+                ? proc.doctors.map((doctor: any) => ({
+                    funcao: doctor.role || '',
+                    crm: doctor.code || '',
+                    nome: doctor.name || '',
+                    dataInicio: doctor.startTime || '',
+                    dataFim: doctor.endTime || '',
+                    status: doctor.status || ''
+                  }))
+                : [];
+                
+              return {
+                codigo: proc.codigo,
+                descricao: proc.procedimento,
+                dataExecucao: proc.created_at ? new Date(proc.created_at).toLocaleDateString('pt-BR') : '',
+                quantidade: 1,
+                status: proc.pago ? 'Fechada' : 'Aberta',
+                valorPago: proc.valor_pago || 0,
+                participacoes: safeParticipacoes
+              };
+            })
           };
           
           guides.push(guide);
@@ -530,12 +537,16 @@ export class MedicalDataService {
           const hasGlosa = matchingProcs.some(p => p.glosa > 0);
           
           if (hasGlosa) {
-            discrepancias.push({
-              tipo: 'pago_parcialmente' as const,
-              procedimentoGuia: procGuia,
-              procedimentoDemonstrativo: matchingProcs.find(p => p.glosa > 0),
-              descricao: `O procedimento ${procGuia.codigo} - ${procGuia.descricao} teve glosa aplicada.`
-            });
+            // Use type assertion to avoid infinite type instantiation
+            const glosaProc = matchingProcs.find(p => p.glosa > 0);
+            if (glosaProc) {
+              discrepancias.push({
+                tipo: 'pago_parcialmente' as const,
+                procedimentoGuia: procGuia,
+                procedimentoDemonstrativo: glosaProc,
+                descricao: `O procedimento ${procGuia.codigo} - ${procGuia.descricao} teve glosa aplicada.`
+              });
+            }
           }
         }
       }
