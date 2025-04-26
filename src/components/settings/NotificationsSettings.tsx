@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Json } from '@/integrations/supabase/types';
 import { Profile, ProfileWithUUID } from '@/types';
-import { getProfile, updateProfile, toJson } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile, toJson } from "../../../utils/supabase/supabaseHelpers";
 
 interface NotificationPreferences {
   email: {

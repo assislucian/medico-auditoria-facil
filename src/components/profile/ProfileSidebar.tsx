@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
 import { Profile, ProfileWithUUID } from "@/types";
-import { updateProfile, getProfile } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile } from "../../../utils/supabase/supabaseHelpers";
 
 interface ProfileSidebarProps {
   name: string;
@@ -22,19 +21,16 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle click on edit photo button
   const handleEditPhotoClick = () => {
     fileInputRef.current?.click();
   };
 
-  // Handle file selection
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
     const file = files[0];
     
-    // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
       toast.error("Formato inválido", {
@@ -43,7 +39,6 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
       return;
     }
 
-    // Check file size (max 2MB)
     const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
       toast.error("Arquivo grande demais", {
@@ -60,7 +55,6 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
           description: "Sua foto de perfil foi atualizada com sucesso."
         });
       } else {
-        // Direct upload implementation if no callback is provided
         const { data: sessionData } = await supabase.auth.getSession();
         if (!sessionData.session) {
           throw new Error("Usuário não autenticado");
@@ -69,7 +63,6 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
         const userId = sessionData.session.user.id;
         const filePath = `avatars/${userId}/profile-${Date.now()}`;
         
-        // Check if the storage bucket exists and create it if needed
         try {
           const { data: buckets } = await supabase.storage.listBuckets();
           const profilesBucketExists = buckets?.some(b => b.name === 'profiles');
@@ -94,24 +87,20 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
           throw uploadError;
         }
 
-        // Get the public URL
         const { data: urlData } = supabase.storage
           .from('profiles')
           .getPublicUrl(filePath);
           
-        // Get the current user profile
         const profileData = await getProfile(supabase, userId);
         
         if (!profileData) {
           throw new Error("Não foi possível recuperar o perfil do usuário");
         }
         
-        // Ensure we have an object to work with
         const currentPreferences = profileData.notification_preferences 
           ? profileData.notification_preferences 
           : {};
         
-        // Update the profile with new avatar_url
         const success = await updateProfile(supabase, userId, {
           notification_preferences: {
             ...(currentPreferences as object),
@@ -134,14 +123,12 @@ export const ProfileSidebar = ({ name, specialty, crm, avatarUrl, onUpdateAvatar
       });
     } finally {
       setUploading(false);
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
   };
 
-  // Generate initials from name
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };

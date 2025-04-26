@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -16,7 +15,7 @@ import {
   ensureCheckedProperty,
   ReferenceTable as ReferenceTableType
 } from './reference-tables/types';
-import { getProfile, updateProfile, toJson } from "@/utils/supabaseHelpers";
+import { getProfile, updateProfile, toJson } from "../../../utils/supabase/supabaseHelpers";
 import { Json } from '@/integrations/supabase/types';
 
 /**

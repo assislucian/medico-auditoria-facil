@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { SupportLayout } from "@/components/support/SupportLayout";
 import { TicketList } from '@/components/support/TicketList';
@@ -6,7 +5,7 @@ import { TicketDetail } from '@/components/support/TicketDetail';
 import { NewTicketForm } from '@/components/support/NewTicketForm';
 import { useTickets } from '@/hooks/useTickets';
 import { TicketCategory, TicketPriority } from '@/components/support/types';
-import { TicketData } from '@/utils/supabaseHelpers';
+import { TicketData } from '../utils/supabase/supabaseHelpers';
 
 /**
  * Support Page

@@ -11,21 +11,19 @@ import { useComparisonData } from '@/hooks/useComparisonData';
 import { supabase } from '@/integrations/supabase/client';
 import { ChevronLeft, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchProceduresByAnalysisId } from '@/utils/supabaseHelpers';
+import { fetchProceduresByAnalysisId } from '../utils/supabase/supabaseHelpers';
 
 const CompareContracheque = () => {
   const [searchParams] = useSearchParams();
   const analysisId = searchParams.get('analysisId');
   const navigate = useNavigate();
   
-  // Log the analysisId for debugging
   console.log('Current analysisId from URL params:', analysisId);
   
   const { data, isLoading, isError } = useComparisonData(analysisId);
   const [guiaDetails, setGuiaDetails] = useState(null);
   const [isLoadingGuias, setIsLoadingGuias] = useState(false);
 
-  // Buscar dados das guias relacionadas
   useEffect(() => {
     const fetchGuiaDetails = async () => {
       if (!analysisId) {
@@ -41,11 +39,9 @@ const CompareContracheque = () => {
         
         console.log('Fetched procedures data:', proceduresData);
         
-        // Filtrar apenas procedimentos da guia
         const guiaProcedures = proceduresData?.filter(proc => proc.guia && proc.codigo) || [];
         setGuiaDetails(guiaProcedures);
         
-        // Mostrar informação sobre guias encontradas
         if (guiaProcedures.length > 0) {
           toast.info(`${guiaProcedures.length} procedimentos de guia encontrados para comparação`, {
             duration: 3000
@@ -70,7 +66,6 @@ const CompareContracheque = () => {
     navigate('/uploads');
   };
 
-  // For debugging - log the current state
   useEffect(() => {
     console.log('Current comparison data state:', { 
       analysisId, 

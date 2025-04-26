@@ -14,7 +14,7 @@ import { VideosList } from '@/components/help/VideosList';
 import type { HelpArticle } from '@/types/help';
 import { guides, videos } from '@/data/helpGuides';
 import { supabase } from "@/integrations/supabase/client";
-import { fetchHelpArticles } from "@/utils/supabaseHelpers";
+import { fetchHelpArticles } from "../utils/supabase/supabaseHelpers";
 
 const faqItems = [
   {

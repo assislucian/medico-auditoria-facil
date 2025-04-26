@@ -1,3 +1,4 @@
+
 // ---------------------------------------------------------------------
 // Re-exporta MÓDULOS ESPECÍFICOS (sem conflitos de nomes)
 // ---------------------------------------------------------------------
@@ -39,3 +40,4 @@ export {
 // para não disparar o erro TS1205 quando `isolatedModules` estiver ativo.
 // ---------------------------------------------------------------------
 export type { TicketData } from './supabaseHelpers';
+

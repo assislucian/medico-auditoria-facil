@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -9,7 +8,7 @@ import {
   createSupportTicket, 
   sendTicketMessage,
   TicketData 
-} from '@/utils/supabaseHelpers';
+} from '../utils/supabase/supabaseHelpers';
 
 /**
  * Custom hook for managing support tickets
