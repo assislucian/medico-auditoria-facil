@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { 
   PaymentStatementDetailed, 
@@ -500,16 +501,31 @@ export class MedicalDataService {
         tipo: 'honorario'
       }));
       
-      // Define our discrepancy type explicitly to avoid infinite recursion
-      type Discrepancy = {
+      // Define a simple type alias for our discrepancies to avoid recursion issues
+      interface SimpleDiscrepancy {
         tipo: 'nao_pago' | 'pago_parcialmente' | 'funcao_incorreta' | 'outro';
-        procedimentoGuia: ProcedimentoGuia;
+        procedimentoGuia: {
+          codigo: string;
+          descricao: string;
+          dataExecucao: string;
+          quantidade: number;
+          status: string;
+          valorPago?: number;
+          participacoes: Array<{
+            funcao: string;
+            crm: string;
+            nome: string;
+            dataInicio: string;
+            dataFim: string;
+            status: string;
+          }>;
+        };
         procedimentoDemonstrativo?: ProcedimentoDemonstrativo;
         descricao: string;
-      };
+      }
       
-      // Now compare procedures to find discrepancies
-      const discrepancias: Discrepancy[] = [];
+      // Now compare procedures to find discrepancies - using our simple type
+      const discrepancias: SimpleDiscrepancy[] = [];
       
       for (const procGuia of guide.procedimentos) {
         // Find matching procedures in the payment statement
