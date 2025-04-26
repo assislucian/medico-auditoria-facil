@@ -1,4 +1,3 @@
-
 export interface DoctorParticipation {
   code: string;
   name: string;

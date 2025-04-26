@@ -1,5 +1,11 @@
 
 import { formatCurrency } from "@/utils/formatters";
+import { Procedure } from "@/types/medical";
+
+interface ColumnParams {
+  value: any;
+  row: Procedure;
+}
 
 export const proceduresColumns = [
   { field: 'codigo', headerName: 'Código', width: 120 },
@@ -9,7 +15,7 @@ export const proceduresColumns = [
     field: 'pago', 
     headerName: 'Pago', 
     width: 100,
-    renderCell: (params: any) => (
+    renderCell: (params: ColumnParams) => (
       <div className="flex justify-center w-full">
         {params.value ? '✓' : '✖'}
       </div>
@@ -20,21 +26,21 @@ export const proceduresColumns = [
     headerName: 'Valor Pago', 
     width: 130,
     type: 'number',
-    valueFormatter: (params: any) => formatCurrency(params.value)
+    valueFormatter: (params: ColumnParams) => formatCurrency(params.value)
   },
   { 
     field: 'valorTabela2015', 
     headerName: 'Valor 2015', 
     width: 130,
     type: 'number',
-    valueFormatter: (params: any) => formatCurrency(params.value)
+    valueFormatter: (params: ColumnParams) => formatCurrency(params.value)
   },
   { 
     field: 'diferenca', 
     headerName: 'Δ%', 
     width: 100,
     type: 'number',
-    renderCell: (params: any) => {
+    renderCell: (params: ColumnParams) => {
       const value = params.value;
       let className = value >= 0 ? 'text-green-600' : 
                      value > -10 ? 'text-orange-500' : 

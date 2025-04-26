@@ -2,9 +2,10 @@
 import { Card } from "@/components/ui/card";
 import { DataGrid } from "@/components/ui/data-grid";
 import { proceduresColumns } from "../columns/proceduresColumns";
+import { Procedure } from "@/types/medical";
 
 interface ProceduresGridProps {
-  procedures: any[];
+  procedures: Procedure[];
 }
 
 export const ProceduresGrid = ({ procedures }: ProceduresGridProps) => {
