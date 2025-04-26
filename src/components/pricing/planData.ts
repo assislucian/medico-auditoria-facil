@@ -4,7 +4,7 @@ import type { Plan } from './types';
 
 export const plans: Plan[] = [
   {
-    id: 'individual-monthly',
+    id: 'price_individual_monthly', // Stripe price ID for individual monthly plan
     name: 'Individual',
     description: 'Plano ideal para médicos individuais',
     price: {
@@ -25,7 +25,7 @@ export const plans: Plan[] = [
     bgColor: 'from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/30',
   },
   {
-    id: 'clinic-monthly',
+    id: 'price_clinic_monthly', // Stripe price ID for clinic monthly plan
     name: 'Clínica',
     description: 'Para clínicas e grupos médicos',
     price: {
@@ -49,7 +49,7 @@ export const plans: Plan[] = [
     isFeatured: true,
   },
   {
-    id: 'premium-monthly',
+    id: 'price_premium_monthly', // Stripe price ID for premium monthly plan
     name: 'Premium',
     description: 'Soluções personalizadas para hospitais',
     price: {

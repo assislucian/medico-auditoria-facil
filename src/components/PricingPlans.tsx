@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -28,9 +27,13 @@ const PricingPlans = ({ isLoggedIn, isTrial, onCheckout }: PricingPlansProps) =>
     } else {
       if (!onCheckout()) return;
       
+      const stripePriceId = billingInterval === 'yearly' 
+        ? planId.replace('_monthly', '_yearly')  
+        : planId;
+        
       navigate('/checkout', {
         state: {
-          planId: selectedPlan.id,
+          planId: stripePriceId,
           planName: selectedPlan.name,
           price: selectedPlan.price[billingInterval],
           interval: billingInterval
@@ -42,8 +45,8 @@ const PricingPlans = ({ isLoggedIn, isTrial, onCheckout }: PricingPlansProps) =>
   const filteredPlans = plans.map(plan => ({
     ...plan,
     id: billingInterval === 'monthly' 
-      ? plan.id.replace('-yearly', '-monthly') 
-      : plan.id.replace('-monthly', '-yearly'),
+      ? plan.id 
+      : plan.id.replace('_monthly', '_yearly'),
   }));
 
   return (

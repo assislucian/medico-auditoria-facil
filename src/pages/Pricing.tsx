@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useTrialStatus } from '@/hooks/use-trial-status';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { PageHeader } from '@/components/layout/PageHeader';
 
 const PricingPage = () => {
   const { session } = useAuth();
@@ -32,16 +31,15 @@ const PricingPage = () => {
       title="Planos e Preços"
       showSideNav={!!session}
     >
-      <PageHeader
-        title="Planos MedCheck"
-        description="Escolha o plano ideal para suas necessidades e comece a recuperar valores glosados hoje mesmo"
-      />
-      
-      <PricingPlans 
-        isLoggedIn={!!session}
-        isTrial={status === 'active'} 
-        onCheckout={handleCheckoutRedirect}
-      />
+      <div className="py-20 px-6 bg-secondary/20">
+        <div className="container mx-auto max-w-6xl">
+          <PricingPlans 
+            isLoggedIn={!!session}
+            isTrial={status === 'active'} 
+            onCheckout={handleCheckoutRedirect}
+          />
+        </div>
+      </div>
     </MainLayout>
   );
 };

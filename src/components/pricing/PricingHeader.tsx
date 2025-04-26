@@ -9,7 +9,6 @@ interface PricingHeaderProps {
 export function PricingHeader({ billingInterval, onIntervalChange }: PricingHeaderProps) {
   return (
     <div className="flex flex-col items-center space-y-4">
-      <h2 className="text-3xl font-bold text-center">Planos MedCheck</h2>
       <p className="text-center text-muted-foreground max-w-2xl">
         Escolha o plano ideal para suas necessidades e comece a recuperar valores glosados hoje mesmo
       </p>
