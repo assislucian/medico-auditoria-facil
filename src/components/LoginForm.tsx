@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { loginSchema } from '@/components/auth/validation';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +12,6 @@ import EmailField from '@/components/auth/EmailField';
 import PasswordField from '@/components/auth/PasswordField';
 import { z } from 'zod';
 import { LoadingSpinner } from './ui/loading-spinner';
-import { showAlert } from '@/utils/alertUtils';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -89,24 +89,24 @@ const LoginForm = () => {
         if (profileResult.error) {
           console.error('Erro ao buscar perfil:', profileResult.error);
           // Se não conseguirmos obter o perfil, vamos para o dashboard
-          showAlert('Sucesso', 'Login realizado com sucesso!', 'success');
+          toast.success('Login realizado com sucesso!');
           navigate(redirectUrl);
           return;
         }
 
         if (!profileResult.data?.trial_status || profileResult.data.trial_status === 'not_started') {
           console.log('Usuário sem trial ativo, redirecionando para welcome');
-          showAlert('Sucesso', 'Login realizado com sucesso!', 'success');
+          toast.success('Login realizado com sucesso!');
           navigate('/welcome', { state: { returnTo: redirectUrl } });
         } else {
           console.log('Usuário com trial ativo, redirecionando para dashboard');
-          showAlert('Sucesso', 'Login realizado com sucesso!', 'success');
+          toast.success('Login realizado com sucesso!');
           navigate(redirectUrl);
         }
       } catch (profileError) {
         console.error('Erro ou timeout ao buscar perfil:', profileError);
         // Em caso de erro ou timeout na busca do perfil, vamos para o dashboard
-        showAlert('Sucesso', 'Login realizado com sucesso!', 'success');
+        toast.success('Login realizado com sucesso!');
         navigate(redirectUrl);
       }
     } catch (error: any) {

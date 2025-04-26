@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { showAlert } from '@/utils/alertUtils';
 
 const AuthCallback = () => {
   const location = useLocation();
@@ -29,11 +29,11 @@ const AuthCallback = () => {
           throw error;
         }
 
-        showAlert('Sucesso', 'Login realizado com sucesso!', 'success');
+        toast.success('Login realizado com sucesso!');
       } catch (err: any) {
         console.error('Error in auth callback:', err);
         setError(err.message || 'An error occurred during authentication');
-        showAlert('Erro', 'Erro de autenticação. Tente novamente.', 'error');
+        toast.error('Erro de autenticação. Tente novamente.');
       } finally {
         setLoading(false);
       }

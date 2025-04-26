@@ -5,25 +5,10 @@ import { Bell } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useState, useEffect } from "react";
 
 export function NotificationsSection() {
+  const { unreadCount } = useNotifications();
   const location = useLocation();
-  const [unreadCount, setUnreadCount] = useState(0);
-  
-  // Try to use the notifications context, but handle the case where it might not be available
-  let notificationContext;
-  try {
-    notificationContext = useNotifications();
-  } catch (error) {
-    console.error("NotificationContext not available yet:", error);
-  }
-  
-  useEffect(() => {
-    if (notificationContext) {
-      setUnreadCount(notificationContext.unreadCount);
-    }
-  }, [notificationContext]);
 
   return (
     <div className="px-3 py-2">
