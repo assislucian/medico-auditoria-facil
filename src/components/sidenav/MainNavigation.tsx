@@ -9,7 +9,10 @@ import {
   CreditCard,
   FileBarChart,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Settings,
+  BookOpen,
+  HelpCircle
 } from "lucide-react";
 import { 
   Tooltip, 
@@ -25,47 +28,68 @@ export function MainNavigation() {
       name: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
+      description: "Visão geral"
     },
     {
       name: "Guias",
       href: "/guides",
       icon: FileText,
+      description: "Guias médicas"
     },
     {
       name: "Demonstrativos",
       href: "/demonstratives",
-      icon: FileUp,
+      icon: FileBarChart,
+      description: "Demonstrativos de pagamento"
     },
     {
       name: "Comparativo",
       href: "/compare",
-      icon: FileBarChart,
+      icon: BarChart2,
+      description: "Comparação com CBHPM"
     },
     {
       name: "Glosas",
       href: "/glosas",
       icon: AlertCircle,
+      description: "Gestão de glosas"
     },
     {
       name: "Upload",
       href: "/uploads",
       icon: FileUp,
+      description: "Enviar documentos"
     },
     {
       name: "Histórico",
       href: "/history",
       icon: History,
+      description: "Histórico de análises"
     },
     {
       name: "Relatórios",
       href: "/reports",
       icon: BarChart2,
+      description: "Relatórios gerenciais"
     },
     {
-      name: "Planos",
-      href: "/pricing",
-      icon: CreditCard,
+      name: "Tabelas",
+      href: "/reference-tables",
+      icon: BookOpen,
+      description: "Tabelas de referência"
     },
+    {
+      name: "Configurações",
+      href: "/settings",
+      icon: Settings,
+      description: "Ajustes da conta"
+    },
+    {
+      name: "Suporte",
+      href: "/help",
+      icon: HelpCircle,
+      description: "Central de ajuda"
+    }
   ];
 
   return (
@@ -90,7 +114,7 @@ export function MainNavigation() {
                   </Link>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">{item.name}</TooltipContent>
+              <TooltipContent side="right">{item.description}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         ))}
