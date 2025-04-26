@@ -5,7 +5,14 @@ import { supabase } from '@/integrations/supabase/client'
 describe('File Upload', () => {
   it('can upload PDF file', async () => {
     const mockFile = new File(['test'], 'test.pdf', { type: 'application/pdf' })
-    const mockResponse = { data: { path: 'uploads/test.pdf' }, error: null }
+    const mockResponse = { 
+      data: { 
+        path: 'uploads/test.pdf',
+        id: 'mock-file-id',
+        fullPath: 'uploads/test.pdf'
+      }, 
+      error: null 
+    }
     
     vi.spyOn(supabase.storage.from('uploads'), 'upload').mockResolvedValue(mockResponse)
 

@@ -6,7 +6,10 @@ describe('Authentication', () => {
   it('can sign in with test user', async () => {
     const mockSession = {
       user: { id: 'test-user-id', email: 'test@example.com' },
-      access_token: 'mock-token'
+      access_token: 'mock-token',
+      refresh_token: 'mock-refresh-token',
+      expires_in: 3600,
+      token_type: 'bearer'
     }
     
     vi.spyOn(supabase.auth, 'signInWithPassword').mockResolvedValue({
