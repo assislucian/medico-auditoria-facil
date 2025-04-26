@@ -5,11 +5,11 @@ import {
   LayoutDashboard,
   FileText,
   FileBarChart,
-  BarChart2,
   Settings,
   HelpCircle,
   History,
-  BookOpen
+  BookOpen,
+  FileX
 } from "lucide-react";
 import { 
   Tooltip, 
@@ -40,10 +40,10 @@ export function MainNavigation() {
       description: "Demonstrativos de pagamento"
     },
     {
-      name: "Comparativos",
-      href: "/compare",
-      icon: BarChart2,
-      description: "Análise comparativa de pagamentos"
+      name: "Não Pagos",
+      href: "/unpaid-procedures",
+      icon: FileX,
+      description: "Procedimentos não pagos e glosas"
     },
     {
       name: "Histórico",

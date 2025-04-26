@@ -20,6 +20,7 @@ import SupportPage from "./pages/Support";
 import AuthCallback from "./pages/AuthCallback";
 import GuidesPage from "./pages/Guides";
 import DemonstrativesPage from "./pages/Demonstratives";
+import UnpaidProceduresPage from "./pages/UnpaidProcedures";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/guides" element={<GuidesPage />} />
                 <Route path="/demonstratives" element={<DemonstrativesPage />} />
+                <Route path="/unpaid-procedures" element={<UnpaidProceduresPage />} />
                 <Route path="/compare" element={<CompareContracheque />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/history" element={<HistoryPage />} />

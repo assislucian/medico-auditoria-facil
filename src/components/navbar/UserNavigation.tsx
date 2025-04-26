@@ -23,8 +23,8 @@ export const UserNavigation = () => {
       <Link to="/demonstratives" className={getNavItemClass("/demonstratives")}>
         Demonstrativos
       </Link>
-      <Link to="/compare" className={getNavItemClass("/compare")}>
-        Comparativos
+      <Link to="/unpaid-procedures" className={getNavItemClass("/unpaid-procedures")}>
+        Não Pagos
       </Link>
       <Link to="/history" className={getNavItemClass("/history")}>
         Histórico
