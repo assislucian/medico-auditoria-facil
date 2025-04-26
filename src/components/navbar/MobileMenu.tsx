@@ -119,7 +119,7 @@ export const MobileMenu = ({ isLoggedIn, isOpen, profileData, onLogout }: Mobile
               </Link>
               <Link
                 to="/register"
-                className="block px-3 py-2 rounded-md text-base font-medium text-white bg-primary hover:bg-primary/90 mt-2 text-center"
+                className="block px-3 py-2 rounded-md text-base font-medium bg-primary text-white hover:bg-primary/90 mt-2 text-center py-2 rounded-md"
               >
                 Cadastrar
               </Link>

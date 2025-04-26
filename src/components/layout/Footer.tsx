@@ -17,7 +17,11 @@ export function Footer() {
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">MedCheck</h3>
+            <Link to="/" className="inline-block">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent">
+                MedCheck
+              </h3>
+            </Link>
             <p className="text-sm text-muted-foreground">
               Automatizando a auditoria médica para maximizar seus resultados
             </p>
@@ -27,6 +31,11 @@ export function Footer() {
             <h4 className="font-medium mb-4">Produto</h4>
             <ul className="space-y-2">
               <li>
+                <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Quem Somos
+                </Link>
+              </li>
+              <li>
                 <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Planos
                 </Link>
@@ -34,11 +43,6 @@ export function Footer() {
               <li>
                 <Link to="/help" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Como Funciona
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Quem Somos
                 </Link>
               </li>
             </ul>
@@ -57,6 +61,11 @@ export function Footer() {
                   Contato
                 </Link>
               </li>
+              <li>
+                <Link to="/support" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Suporte Técnico
+                </Link>
+              </li>
             </ul>
           </div>
           
@@ -73,6 +82,11 @@ export function Footer() {
                   Termos de Uso
                 </Link>
               </li>
+              <li>
+                <Link to="/compliance" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Compliance
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -82,12 +96,15 @@ export function Footer() {
             © {currentYear} MedCheck. Todos os direitos reservados.
           </p>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
-            <Link to="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               LinkedIn
-            </Link>
-            <Link to="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Twitter
-            </Link>
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Instagram
+            </a>
           </div>
         </div>
       </div>

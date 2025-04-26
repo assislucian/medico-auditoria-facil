@@ -1,253 +1,255 @@
 
-import { useState } from 'react';
+import { useState } from "react";
 import { PublicLayout } from "@/layout/PublicLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { Mail, MapPin, Phone, Calendar, Linkedin, Twitter, Instagram, Facebook } from "lucide-react";
 import { motion } from "framer-motion";
+import { 
+  MapPin, 
+  Phone, 
+  Mail, 
+  MessageSquare, 
+  Send,
+  Linkedin,
+  Twitter,
+  Instagram,
+  Facebook
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Contact = () => {
-  const { toast } = useToast();
-  const [sending, setSending] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    assunto: "",
-    mensagem: ""
+    subject: "",
+    message: ""
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSending(true);
-    
-    // Simulação de envio
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "Mensagem enviada",
-      description: "Recebemos sua mensagem e responderemos em breve."
-    });
-    
-    setFormData({
-      name: "",
-      email: "",
-      assunto: "",
-      mensagem: ""
-    });
-    
-    setSending(false);
-  };
+    setIsLoading(true);
 
-  const socialLinks = [
-    { name: "LinkedIn", icon: Linkedin, link: "https://linkedin.com/company/medcheck" },
-    { name: "Twitter", icon: Twitter, link: "https://twitter.com/medcheck" },
-    { name: "Instagram", icon: Instagram, link: "https://instagram.com/medcheck" },
-    { name: "Facebook", icon: Facebook, link: "https://facebook.com/medcheck" }
-  ];
+    try {
+      // Simulando envio do formulário
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      toast.success("Mensagem enviada com sucesso! Entraremos em contato em breve.");
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (error) {
+      toast.error("Erro ao enviar mensagem. Por favor, tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <PublicLayout 
-      title="Contato | MedCheck"
-      description="Entre em contato com a equipe do MedCheck. Estamos aqui para ajudar."
+      title="Contato | MedCheck" 
+      description="Entre em contato com a equipe do MedCheck para saber mais sobre nossa plataforma de auditoria médica automatizada."
       showBackButton={true}
     >
-      <motion.div 
-        className="container py-12"
+      <motion.div
+        className="py-16 px-6 bg-background"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Entre em Contato</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Estamos prontos para ajudar com qualquer dúvida sobre a plataforma, planos ou suporte técnico.
-            Nossa equipe responderá o mais rápido possível.
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+        <div className="container mx-auto max-w-6xl">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
           >
-            <Card>
-              <CardHeader>
-                <CardTitle>Envie sua Mensagem</CardTitle>
-                <CardDescription>
-                  Preencha o formulário abaixo e nossa equipe entrará em contato o mais breve possível
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome Completo</Label>
-                      <Input 
-                        id="name" 
-                        name="name" 
-                        value={formData.name} 
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">Entre em Contato</h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Estamos prontos para esclarecer suas dúvidas e mostrar como o MedCheck 
+              pode transformar a gestão financeira da sua prática médica.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            {/* Informações de contato */}
+            <motion.div 
+              className="space-y-8"
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7 }}
+              viewport={{ once: true }}
+            >
+              <div className="bg-card rounded-xl p-8 border border-border">
+                <h2 className="text-2xl font-semibold mb-6">Informações de Contato</h2>
+                
+                <div className="space-y-6">
+                  <div className="flex items-start">
+                    <div className="bg-primary/10 p-3 rounded-lg mr-4">
+                      <MapPin className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Endereço</h3>
+                      <p className="text-muted-foreground">
+                        Av. Paulista, 1000, Bela Vista<br />
+                        São Paulo - SP, 01310-100
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start">
+                    <div className="bg-primary/10 p-3 rounded-lg mr-4">
+                      <Phone className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Telefone</h3>
+                      <p className="text-muted-foreground">+55 (11) 4000-7000</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start">
+                    <div className="bg-primary/10 p-3 rounded-lg mr-4">
+                      <Mail className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Email</h3>
+                      <p className="text-muted-foreground">contato@medcheck.com.br</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start">
+                    <div className="bg-primary/10 p-3 rounded-lg mr-4">
+                      <MessageSquare className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Suporte</h3>
+                      <p className="text-muted-foreground">suporte@medcheck.com.br</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-border">
+                  <h3 className="font-medium mb-4">Siga-nos</h3>
+                  <div className="flex items-center space-x-4">
+                    <a href="#" className="bg-background p-2 rounded-full border border-border hover:bg-muted transition-colors">
+                      <Linkedin className="h-5 w-5" />
+                    </a>
+                    <a href="#" className="bg-background p-2 rounded-full border border-border hover:bg-muted transition-colors">
+                      <Twitter className="h-5 w-5" />
+                    </a>
+                    <a href="#" className="bg-background p-2 rounded-full border border-border hover:bg-muted transition-colors">
+                      <Instagram className="h-5 w-5" />
+                    </a>
+                    <a href="#" className="bg-background p-2 rounded-full border border-border hover:bg-muted transition-colors">
+                      <Facebook className="h-5 w-5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Formulário de contato */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7 }}
+              viewport={{ once: true }}
+            >
+              <div className="bg-card rounded-xl p-8 border border-border">
+                <h2 className="text-2xl font-semibold mb-6">Envie uma Mensagem</h2>
+                
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium mb-1">Nome completo</label>
+                      <Input
+                        id="name"
+                        name="name"
+                        placeholder="Seu nome"
+                        value={formData.name}
                         onChange={handleChange}
-                        placeholder="Dr. João Silva"
                         required
                       />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input 
-                        id="email" 
-                        name="email" 
+
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium mb-1">E-mail</label>
+                      <Input
+                        id="email"
+                        name="email"
                         type="email"
-                        value={formData.email} 
+                        placeholder="seu.email@exemplo.com"
+                        value={formData.email}
                         onChange={handleChange}
-                        placeholder="seu@email.com"
                         required
                       />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="assunto">Assunto</Label>
-                      <Select onValueChange={(value) => setFormData(prev => ({ ...prev, assunto: value }))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o assunto" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="suporte">Suporte Técnico</SelectItem>
-                          <SelectItem value="comercial">Informações Comerciais</SelectItem>
-                          <SelectItem value="sugestao">Sugestões</SelectItem>
-                          <SelectItem value="reclamacao">Reclamações</SelectItem>
-                          <SelectItem value="outros">Outros</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="mensagem">Mensagem</Label>
-                      <Textarea 
-                        id="mensagem" 
-                        name="mensagem"
-                        value={formData.mensagem} 
+
+                    <div>
+                      <label htmlFor="subject" className="block text-sm font-medium mb-1">Assunto</label>
+                      <Input
+                        id="subject"
+                        name="subject"
+                        placeholder="Assunto da mensagem"
+                        value={formData.subject}
                         onChange={handleChange}
-                        placeholder="Como podemos ajudar?"
                         required
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="message" className="block text-sm font-medium mb-1">Mensagem</label>
+                      <Textarea
+                        id="message"
+                        name="message"
+                        placeholder="Digite sua mensagem aqui..."
                         rows={5}
+                        value={formData.message}
+                        onChange={handleChange}
+                        required
+                        className="resize-none"
                       />
                     </div>
                   </div>
-                  
-                  <Button type="submit" className="w-full" disabled={sending}>
-                    {sending ? "Enviando..." : "Enviar Mensagem"}
+
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    size="lg"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      'Enviando...'
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" /> Enviar Mensagem
+                      </>
+                    )}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-          </motion.div>
-          
-          <motion.div 
-            className="space-y-6"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações de Contato</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start">
-                  <Phone className="h-5 w-5 mr-3 text-primary" />
-                  <div>
-                    <h4 className="font-medium">Telefone</h4>
-                    <p className="text-muted-foreground">(11) 3456-7890</p>
-                    <p className="text-muted-foreground">Segunda à Sexta, 9h às 18h</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <Mail className="h-5 w-5 mr-3 text-primary" />
-                  <div>
-                    <h4 className="font-medium">Email</h4>
-                    <p className="text-muted-foreground">contato@medcheck.com.br</p>
-                    <p className="text-muted-foreground">suporte@medcheck.com.br</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <MapPin className="h-5 w-5 mr-3 text-primary" />
-                  <div>
-                    <h4 className="font-medium">Endereço</h4>
-                    <p className="text-muted-foreground">Av. Paulista, 1000</p>
-                    <p className="text-muted-foreground">Bela Vista, São Paulo - SP</p>
-                    <p className="text-muted-foreground">CEP: 01310-100</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Horário de Atendimento</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-start mb-4">
-                  <Calendar className="h-5 w-5 mr-3 text-primary" />
-                  <div className="flex-1">
-                    <h4 className="font-medium">Quando estamos disponíveis</h4>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Segunda à Sexta</span>
-                    <span>9h às 18h</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sábado</span>
-                    <span>9h às 13h</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Domingo e Feriados</span>
-                    <span>Fechado</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Redes Sociais</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-4">
-                  {socialLinks.map((social) => (
-                    <a 
-                      key={social.name} 
-                      href={social.link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center p-2 hover:bg-muted rounded-md transition-colors"
-                    >
-                      <social.icon className="h-5 w-5 mr-2 text-primary" />
-                      <span>{social.name}</span>
-                    </a>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Mapa */}
+          <div className="mt-16">
+            <div className="bg-muted rounded-xl border border-border overflow-hidden h-[400px]">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.0976521945293!2d-46.655103724941!3d-23.56150393759689!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce59c8da0aa315%3A0xd59f9431f2c9776a!2sAv.%20Paulista%20-%20Bela%20Vista%2C%20S%C3%A3o%20Paulo%20-%20SP!5e0!3m2!1spt-BR!2sbr!4v1682624414682!5m2!1spt-BR!2sbr" 
+                width="100%" 
+                height="400" 
+                style={{ border: 0 }}
+                allowFullScreen 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Localização MedCheck"
+              />
+            </div>
+          </div>
         </div>
       </motion.div>
     </PublicLayout>

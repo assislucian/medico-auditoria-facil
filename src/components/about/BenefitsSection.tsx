@@ -1,65 +1,73 @@
 
-import { BenefitItem } from "./benefits/BenefitItem";
 import { motion } from "framer-motion";
+import { BenefitItem } from "./benefits/BenefitItem";
+import { 
+  TrendingUp, 
+  Clock, 
+  FileSpreadsheet, 
+  CloudCheck, 
+  Database,
+  ShieldCheck
+} from "lucide-react";
 
 export function BenefitsSection() {
   const benefits = [
     {
-      title: "Aumento da receita",
-      description: "Recupere até 25% dos honorários que seriam perdidos devido a glosas indevidas.",
-      icon: "trend-up"
+      icon: <TrendingUp className="h-8 w-8 text-primary" />,
+      title: "Aumento de Receita",
+      description: "Recupere até 15% dos honorários glosados indevidamente pelas operadoras."
     },
     {
-      title: "Economia de tempo",
-      description: "Reduza em até 80% o tempo gasto com tarefas administrativas relacionadas a pagamentos.",
-      icon: "clock"
+      icon: <Clock className="h-8 w-8 text-primary" />,
+      title: "Economia de Tempo",
+      description: "Reduza em até 80% o tempo gasto com auditorias manuais e processos administrativos."
     },
     {
-      title: "Transparência total",
-      description: "Tenha uma visão clara e completa de todos os seus pagamentos e pendências.",
-      icon: "search"
+      icon: <FileSpreadsheet className="h-8 w-8 text-primary" />,
+      title: "Relatórios Detalhados",
+      description: "Acesse análises completas e visualize todo o potencial de recuperação."
     },
     {
-      title: "Suporte especializado",
-      description: "Conte com nossa equipe de especialistas em regulação de saúde para ajudá-lo.",
-      icon: "headset"
+      icon: <CloudCheck className="h-8 w-8 text-primary" />,
+      title: "Tecnologia em Nuvem",
+      description: "Acesse seus dados de qualquer lugar, a qualquer momento, com total segurança."
     },
     {
-      title: "Dados seguros",
-      description: "Sua informação está protegida com criptografia de ponta a ponta e conformidade com a LGPD.",
-      icon: "shield"
+      icon: <Database className="h-8 w-8 text-primary" />,
+      title: "Histórico Completo",
+      description: "Mantenha um registro organizado de todas as suas análises e recuperações."
     },
     {
-      title: "Integração fácil",
-      description: "Compatível com os principais sistemas de gestão médica e hospitalar do mercado.",
-      icon: "puzzle"
+      icon: <ShieldCheck className="h-8 w-8 text-primary" />,
+      title: "Segurança e Conformidade",
+      description: "Seus dados protegidos com criptografia e em total conformidade com a LGPD."
     }
   ];
 
   return (
-    <section className="py-16 bg-background">
-      <div className="container max-w-6xl mx-auto px-4">
+    <section className="py-24 px-6 bg-muted/30">
+      <div className="container mx-auto max-w-6xl">
         <motion.div 
-          className="text-center mb-12"
+          className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Benefícios</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Ao utilizar o MedCheck, você terá acesso a diversos benefícios que transformarão 
-            a gestão financeira da sua prática médica.
+          <h2 className="text-4xl font-bold mb-4">Por que escolher o MedCheck?</h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Nossa plataforma oferece benefícios tangíveis e mensuráveis para 
+            profissionais de saúde e instituições médicas de todos os portes.
           </p>
         </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {benefits.map((benefit, index) => (
-            <BenefitItem 
+            <BenefitItem
               key={index}
+              icon={benefit.icon}
               title={benefit.title}
               description={benefit.description}
-              icon={benefit.icon}
               index={index}
             />
           ))}

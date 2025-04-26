@@ -1,50 +1,60 @@
 
-import { ProblemCard } from "./problems/ProblemCard";
 import { motion } from "framer-motion";
+import { ProblemCard } from "./problems/ProblemCard";
+import { CircleDashed, FileX, Clock, DollarSign } from "lucide-react";
 
 export function ProblemsSection() {
-  const problems = [
+  const problemCards = [
     {
-      title: "Glosas indevidas",
-      description: "Estudos mostram que até 30% dos honorários médicos são indevidamente retidos por operadoras de saúde através de glosas injustificadas."
+      icon: <FileX className="h-10 w-10 text-red-500" />,
+      title: "Glosas Indevidas",
+      description:
+        "Operadoras e seguradoras frequentemente glosam procedimentos de forma injustificada, causando prejuízos significativos aos profissionais de saúde."
     },
     {
-      title: "Processos manuais",
-      description: "A maioria dos médicos e clínicas ainda utiliza métodos manuais para conferir pagamentos, resultando em perda de tempo e dinheiro."
+      icon: <CircleDashed className="h-10 w-10 text-amber-500" />,
+      title: "Processos Manuais",
+      description:
+        "A auditoria manual de honorários é trabalhosa, sujeita a erros e consome um tempo precioso que poderia ser dedicado ao atendimento dos pacientes."
     },
     {
-      title: "Complexidade administrativa",
-      description: "A burocracia para contestar glosas é desafiadora, levando muitos profissionais a desistirem de valores que lhes são de direito."
+      icon: <Clock className="h-10 w-10 text-blue-500" />,
+      title: "Demora no Reprocessamento",
+      description:
+        "O processo de contestação e reprocessamento de glosas é lento e burocrático, gerando atrasos no recebimento de valores já realizados."
     },
     {
-      title: "Falta de transparência",
-      description: "Informações pouco claras nas demonstrações de pagamento dificultam a identificação de inconsistências e a tomada de decisões."
+      icon: <DollarSign className="h-10 w-10 text-green-500" />,
+      title: "Prejuízo Financeiro",
+      description:
+        "A combinação desses fatores resulta em uma perda financeira significativa para médicos, hospitais e clínicas em todo o Brasil."
     }
   ];
 
   return (
-    <section className="py-16 bg-muted/30">
-      <div className="container max-w-6xl mx-auto px-4">
+    <section className="py-20 px-6 bg-muted/30">
+      <div className="container mx-auto max-w-6xl">
         <motion.div 
-          className="text-center mb-12"
+          className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Problemas que Resolvemos</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Os profissionais de saúde enfrentam diversos desafios na gestão de seus honorários. 
-            O MedCheck foi criado para solucionar esses problemas de forma eficiente e tecnológica.
+          <h2 className="text-4xl font-bold mb-4">Os Desafios da Auditoria Médica</h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Os profissionais de saúde enfrentam diversos obstáculos na gestão financeira 
+            dos honorários médicos. Entenda os principais problemas que o MedCheck resolve:
           </p>
         </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {problems.map((problem, index) => (
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {problemCards.map((card, index) => (
             <ProblemCard 
               key={index}
-              title={problem.title}
-              description={problem.description}
+              icon={card.icon}
+              title={card.title}
+              description={card.description}
               index={index}
             />
           ))}
