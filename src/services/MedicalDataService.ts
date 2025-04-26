@@ -69,77 +69,47 @@ export class MedicalDataService {
    */
   static async savePaymentStatement(paymentStatement: PaymentStatementDetailed): Promise<{ success: boolean, id?: string, error?: string }> {
     try {
-      // First, save the payment statement header
-      const { data: statementData, error: statementError } = await supabase
-        .from('payment_statements')
+      // Note: This implementation is a temporary mock until the tables are created
+      // For now, we'll create a row in analysis_results to track this payment statement
+      const { data: analysisData, error: analysisError } = await supabase
+        .from('analysis_results')
         .insert({
-          periodo: paymentStatement.periodo,
-          nome: paymentStatement.nome,
-          crm: paymentStatement.crm,
-          cpf: paymentStatement.cpf,
-          total_consultas: paymentStatement.totais.consultas,
-          total_honorarios: paymentStatement.totais.honorarios,
-          total_geral: paymentStatement.totais.total,
-          qtd_procedimentos: paymentStatement.totais.qtdProcedimentos,
-          qtd_glosas: paymentStatement.totais.glosas,
-          valor_glosas: paymentStatement.totais.valorGlosas
+          file_name: `demonstrativo_${paymentStatement.periodo.replace(/\s+/g, '_')}`,
+          file_type: 'demonstrativo',
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          summary: {
+            totalProcedimentos: paymentStatement.totais.qtdProcedimentos,
+            totalPago: paymentStatement.totais.total,
+            totalGlosas: paymentStatement.totais.valorGlosas
+          }
         })
         .select('id')
         .single();
         
-      if (statementError) throw new Error(statementError.message);
+      if (analysisError) throw new Error(analysisError.message);
       
-      const statementId = statementData.id;
-      
-      // Then save all procedures
+      // Store the procedures in the procedures table
+      // This is a simplified version until the proper schema is created
       const proceduresData = paymentStatement.procedimentos.map(proc => ({
-        statement_id: statementId,
-        lote: proc.lote,
-        conta: proc.conta,
+        analysis_id: analysisData.id,
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        codigo: proc.codigoServico,
+        procedimento: proc.descricaoServico,
+        valor_pago: proc.valorLiberado,
+        pago: proc.valorLiberado > 0,
         guia: proc.guia,
-        data: proc.data,
-        carteira: proc.carteira,
-        nome: proc.nome,
-        acomodacao: proc.acomodacao,
-        codigo_servico: proc.codigoServico,
-        descricao_servico: proc.descricaoServico,
-        quantidade: proc.quantidade,
-        valor_apresentado: proc.valorApresentado,
-        valor_liberado: proc.valorLiberado,
-        pro_rata: proc.proRata,
-        glosa: proc.glosa,
-        tipo: proc.tipo
+        beneficiario: proc.nome
       }));
       
-      const { error: proceduresError } = await supabase
-        .from('statement_procedures')
-        .insert(proceduresData);
-        
-      if (proceduresError) throw new Error(proceduresError.message);
-      
-      // Finally, save glosas if any
-      if (paymentStatement.glosas && paymentStatement.glosas.length > 0) {
-        const glosaData = paymentStatement.glosas.map(glosa => ({
-          statement_id: statementId,
-          conta: glosa.conta,
-          guia: glosa.guia,
-          data: glosa.data,
-          nome: glosa.nome,
-          codigo_servico: glosa.codigoServico,
-          descricao_servico: glosa.descricaoServico,
-          codigo: glosa.codigo,
-          descricao: glosa.descricao,
-          valor: glosa.valor
-        }));
-        
-        const { error: glosaError } = await supabase
-          .from('statement_glosas')
-          .insert(glosaData);
+      if (proceduresData.length > 0) {
+        const { error: proceduresError } = await supabase
+          .from('procedures')
+          .insert(proceduresData);
           
-        if (glosaError) throw new Error(glosaError.message);
+        if (proceduresError) throw new Error(proceduresError.message);
       }
       
-      return { success: true, id: statementId };
+      return { success: true, id: analysisData.id };
       
     } catch (error: any) {
       console.error('Error saving payment statement:', error);
@@ -154,62 +124,56 @@ export class MedicalDataService {
    */
   static async saveMedicalGuide(medicalGuide: MedicalGuideDetailed): Promise<{ success: boolean, id?: string, error?: string }> {
     try {
-      // First, save the guide header
-      const { data: guideData, error: guideError } = await supabase
-        .from('medical_guides')
+      // Note: This implementation is a temporary mock until the tables are created
+      // For now, we'll create a row in analysis_results to track this guide
+      const { data: analysisData, error: analysisError } = await supabase
+        .from('analysis_results')
         .insert({
+          file_name: `guia_${medicalGuide.numero}`,
+          file_type: 'guia',
           numero: medicalGuide.numero,
-          data_execucao: medicalGuide.dataExecucao,
-          beneficiario_codigo: medicalGuide.beneficiario.codigo,
-          beneficiario_nome: medicalGuide.beneficiario.nome,
-          prestador_codigo: medicalGuide.prestador.codigo,
-          prestador_nome: medicalGuide.prestador.nome
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          summary: {
+            totalProcedimentos: medicalGuide.procedimentos.length
+          }
         })
         .select('id')
         .single();
         
-      if (guideError) throw new Error(guideError.message);
+      if (analysisError) throw new Error(analysisError.message);
       
-      const guideId = guideData.id;
-      
-      // Then save all procedures
+      // Store each procedure as a row in the procedures table
       for (const proc of medicalGuide.procedimentos) {
-        // Save procedure
-        const { data: procData, error: procError } = await supabase
-          .from('guide_procedures')
+        // Find the doctor who is the user
+        const userId = (await supabase.auth.getUser()).data.user?.id;
+        const userParticipation = proc.participacoes.find(p => 
+          p.crm === (await this.getUserProfile(userId))?.crm
+        );
+        
+        const { error: procError } = await supabase
+          .from('procedures')
           .insert({
-            guide_id: guideId,
+            analysis_id: analysisData.id,
+            user_id: userId,
             codigo: proc.codigo,
-            descricao: proc.descricao,
-            data_execucao: proc.dataExecucao,
-            quantidade: proc.quantidade,
-            status: proc.status,
-            valor_pago: proc.valorPago
-          })
-          .select('id')
-          .single();
+            procedimento: proc.descricao,
+            papel: userParticipation?.funcao || 'Não especificado',
+            guia: medicalGuide.numero,
+            beneficiario: medicalGuide.beneficiario.nome,
+            doctors: proc.participacoes.map(p => ({
+              code: p.crm,
+              name: p.nome,
+              role: p.funcao,
+              startTime: p.dataInicio,
+              endTime: p.dataFim,
+              status: p.status
+            }))
+          });
           
         if (procError) throw new Error(procError.message);
-        
-        // Save all participations for this procedure
-        const participations = proc.participacoes.map(part => ({
-          procedure_id: procData.id,
-          funcao: part.funcao,
-          crm: part.crm,
-          nome: part.nome,
-          data_inicio: part.dataInicio,
-          data_fim: part.dataFim,
-          status: part.status
-        }));
-        
-        const { error: partError } = await supabase
-          .from('guide_participations')
-          .insert(participations);
-          
-        if (partError) throw new Error(partError.message);
       }
       
-      return { success: true, id: guideId };
+      return { success: true, id: analysisData.id };
       
     } catch (error: any) {
       console.error('Error saving medical guide:', error);
@@ -218,65 +182,88 @@ export class MedicalDataService {
   }
   
   /**
+   * Get the current user's profile
+   * @param userId User ID
+   * @returns User profile
+   */
+  private static async getUserProfile(userId?: string): Promise<any> {
+    if (!userId) return null;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+      
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+    
+    return data;
+  }
+  
+  /**
    * Retrieves all payment statements for the current user
    */
   static async getPaymentStatements(): Promise<PaymentStatementDetailed[]> {
     try {
-      const { data, error } = await supabase
-        .from('payment_statements')
+      // This is a mock implementation until the proper tables are created
+      const { data: analyses, error } = await supabase
+        .from('analysis_results')
         .select(`
           *,
-          statement_procedures(*),
-          statement_glosas(*)
+          procedures(*)
         `)
+        .eq('file_type', 'demonstrativo')
         .order('created_at', { ascending: false });
         
       if (error) throw error;
       
       // Transform the data to match our frontend model
-      return data.map(statement => ({
-        id: statement.id,
-        periodo: statement.periodo,
-        nome: statement.nome,
-        crm: statement.crm,
-        cpf: statement.cpf,
-        procedimentos: statement.statement_procedures.map((proc: any) => ({
-          lote: proc.lote,
-          conta: proc.conta,
-          guia: proc.guia,
-          data: proc.data,
-          carteira: proc.carteira,
-          nome: proc.nome,
-          acomodacao: proc.acomodacao,
-          codigoServico: proc.codigo_servico,
-          descricaoServico: proc.descricao_servico,
-          quantidade: proc.quantidade,
-          valorApresentado: proc.valor_apresentado,
-          valorLiberado: proc.valor_liberado,
-          proRata: proc.pro_rata,
-          glosa: proc.glosa,
-          tipo: proc.tipo
-        })),
-        totais: {
-          consultas: statement.total_consultas,
-          honorarios: statement.total_honorarios,
-          total: statement.total_geral,
-          qtdProcedimentos: statement.qtd_procedimentos,
-          glosas: statement.qtd_glosas,
-          valorGlosas: statement.valor_glosas
-        },
-        glosas: statement.statement_glosas.map((glosa: any) => ({
-          conta: glosa.conta,
-          guia: glosa.guia,
-          data: glosa.data,
-          nome: glosa.nome,
-          codigoServico: glosa.codigo_servico,
-          descricaoServico: glosa.descricao_servico,
-          codigo: glosa.codigo,
-          descricao: glosa.descricao,
-          valor: glosa.valor
-        }))
-      }));
+      const statements: PaymentStatementDetailed[] = [];
+      
+      for (const analysis of analyses) {
+        const procedures = analysis.procedures || [];
+        
+        const statement: PaymentStatementDetailed = {
+          id: analysis.id,
+          periodo: analysis.competencia || 'Período não especificado',
+          nome: 'Nome do Médico', // We'd get this from profiles
+          crm: 'CRM', // We'd get this from profiles
+          cpf: 'CPF', // We'd get this from profiles
+          procedimentos: procedures.map((proc: any) => ({
+            lote: proc.guia?.split('-')[0] || '',
+            conta: proc.id,
+            guia: proc.guia || '',
+            data: new Date(proc.created_at).toLocaleDateString('pt-BR'),
+            carteira: '',
+            nome: proc.beneficiario || '',
+            acomodacao: '',
+            codigoServico: proc.codigo,
+            descricaoServico: proc.procedimento,
+            quantidade: 1,
+            valorApresentado: proc.valor_cbhpm || 0,
+            valorLiberado: proc.valor_pago || 0,
+            proRata: 0,
+            glosa: (proc.valor_cbhpm || 0) - (proc.valor_pago || 0),
+            tipo: 'honorario'
+          })),
+          totais: {
+            consultas: 0,
+            honorarios: procedures.reduce((sum: number, proc: any) => sum + (proc.valor_pago || 0), 0),
+            total: procedures.reduce((sum: number, proc: any) => sum + (proc.valor_pago || 0), 0),
+            qtdProcedimentos: procedures.length,
+            glosas: procedures.filter((p: any) => !p.pago).length,
+            valorGlosas: procedures.reduce((sum: number, proc: any) => sum + ((proc.valor_cbhpm || 0) - (proc.valor_pago || 0)), 0)
+          },
+          glosas: []
+        };
+        
+        statements.push(statement);
+      }
+      
+      return statements;
       
     } catch (error) {
       console.error('Error fetching payment statements:', error);
@@ -289,48 +276,72 @@ export class MedicalDataService {
    */
   static async getMedicalGuides(): Promise<MedicalGuideDetailed[]> {
     try {
-      const { data, error } = await supabase
-        .from('medical_guides')
+      // This is a mock implementation until the proper tables are created
+      const { data: analyses, error } = await supabase
+        .from('analysis_results')
         .select(`
           *,
-          guide_procedures(
-            *,
-            guide_participations(*)
-          )
+          procedures(*)
         `)
+        .eq('file_type', 'guia')
         .order('created_at', { ascending: false });
         
       if (error) throw error;
       
       // Transform the data to match our frontend model
-      return data.map(guide => ({
-        numero: guide.numero,
-        dataExecucao: guide.data_execucao,
-        beneficiario: {
-          codigo: guide.beneficiario_codigo,
-          nome: guide.beneficiario_nome
-        },
-        prestador: {
-          codigo: guide.prestador_codigo,
-          nome: guide.prestador_nome
-        },
-        procedimentos: guide.guide_procedures.map((proc: any) => ({
-          codigo: proc.codigo,
-          descricao: proc.descricao,
-          dataExecucao: proc.data_execucao,
-          quantidade: proc.quantidade,
-          status: proc.status,
-          valorPago: proc.valor_pago,
-          participacoes: proc.guide_participations.map((part: any) => ({
-            funcao: part.funcao,
-            crm: part.crm,
-            nome: part.nome,
-            dataInicio: part.data_inicio,
-            dataFim: part.data_fim,
-            status: part.status
-          }))
-        }))
-      }));
+      const guides: MedicalGuideDetailed[] = [];
+      
+      for (const analysis of analyses) {
+        const procedures = analysis.procedures || [];
+        
+        // Group procedures by guide number
+        const proceduresByGuide: Record<string, any[]> = {};
+        
+        for (const proc of procedures) {
+          if (!proceduresByGuide[proc.guia]) {
+            proceduresByGuide[proc.guia] = [];
+          }
+          proceduresByGuide[proc.guia].push(proc);
+        }
+        
+        // Create a guide for each unique guide number
+        for (const guideNumber of Object.keys(proceduresByGuide)) {
+          const procs = proceduresByGuide[guideNumber];
+          
+          const guide: MedicalGuideDetailed = {
+            numero: guideNumber,
+            dataExecucao: procs[0]?.created_at ? new Date(procs[0].created_at).toLocaleDateString('pt-BR') : '',
+            beneficiario: {
+              codigo: '',
+              nome: procs[0]?.beneficiario || 'Beneficiário não especificado'
+            },
+            prestador: {
+              codigo: '',
+              nome: 'Prestador não especificado'
+            },
+            procedimentos: procs.map((proc: any) => ({
+              codigo: proc.codigo,
+              descricao: proc.procedimento,
+              dataExecucao: proc.created_at ? new Date(proc.created_at).toLocaleDateString('pt-BR') : '',
+              quantidade: 1,
+              status: proc.pago ? 'Fechada' : 'Aberta',
+              valorPago: proc.valor_pago,
+              participacoes: proc.doctors ? proc.doctors.map((doctor: any) => ({
+                funcao: doctor.role,
+                crm: doctor.code,
+                nome: doctor.name,
+                dataInicio: doctor.startTime,
+                dataFim: doctor.endTime,
+                status: doctor.status
+              })) : []
+            }))
+          };
+          
+          guides.push(guide);
+        }
+      }
+      
+      return guides;
       
     } catch (error) {
       console.error('Error fetching medical guides:', error);
@@ -344,80 +355,78 @@ export class MedicalDataService {
    */
   static async compareGuideWithStatements(guideId: string): Promise<ComparisonResult | null> {
     try {
-      // First get the guide with all its procedures and participations
-      const { data: guideData, error: guideError } = await supabase
-        .from('medical_guides')
+      // Get the guide from analyses
+      const { data: analysis, error: analysisError } = await supabase
+        .from('analysis_results')
         .select(`
           *,
-          guide_procedures(
-            *,
-            guide_participations(*)
-          )
+          procedures(*)
         `)
         .eq('id', guideId)
         .single();
         
-      if (guideError) throw guideError;
+      if (analysisError) throw analysisError;
+      
+      const guideNumber = analysis.numero;
+      const procedures = analysis.procedures || [];
+      
+      // Find procedures from payment statements with matching guide number
+      const { data: paymentProcs, error: paymentError } = await supabase
+        .from('procedures')
+        .select('*')
+        .eq('guia', guideNumber)
+        .neq('file_type', 'guia');
+        
+      if (paymentError) throw paymentError;
       
       // Transform guide data to our frontend model
       const guide: MedicalGuideDetailed = {
-        numero: guideData.numero,
-        dataExecucao: guideData.data_execucao,
+        numero: guideNumber,
+        dataExecucao: procedures[0]?.created_at ? new Date(procedures[0].created_at).toLocaleDateString('pt-BR') : '',
         beneficiario: {
-          codigo: guideData.beneficiario_codigo,
-          nome: guideData.beneficiario_nome
+          codigo: '',
+          nome: procedures[0]?.beneficiario || 'Beneficiário não especificado'
         },
         prestador: {
-          codigo: guideData.prestador_codigo,
-          nome: guideData.prestador_nome
+          codigo: '',
+          nome: 'Prestador não especificado'
         },
-        procedimentos: guideData.guide_procedures.map((proc: any) => ({
+        procedimentos: procedures.map((proc: any) => ({
           codigo: proc.codigo,
-          descricao: proc.descricao,
-          dataExecucao: proc.data_execucao,
-          quantidade: proc.quantidade,
-          status: proc.status,
+          descricao: proc.procedimento,
+          dataExecucao: proc.created_at ? new Date(proc.created_at).toLocaleDateString('pt-BR') : '',
+          quantidade: 1,
+          status: proc.pago ? 'Fechada' : 'Aberta',
           valorPago: proc.valor_pago,
-          participacoes: proc.guide_participations.map((part: any) => ({
-            funcao: part.funcao,
-            crm: part.crm,
-            nome: part.nome,
-            dataInicio: part.data_inicio,
-            dataFim: part.data_fim,
-            status: part.status
-          }))
+          participacoes: proc.doctors ? proc.doctors.map((doctor: any) => ({
+            funcao: doctor.role,
+            crm: doctor.code,
+            nome: doctor.name,
+            dataInicio: doctor.startTime,
+            dataFim: doctor.endTime,
+            status: doctor.status
+          })) : []
         }))
       };
       
-      // Now fetch all statements that might have procedures related to this guide
-      const { data: stmtProcs, error: stmtError } = await supabase
-        .from('statement_procedures')
-        .select(`
-          *,
-          payment_statements(*)
-        `)
-        .eq('guia', guide.numero);
-        
-      if (stmtError) throw stmtError;
-      
-      // Transform statement procedures data to our frontend model
-      const demonstrativoProcs: ProcedimentoDemonstrativo[] = stmtProcs.map((proc: any) => ({
-        lote: proc.lote,
-        conta: proc.conta,
-        guia: proc.guia,
-        data: proc.data,
-        carteira: proc.carteira,
-        nome: proc.nome,
-        acomodacao: proc.acomodacao,
-        codigoServico: proc.codigo_servico,
-        descricaoServico: proc.descricao_servico,
-        quantidade: proc.quantidade,
-        valorApresentado: proc.valor_apresentado,
-        valorLiberado: proc.valor_liberado,
-        proRata: proc.pro_rata,
-        glosa: proc.glosa,
-        tipo: proc.tipo
-      }));
+      // Transform payment procedures data to our frontend model
+      const demonstrativoProcs: ProcedimentoDemonstrativo[] = paymentProcs ? paymentProcs.map((proc: any) => ({
+        lote: proc.guia?.split('-')[0] || '',
+        conta: proc.id,
+        guia: proc.guia || '',
+        data: proc.created_at ? new Date(proc.created_at).toLocaleDateString('pt-BR') : '',
+        carteira: '',
+        nome: proc.beneficiario || '',
+        acomodacao: '',
+        codigoServico: proc.codigo,
+        descricaoServico: proc.procedimento,
+        quantidade: 1,
+        valorApresentado: proc.valor_cbhpm || 0,
+        valorLiberado: proc.valor_pago || 0,
+        proRata: 0,
+        glosa: (proc.valor_cbhpm || 0) - (proc.valor_pago || 0),
+        tipo: 'honorario'
+      })) : [];
       
       // Now compare procedures to find discrepancies
       const discrepancias = [];

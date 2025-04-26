@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -51,9 +52,11 @@ const App: React.FC = () => {
 };
 
 const AppRoutes: React.FC = () => {
-  const { isLoggedIn, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const location = useLocation();
+  
+  const isLoggedIn = !!user;
 
   useEffect(() => {
     const fetchProfile = async () => {

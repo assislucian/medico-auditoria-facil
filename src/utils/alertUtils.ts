@@ -48,3 +48,31 @@ export const addNotification = (
     })
   );
 };
+
+/**
+ * Hook for simplified alert functions
+ */
+export const useAlert = () => {
+  const showSuccess = (title: string, message: string) => {
+    addNotification(title, message, message, 'success');
+  };
+
+  const showError = (title: string, message: string) => {
+    addNotification(title, message, message, 'error');
+  };
+
+  const showWarning = (title: string, message: string) => {
+    addNotification(title, message, message, 'warning');
+  };
+
+  const showInfo = (title: string, message: string) => {
+    addNotification(title, message, message, 'info');
+  };
+
+  return {
+    showSuccess,
+    showError,
+    showWarning,
+    showInfo
+  };
+};

@@ -115,7 +115,7 @@ export const GuideStatementComparison: React.FC<GuideStatementComparisonProps> =
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Badge variant="warning">Pagos parcialmente</Badge>
+                  <Badge variant="secondary">Pagos parcialmente</Badge>
                 </div>
                 <div className="font-medium">
                   {discrepancias.filter(d => d.tipo === 'pago_parcialmente').length}
@@ -230,7 +230,7 @@ const DiscrepancyBadge: React.FC<{ tipo: string }> = ({ tipo }) => {
     case 'nao_pago':
       return <Badge variant="destructive">Não pago</Badge>;
     case 'pago_parcialmente':
-      return <Badge variant="warning">Pago parcialmente</Badge>;
+      return <Badge variant="secondary">Pago parcialmente</Badge>;
     case 'funcao_incorreta':
       return <Badge variant="outline">Função incorreta</Badge>;
     default:
