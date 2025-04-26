@@ -8,6 +8,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 import { Profile } from '@/types';
+import { Ticket, Message, TicketCategory, TicketPriority, TicketStatus } from '@/components/support/types';
 
 /**
  * Get a user's profile data

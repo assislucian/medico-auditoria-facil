@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +14,6 @@ import { GuidesList } from '@/components/help/GuidesList';
 import { VideosList } from '@/components/help/VideosList';
 import type { HelpArticle } from '@/types/help';
 import { guides, videos } from '@/data/helpGuides';
-import { supabase } from "@/integrations/supabase/client";
 import { fetchHelpArticles } from "../utils/supabase/supabaseHelpers";
 
 const faqItems = [
@@ -58,7 +58,8 @@ const Help = () => {
 
   const fetchArticles = async () => {
     try {
-      const articles = await fetchHelpArticles(supabase);
+      // Pass the correct options format to fetchHelpArticles
+      const articles = await fetchHelpArticles({published: true});
       setHelpArticles(articles);
     } catch (error) {
       console.error('Erro ao buscar artigos de ajuda:', error);

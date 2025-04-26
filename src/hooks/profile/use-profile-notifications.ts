@@ -1,3 +1,4 @@
+
 /**
  * use-profile-notifications.ts
  * 
@@ -58,11 +59,15 @@ export const useProfileNotifications = () => {
         ? profileData.notification_preferences 
         : {};
       
+      // Correctly merge the objects without using spread on potentially non-object value
       const prefJson = {
-        ...currentNotificationPrefs,
         email: preferences.email,
         sms: preferences.sms
       };
+      
+      if (typeof currentNotificationPrefs === 'object') {
+        Object.assign(prefJson, currentNotificationPrefs);
+      }
       
       // Atualiza o perfil com as novas preferências
       const success = await updateProfile(supabase, session.user.id, {

@@ -84,11 +84,17 @@ export const useProfileData = () => {
         ? profileData.notification_preferences
         : {};
       
-      // Mescla preferências existentes com novas informações
-      const updatedNotificationPrefs = {
-        ...currentNotificationPrefs,
-        ...(avatarUrl ? { avatar_url: avatarUrl } : {})
-      };
+      // Create properly typed object without spread
+      const updatedNotificationPrefs: Record<string, any> = {};
+      
+      if (typeof currentNotificationPrefs === 'object') {
+        Object.assign(updatedNotificationPrefs, currentNotificationPrefs);
+      }
+      
+      // Add avatar_url if available
+      if (avatarUrl) {
+        updatedNotificationPrefs.avatar_url = avatarUrl;
+      }
       
       // Atualiza o perfil com os novos dados
       const success = await updateProfileHelper(supabase, session.user.id, {

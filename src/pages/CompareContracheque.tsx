@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -8,7 +9,6 @@ import Navbar from '@/components/Navbar';
 import CBHPMSummaryCards from '@/components/comparison/CBHPMSummaryCards';
 import CBHPMComparisonTable from '@/components/comparison/CBHPMComparisonTable';
 import { useComparisonData } from '@/hooks/useComparisonData';
-import { supabase } from '@/integrations/supabase/client';
 import { ChevronLeft, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { fetchProceduresByAnalysisId } from '../utils/supabase/supabaseHelpers';
@@ -35,7 +35,7 @@ const CompareContracheque = () => {
       console.log('Fetching guia details for analysisId:', analysisId);
       
       try {
-        const proceduresData = await fetchProceduresByAnalysisId(supabase, analysisId);
+        const proceduresData = await fetchProceduresByAnalysisId(analysisId);
         
         console.log('Fetched procedures data:', proceduresData);
         
