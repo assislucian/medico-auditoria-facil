@@ -7,7 +7,9 @@ import {
   History, 
   BarChart2, 
   CreditCard,
-  FileBarChart
+  FileBarChart,
+  FileText,
+  AlertCircle
 } from "lucide-react";
 import { 
   Tooltip, 
@@ -25,7 +27,27 @@ export function MainNavigation() {
       icon: LayoutDashboard,
     },
     {
-      name: "Uploads",
+      name: "Guias",
+      href: "/guides",
+      icon: FileText,
+    },
+    {
+      name: "Demonstrativos",
+      href: "/demonstratives",
+      icon: FileUp,
+    },
+    {
+      name: "Comparativo",
+      href: "/compare",
+      icon: FileBarChart,
+    },
+    {
+      name: "Glosas",
+      href: "/glosas",
+      icon: AlertCircle,
+    },
+    {
+      name: "Upload",
       href: "/uploads",
       icon: FileUp,
     },
@@ -38,11 +60,6 @@ export function MainNavigation() {
       name: "Relatórios",
       href: "/reports",
       icon: BarChart2,
-    },
-    {
-      name: "Comparativo",
-      href: "/compare",
-      icon: FileBarChart,
     },
     {
       name: "Planos",

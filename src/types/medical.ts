@@ -1,3 +1,4 @@
+
 export interface DoctorParticipation {
   code: string;
   name: string;
@@ -28,6 +29,13 @@ export interface PaymentStatement {
   hospital: string;
   data: string;
   beneficiario: string;
+  codigo: string;
+  descricao: string;
+  funcao: string;
+  pago: boolean;
+  valorPago: number;
+  valorTabela2015: number;
+  diferenca: number;
   procedimentos: Procedure[];
 }
 

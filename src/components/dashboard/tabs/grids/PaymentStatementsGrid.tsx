@@ -3,7 +3,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { DataGrid } from "@/components/ui/data-grid";
 import { paymentStatementsColumns } from "../columns/paymentStatementsColumns";
 import { PaymentStatement } from "@/types/medical";
-import { ArrowTrendingUpIcon, AlertTriangleIcon } from "lucide-react";
+import { TrendingUp, AlertTriangle } from "lucide-react";
 
 interface PaymentStatementsGridProps {
   payments: PaymentStatement[];
@@ -19,7 +19,7 @@ export const PaymentStatementsGrid = ({ payments }: PaymentStatementsGridProps) 
       <CardHeader>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex items-center gap-2 p-4 rounded-lg bg-success/10">
-            <ArrowTrendingUpIcon className="w-5 h-5 text-success" />
+            <TrendingUp className="w-5 h-5 text-success" />
             <div>
               <p className="text-sm font-medium">Total Recebido</p>
               <p className="text-2xl font-bold">
@@ -33,7 +33,7 @@ export const PaymentStatementsGrid = ({ payments }: PaymentStatementsGridProps) 
           
           {belowTableCount > 0 && (
             <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10">
-              <AlertTriangleIcon className="w-5 h-5 text-destructive" />
+              <AlertTriangle className="w-5 h-5 text-destructive" />
               <div>
                 <p className="text-sm font-medium">Abaixo da CBHPM</p>
                 <p className="text-2xl font-bold">{belowTableCount} procedimento{belowTableCount !== 1 ? 's' : ''}</p>

@@ -20,6 +20,9 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import NotFoundPage from "./pages/NotFound";
 import SupportPage from "./pages/Support";
 import AuthCallback from "./pages/AuthCallback";
+import GuidesPage from "./pages/Guides";
+import DemonstrativesPage from "./pages/Demonstratives";
+import GlosasPage from "./pages/Glosas";
 
 function App() {
   return (
@@ -34,10 +37,13 @@ function App() {
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/guides" element={<GuidesPage />} />
+                <Route path="/demonstratives" element={<DemonstrativesPage />} />
+                <Route path="/compare" element={<CompareContracheque />} />
+                <Route path="/glosas" element={<GlosasPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/uploads" element={<NewAuditPage />} />
                 <Route path="/analysis/:id" element={<AnalysisPage />} />
-                <Route path="/compare" element={<CompareContracheque />} />
                 <Route path="/history" element={<HistoryPage />} />
                 <Route path="/reference-tables" element={<ReferenceTablesPage />} />
                 <Route path="/help" element={<HelpPage />} />
