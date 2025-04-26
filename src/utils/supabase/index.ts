@@ -21,6 +21,7 @@ import {
   fetchTicketMessages,
   createSupportTicket,
   sendTicketMessage,
+  fetchAnalysisById,
 } from './supabaseHelpers';
 
 export {
@@ -33,6 +34,7 @@ export {
   fetchTicketMessages,
   createSupportTicket,
   sendTicketMessage,
+  fetchAnalysisById,
 };
 
 // ---------------------------------------------------------------------
@@ -40,4 +42,3 @@ export {
 // para não disparar o erro TS1205 quando `isolatedModules` estiver ativo.
 // ---------------------------------------------------------------------
 export type { TicketData } from './supabaseHelpers';
-

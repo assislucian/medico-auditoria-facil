@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
 import { Profile, ProfileWithUUID } from "@/types";
-import { getProfile, updateProfile } from "../../../utils/supabase/supabaseHelpers";
+import { getProfile, updateProfile } from "@/utils/supabase";
 
 interface ProfileSidebarProps {
   name: string;

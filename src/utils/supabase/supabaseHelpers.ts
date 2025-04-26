@@ -67,9 +67,9 @@ export function toJson(data: any): Json {
 /**
  * Fetch procedures by analysis ID
  */
-export async function fetchProceduresByAnalysisId(supabaseClient: any, analysisId: string) {
+export async function fetchProceduresByAnalysisId(analysisId: string) {
   try {
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabase
       .from('procedures')
       .select('*')
       .eq('analysis_id', analysisId);
@@ -80,6 +80,26 @@ export async function fetchProceduresByAnalysisId(supabaseClient: any, analysisI
   } catch (error) {
     console.error('Error fetching procedures:', error);
     return [];
+  }
+}
+
+/**
+ * Fetch analysis by ID
+ */
+export async function fetchAnalysisById(analysisId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('analysis_results')
+      .select('*')
+      .eq('id', analysisId)
+      .maybeSingle();
+      
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching analysis:', error);
+    return null;
   }
 }
 
@@ -96,9 +116,9 @@ export interface TicketData {
 /**
  * Fetch tickets for a user
  */
-export async function fetchUserTickets(supabaseClient: any, userId: string) {
+export async function fetchUserTickets(userId: string) {
   try {
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabase
       .from('support_tickets')
       .select('*')
       .eq('user_id', userId)
@@ -116,9 +136,9 @@ export async function fetchUserTickets(supabaseClient: any, userId: string) {
 /**
  * Fetch messages for a ticket
  */
-export async function fetchTicketMessages(supabaseClient: any, ticketId: string) {
+export async function fetchTicketMessages(ticketId: string) {
   try {
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabase
       .from('support_messages')
       .select('*')
       .eq('ticket_id', ticketId)
@@ -136,9 +156,9 @@ export async function fetchTicketMessages(supabaseClient: any, ticketId: string)
 /**
  * Create a new support ticket
  */
-export async function createSupportTicket(supabaseClient: any, userId: string, ticketData: TicketData) {
+export async function createSupportTicket(userId: string, ticketData: TicketData) {
   try {
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabase
       .from('support_tickets')
       .insert({
         user_id: userId,
@@ -162,10 +182,10 @@ export async function createSupportTicket(supabaseClient: any, userId: string, t
 /**
  * Send a message in a support ticket
  */
-export async function sendTicketMessage(supabaseClient: any, ticketId: string, userId: string, content: string) {
+export async function sendTicketMessage(ticketId: string, userId: string, content: string) {
   try {
     // First insert the new message
-    const { data: message, error: messageError } = await supabaseClient
+    const { data: message, error: messageError } = await supabase
       .from('support_messages')
       .insert({
         ticket_id: ticketId,
@@ -178,7 +198,7 @@ export async function sendTicketMessage(supabaseClient: any, ticketId: string, u
     if (messageError) throw messageError;
     
     // Update the ticket status if needed
-    const { data: ticket, error: ticketError } = await supabaseClient
+    const { data: ticket, error: ticketError } = await supabase
       .from('support_tickets')
       .update({ status: 'cliente_respondeu', updated_at: new Date().toISOString() })
       .eq('id', ticketId)
@@ -197,9 +217,9 @@ export async function sendTicketMessage(supabaseClient: any, ticketId: string, u
 /**
  * Fetch help articles
  */
-export async function fetchHelpArticles(supabaseClient: any, options: {published?: boolean} = {published: true}) {
+export async function fetchHelpArticles(options: {published?: boolean} = {published: true}) {
   try {
-    let query = supabaseClient
+    let query = supabase
       .from('help_articles')
       .select('*');
     

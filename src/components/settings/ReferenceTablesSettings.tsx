@@ -15,7 +15,7 @@ import {
   ensureCheckedProperty,
   ReferenceTable as ReferenceTableType
 } from './reference-tables/types';
-import { getProfile, updateProfile, toJson } from "../../../utils/supabase/supabaseHelpers";
+import { getProfile, updateProfile, toJson } from "@/utils/supabase";
 import { Json } from '@/integrations/supabase/types';
 
 /**
