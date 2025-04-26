@@ -41,7 +41,14 @@ export type ExtractedData = {
 
 export type HelpArticle = Database['public']['Tables']['help_articles']['Row'];
 
-// Export other types but avoid duplicate exports
-// Use explicit re-exports to avoid ambiguity
-export * from './medical';
+// Use explicit re-exports to avoid ambiguity with DoctorParticipation
 export * from './upload';
+
+// Re-export everything except DoctorParticipation from medical
+// since it's already exported from upload
+export type {
+  Procedure,
+  PaymentStatement,
+  GuideData,
+  DemonstrativeData
+} from './medical';

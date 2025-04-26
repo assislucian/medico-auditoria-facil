@@ -76,6 +76,7 @@ export const useAlert = () => {
       message: description,
       description,
       type,
+      time: new Date().toISOString(), // Add the missing time property
       link: options?.link,
       data: options?.data
     });
