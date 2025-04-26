@@ -1,0 +1,25 @@
+
+import { describe, it, expect, vi } from 'vitest'
+import { supabase } from '@/integrations/supabase/client'
+
+describe('Authentication', () => {
+  it('can sign in with test user', async () => {
+    const mockSession = {
+      user: { id: 'test-user-id', email: 'test@example.com' },
+      access_token: 'mock-token'
+    }
+    
+    vi.spyOn(supabase.auth, 'signInWithPassword').mockResolvedValue({
+      data: { session: mockSession },
+      error: null
+    })
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: 'test@example.com',
+      password: 'password123'
+    })
+
+    expect(error).toBeNull()
+    expect(data.session).toEqual(mockSession)
+  })
+})

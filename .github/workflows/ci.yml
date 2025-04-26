@@ -1,4 +1,3 @@
-
 name: CI
 
 on:
@@ -27,6 +26,9 @@ jobs:
         
       - name: Type check
         run: npm run type-check
+        
+      - name: Strict type check (warning only)
+        run: npm run type-check:strict || echo "Strict type check failed but continuing"
         
       - name: Run tests
         run: npm run test
