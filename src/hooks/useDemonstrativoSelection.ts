@@ -26,6 +26,13 @@ const demonstrativos: PaymentStatement[] = [
     hospital: "Liga Norteriog Cancer Policlinic",
     data: "2024-08-19",
     beneficiario: "00620040000604690",
+    codigo: "30602246", // Added required fields
+    descricao: "Reconstrução Mamária Com Retalhos Cutâneos Regionais",
+    funcao: "Cirurgião",
+    pago: true,
+    valorPago: 457.64,
+    valorTabela2015: 1521.32,
+    diferenca: -1063.68,
     procedimentos: [
       {
         id: "proc1",
