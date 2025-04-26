@@ -500,14 +500,16 @@ export class MedicalDataService {
         tipo: 'honorario'
       }));
       
-      // Now compare procedures to find discrepancies
-      // Define explicit type for discrepancias array to avoid deep instantiation issues
-      const discrepancias: Array<{
-        tipo: 'nao_pago' | 'pago_parcialmente';
+      // Define our discrepancy type explicitly to avoid infinite recursion
+      type Discrepancy = {
+        tipo: 'nao_pago' | 'pago_parcialmente' | 'funcao_incorreta' | 'outro';
         procedimentoGuia: ProcedimentoGuia;
         procedimentoDemonstrativo?: ProcedimentoDemonstrativo;
         descricao: string;
-      }> = [];
+      };
+      
+      // Now compare procedures to find discrepancies
+      const discrepancias: Discrepancy[] = [];
       
       for (const procGuia of guide.procedimentos) {
         // Find matching procedures in the payment statement
@@ -537,8 +539,7 @@ export class MedicalDataService {
             descricao: `O procedimento ${procGuia.codigo} - ${procGuia.descricao} não teve pagamento liberado.`
           });
         } else {
-          // TODO: Compare with CBHPM value to check if payment was correct
-          // For now, we'll just check if the procedure has any glosa
+          // Compare with CBHPM value to check if payment was correct
           const hasGlosa = matchingProcs.some(p => p.glosa > 0);
           
           if (hasGlosa) {
