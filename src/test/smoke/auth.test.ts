@@ -4,15 +4,17 @@ import { supabase } from '@/integrations/supabase/client'
 
 describe('Authentication', () => {
   it('can sign in with test user', async () => {
+    const mockUser = {
+      id: 'test-user-id',
+      email: 'test@example.com',
+      app_metadata: {},
+      user_metadata: {},
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+    }
+
     const mockSession = {
-      user: {
-        id: 'test-user-id',
-        email: 'test@example.com',
-        app_metadata: {},
-        user_metadata: {},
-        aud: 'authenticated',
-        created_at: new Date().toISOString(),
-      },
+      user: mockUser,
       access_token: 'mock-token',
       refresh_token: 'mock-refresh-token',
       expires_in: 3600,
@@ -20,7 +22,7 @@ describe('Authentication', () => {
     }
     
     vi.spyOn(supabase.auth, 'signInWithPassword').mockResolvedValue({
-      data: { session: mockSession },
+      data: { user: mockUser, session: mockSession },
       error: null
     })
 
@@ -31,5 +33,6 @@ describe('Authentication', () => {
 
     expect(error).toBeNull()
     expect(data.session).toEqual(mockSession)
+    expect(data.user).toEqual(mockUser)
   })
 })
