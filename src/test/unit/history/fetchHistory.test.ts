@@ -4,6 +4,7 @@ import { fetchHistoryData } from '@/services/history/fetchHistory';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
+// Mock the Supabase client
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
@@ -28,11 +29,11 @@ describe('fetchHistoryData', () => {
       user_metadata: {},
       aud: 'authenticated',
       created_at: '2024-01-01',
-      updated_at: '2024-01-01',
       email: 'test@example.com',
       phone: '',
       role: '',
-      factors: null
+      factors: null,
+      updated_at: '2024-01-01'
     };
 
     const mockHistoryData = [{
@@ -48,20 +49,12 @@ describe('fetchHistoryData', () => {
     vi.spyOn(supabase.auth, 'getUser').mockResolvedValue({ data: { user: mockUser }, error: null });
     
     const mockOrder = vi.fn().mockResolvedValue({ data: mockHistoryData, error: null });
-    
-    const mockEq = vi.fn().mockReturnValue({
-      order: mockOrder
-    });
-    
-    const mockSelect = vi.fn().mockReturnValue({
-      eq: mockEq
-    });
-    
-    const mockFrom = vi.fn().mockReturnValue({
-      select: mockSelect
-    });
+    const mockEq = vi.fn().mockReturnValue({ order: mockOrder });
+    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect });
 
-    vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
+    // Use vi.mocked to properly type the mock
+    vi.mocked(supabase.from).mockImplementation(mockFrom);
 
     const result = await fetchHistoryData();
     expect(result).toHaveLength(1);

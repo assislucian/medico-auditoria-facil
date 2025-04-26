@@ -4,6 +4,7 @@ import { fetchAnalysisDetails } from '@/services/history/analysisDetails';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
+// Mock the Supabase client
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
@@ -56,36 +57,24 @@ describe('fetchAnalysisDetails', () => {
 
     vi.spyOn(supabase.auth, 'getUser').mockResolvedValue({ data: { user: mockUser }, error: null });
     
-    const mockFromImplementation = (table: string) => {
-      if (table === 'analysis_results') {
+    // Create a more sophisticated mock implementation for the supabase.from
+    const mockFromImplementation = (tableName: string) => {
+      if (tableName === 'analysis_results') {
         const mockSingle = vi.fn().mockResolvedValue({ data: mockAnalysis, error: null });
-        const mockEqInner = vi.fn().mockReturnValue({
-          single: mockSingle
-        });
-        const mockEq = vi.fn().mockReturnValue({
-          eq: mockEqInner
-        });
-        const mockSelect = vi.fn().mockReturnValue({
-          eq: mockEq
-        });
-        return {
-          select: mockSelect
-        };
+        const mockEqInner = vi.fn().mockReturnValue({ single: mockSingle });
+        const mockEq = vi.fn().mockReturnValue({ eq: mockEqInner });
+        const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+        return { select: mockSelect };
       } else {
         const mockEqInner = vi.fn().mockResolvedValue({ data: mockProcedures, error: null });
-        const mockEq = vi.fn().mockReturnValue({
-          eq: mockEqInner
-        });
-        const mockSelect = vi.fn().mockReturnValue({
-          eq: mockEq
-        });
-        return {
-          select: mockSelect
-        };
+        const mockEq = vi.fn().mockReturnValue({ eq: mockEqInner });
+        const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+        return { select: mockSelect };
       }
     };
 
-    vi.spyOn(supabase, 'from').mockImplementation(mockFromImplementation);
+    // Use vi.mocked to properly type the mock
+    vi.mocked(supabase.from).mockImplementation(mockFromImplementation);
 
     const result = await fetchAnalysisDetails('test-id');
     expect(result).toBeTruthy();
