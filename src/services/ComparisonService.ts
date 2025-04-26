@@ -100,13 +100,15 @@ export class ComparisonService {
         tipo: 'honorario'
       }));
       
-      // Define a simpler discrepancy type directly to avoid excessive type instantiation
-      type SimpleDiscrepancy = {
-        tipo: 'nao_pago' | 'pago_parcialmente' | 'funcao_incorreta' | 'outro';
-        procedimentoGuia: any; // Simplify this type to avoid deep nesting
-        procedimentoDemonstrativo?: any; // Simplify this type to avoid deep nesting
+      // Use a more basic structure for discrepancies to avoid deep type nesting
+      type DiscrepancyType = 'nao_pago' | 'pago_parcialmente' | 'funcao_incorreta' | 'outro';
+      
+      interface SimpleDiscrepancy {
+        tipo: DiscrepancyType;
+        procedimentoGuia: any; 
+        procedimentoDemonstrativo?: any;
         descricao: string;
-      };
+      }
       
       // Find discrepancies between the guide and payment statements
       const discrepancias: SimpleDiscrepancy[] = [];
