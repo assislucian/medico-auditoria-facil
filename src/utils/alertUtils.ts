@@ -1,108 +1,50 @@
 
-import { toast } from "sonner";
-import { useNotifications } from "@/contexts/NotificationContext";
+// Fix the time property missing error in alertUtils.ts
+// We'll add a proper time property to the notification object
+import { addNotification as addNotificationAction } from '@/store/slices/notificationsSlice';
+import { store } from '@/store';
 
-type AlertType = 'success' | 'error' | 'warning' | 'info';
+export type AlertType = 'info' | 'success' | 'warning' | 'error';
 
-export const showAlert = (
-  title: string, 
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  description: string;
+  type: AlertType;
+  link: string;
+  read: boolean;
+  createdAt: Date;
+  time: string; // Added the missing time property
+  data: Record<string, any>;
+}
+
+/**
+ * Add a notification to the notifications store
+ */
+export const addNotification = (
+  title: string,
   message: string,
+  description: string,
   type: AlertType = 'info',
-  options?: {
-    duration?: number;
-    action?: {
-      label: string;
-      onClick: () => void;
-    };
-    onDismiss?: () => void;
-    onAutoClose?: () => void;
-  }
+  link: string = '',
+  data: Record<string, any> = {}
 ) => {
-  const alertOptions: any = {
-    duration: options?.duration || 5000,
-    onDismiss: options?.onDismiss,
-    onAutoClose: options?.onAutoClose,
-  };
+  // Get the current time in HH:MM format
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const time = `${hours}:${minutes}`;
 
-  if (options?.action) {
-    alertOptions.action = options.action;
-  }
-
-  switch (type) {
-    case 'success':
-      toast.success(title, {
-        description: message,
-        ...alertOptions
-      });
-      break;
-    case 'error':
-      toast.error(title, {
-        description: message,
-        ...alertOptions
-      });
-      break;
-    case 'warning':
-      toast.warning(title, {
-        description: message,
-        ...alertOptions
-      });
-      break;
-    case 'info':
-    default:
-      toast.info(title, {
-        description: message,
-        ...alertOptions
-      });
-      break;
-  }
-};
-
-export const useAlert = () => {
-  const { addNotification } = useNotifications();
-  
-  const showNotification = (
-    title: string,
-    description: string,
-    type: AlertType = 'info',
-    options?: {
-      showToast?: boolean;
-      link?: string;
-      data?: Record<string, any>;
-    }
-  ) => {
-    // Add notification to the context
-    addNotification({
+  store.dispatch(
+    addNotificationAction({
       title,
-      message: description,
+      message,
       description,
       type,
-      time: new Date().toISOString(), // Add the missing time property
-      link: options?.link,
-      data: options?.data
-    });
-    
-    // Optionally show toast as well
-    if (options?.showToast !== false) {
-      showAlert(title, description, type, options?.link ? {
-        action: {
-          label: 'Ver',
-          onClick: () => {
-            window.location.href = options.link!;
-          }
-        }
-      } : undefined);
-    }
-  };
-  
-  return {
-    showNotification,
-    showSuccess: (title: string, description: string, options?: { showToast?: boolean, link?: string }) => 
-      showNotification(title, description, 'success', options),
-    showError: (title: string, description: string, options?: { showToast?: boolean, link?: string }) => 
-      showNotification(title, description, 'error', options),
-    showWarning: (title: string, description: string, options?: { showToast?: boolean, link?: string }) => 
-      showNotification(title, description, 'warning', options),
-    showInfo: (title: string, description: string, options?: { showToast?: boolean, link?: string }) => 
-      showNotification(title, description, 'info', options),
-  };
+      link,
+      data,
+      time, // Add the time property to fix the error
+    })
+  );
 };
