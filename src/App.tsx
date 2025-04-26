@@ -11,6 +11,7 @@ import CompareContracheque from "./pages/CompareContracheque";
 import HistoryPage from "./pages/History";
 import ReferenceTablesPage from "./pages/ReferenceTables";
 import HelpPage from "./pages/Help";
+import NotificationsPage from "./pages/Notifications";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeProvider";
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -40,6 +41,7 @@ function App() {
                   <Route path="/history" element={<HistoryPage />} />
                   <Route path="/reference-tables" element={<ReferenceTablesPage />} />
                   <Route path="/help" element={<HelpPage />} />
+                  <Route path="/notifications" element={<NotificationsPage />} />
                   <Route path="/support" element={<SupportPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>

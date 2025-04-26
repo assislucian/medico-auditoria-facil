@@ -73,6 +73,7 @@ export const useAlert = () => {
     // Add notification to the context
     addNotification({
       title,
+      message: description,
       description,
       type,
       link: options?.link,

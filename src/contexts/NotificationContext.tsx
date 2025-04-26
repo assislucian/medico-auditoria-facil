@@ -2,22 +2,29 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 // Define the context value type
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  description: string; // Added this field
+  time: string; // Added this field
+  read: boolean;
+  createdAt: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  link?: string; // Added this field
+  data?: Record<string, any>;
+}
+
+// Define the context value type
 interface NotificationContextType {
   unreadCount: number;
   notifications: Notification[];
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   fetchNotifications: () => Promise<void>;
-}
-
-// Define notification type
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  clearNotifications: () => void; // Added this method
+  removeNotification: (id: string) => void; // Added this method
+  addNotification: (notification: Omit<Notification, 'id' | 'read' | 'createdAt'>) => void; // Added this method
 }
 
 // Create the context with default values
@@ -47,24 +54,30 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
       id: '1',
       title: 'Nova análise concluída',
       message: 'Sua análise de contracheque foi processada com sucesso.',
+      description: 'Sua análise de contracheque foi processada com sucesso.',
       read: false,
       createdAt: new Date().toISOString(),
+      time: new Date().toISOString(),
       type: 'success'
     },
     {
       id: '2',
       title: 'Atualização disponível',
       message: 'Uma nova versão do sistema está disponível.',
+      description: 'Uma nova versão do sistema está disponível.',
       read: true,
       createdAt: new Date(Date.now() - 86400000).toISOString(),
+      time: new Date(Date.now() - 86400000).toISOString(),
       type: 'info'
     },
     {
       id: '3',
       title: 'Discrepância detectada',
       message: 'Encontramos uma discrepância em seu último pagamento.',
+      description: 'Encontramos uma discrepância em seu último pagamento.',
       read: false,
       createdAt: new Date(Date.now() - 172800000).toISOString(),
+      time: new Date(Date.now() - 172800000).toISOString(),
       type: 'warning'
     }
   ];
@@ -105,6 +118,34 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     setUnreadCount(0);
   };
 
+  // Remove a notification
+  const removeNotification = (id: string) => {
+    const updatedNotifications = notifications.filter(notification => notification.id !== id);
+    setNotifications(updatedNotifications);
+    updateUnreadCount(updatedNotifications);
+  };
+
+  // Clear all notifications
+  const clearNotifications = () => {
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+
+  // Add a new notification
+  const addNotification = (notification: Omit<Notification, 'id' | 'read' | 'createdAt'>) => {
+    const now = new Date();
+    const newNotification: Notification = {
+      id: `notification-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      read: false,
+      createdAt: now.toISOString(),
+      time: now.toISOString(),
+      ...notification
+    };
+    const updatedNotifications = [newNotification, ...notifications];
+    setNotifications(updatedNotifications);
+    updateUnreadCount(updatedNotifications);
+  };
+
   // Load notifications on mount
   useEffect(() => {
     fetchNotifications();
@@ -115,7 +156,10 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     notifications,
     markAsRead,
     markAllAsRead,
-    fetchNotifications
+    fetchNotifications,
+    clearNotifications,
+    removeNotification,
+    addNotification
   };
 
   return (
