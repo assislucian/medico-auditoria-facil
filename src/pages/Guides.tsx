@@ -1,12 +1,17 @@
 
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card";
 import { DataGrid } from "@/components/ui/data-grid";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileText, Filter } from "lucide-react";
+import { PlusCircle, FileText, Filter, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import FileDropZone from "@/components/upload/FileDropZone";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { FileType } from "@/types/upload";
+import FileList from "@/components/upload/FileList";
+import { toast } from "sonner";
 
 // Dados mock de exemplo para a demonstração
 const mockGuides = [
@@ -59,6 +64,41 @@ const guidesColumns = [
 
 const GuidesPage = () => {
   const [guides] = useState<any[]>(mockGuides);
+  const [activeTab, setActiveTab] = useState("list");
+  
+  const fileUpload = useFileUpload();
+  const {
+    files,
+    isUploading,
+    removeFile,
+    resetFiles,
+    handleFileChangeByType,
+    processUploadedFiles
+  } = fileUpload;
+
+  const handleUploadGuias = async () => {
+    if (files.length === 0) {
+      toast.error("Nenhum arquivo selecionado");
+      return;
+    }
+    
+    try {
+      const result = await processUploadedFiles();
+      if (result.success) {
+        toast.success("Guias processadas com sucesso");
+        resetFiles();
+        setActiveTab("list");
+      } else {
+        toast.error("Erro ao processar guias");
+      }
+    } catch (error) {
+      toast.error("Erro ao processar os arquivos");
+    }
+  };
+
+  const handleFileDrop = async (type: FileType, fileList: FileList) => {
+    await handleFileChangeByType(type, fileList);
+  };
 
   return (
     <AuthenticatedLayout 
@@ -74,37 +114,102 @@ const GuidesPage = () => {
             </p>
           </div>
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setActiveTab("list")}
+            >
               <Filter className="w-4 h-4 mr-2" />
               Filtrar
             </Button>
-            <Button size="sm">
+            <Button 
+              variant={activeTab === "upload" ? "secondary" : "default"}
+              size="sm"
+              onClick={() => setActiveTab("upload")}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload
+            </Button>
+            <Button 
+              size="sm"
+              onClick={() => setActiveTab("list")}
+            >
               <PlusCircle className="w-4 h-4 mr-2" />
               Nova Guia
             </Button>
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <FileText className="w-5 h-5 text-primary mb-2" />
-                <h3 className="font-medium">Guias Médicas</h3>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <DataGrid
-              rows={guides}
-              columns={guidesColumns}
-              pageSize={10}
-              rowsPerPageOptions={[10, 25, 50]}
-              disableSelectionOnClick
-              className="min-h-[500px]"
-            />
-          </CardContent>
-        </Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="list">Lista de Guias</TabsTrigger>
+            <TabsTrigger value="upload">Upload de Guias</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="list">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <FileText className="w-5 h-5 text-primary mb-2" />
+                    <h3 className="font-medium">Guias Médicas</h3>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <DataGrid
+                  rows={guides}
+                  columns={guidesColumns}
+                  pageSize={10}
+                  rowsPerPageOptions={[10, 25, 50]}
+                  disableSelectionOnClick
+                  className="min-h-[500px]"
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="upload">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Upload de Guias</CardTitle>
+                <CardDescription>
+                  Faça upload de guias TISS para processamento e análise
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FileDropZone 
+                  type="guia"
+                  onDropFiles={handleFileDrop}
+                  disabled={isUploading}
+                  hasFiles={files.some(f => f.type === "guia")}
+                />
+                
+                <FileList 
+                  files={files.filter(f => f.type === "guia")} 
+                  onRemove={removeFile} 
+                  disabled={isUploading}
+                />
+                
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={resetFiles} 
+                    disabled={files.length === 0 || isUploading}
+                  >
+                    Limpar
+                  </Button>
+                  <Button 
+                    onClick={handleUploadGuias}
+                    disabled={files.length === 0 || isUploading}
+                  >
+                    {isUploading ? 'Processando...' : 'Processar Guias'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </AuthenticatedLayout>
   );

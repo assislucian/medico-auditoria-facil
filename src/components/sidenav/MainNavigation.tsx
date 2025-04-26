@@ -2,17 +2,14 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  LayoutDashboard, 
-  FileUp, 
-  History, 
-  BarChart2, 
-  CreditCard,
-  FileBarChart,
+  LayoutDashboard,
   FileText,
-  AlertCircle,
+  FileBarChart,
+  BarChart2,
   Settings,
-  BookOpen,
-  HelpCircle
+  HelpCircle,
+  History,
+  BookOpen
 } from "lucide-react";
 import { 
   Tooltip, 
@@ -43,34 +40,16 @@ export function MainNavigation() {
       description: "Demonstrativos de pagamento"
     },
     {
-      name: "Comparativo",
+      name: "Comparativos",
       href: "/compare",
       icon: BarChart2,
-      description: "Comparação com CBHPM"
-    },
-    {
-      name: "Glosas",
-      href: "/glosas",
-      icon: AlertCircle,
-      description: "Gestão de glosas"
-    },
-    {
-      name: "Upload",
-      href: "/uploads",
-      icon: FileUp,
-      description: "Enviar documentos"
+      description: "Análise comparativa de pagamentos"
     },
     {
       name: "Histórico",
       href: "/history",
       icon: History,
       description: "Histórico de análises"
-    },
-    {
-      name: "Relatórios",
-      href: "/reports",
-      icon: BarChart2,
-      description: "Relatórios gerenciais"
     },
     {
       name: "Tabelas",

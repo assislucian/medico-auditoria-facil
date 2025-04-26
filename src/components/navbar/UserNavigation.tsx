@@ -24,16 +24,10 @@ export const UserNavigation = () => {
         Demonstrativos
       </Link>
       <Link to="/compare" className={getNavItemClass("/compare")}>
-        Comparativo
+        Comparativos
       </Link>
-      <Link to="/glosas" className={getNavItemClass("/glosas")}>
-        Glosas
-      </Link>
-      <Link to="/uploads" className={getNavItemClass("/uploads")}>
-        Uploads
-      </Link>
-      <Link to="/reports" className={getNavItemClass("/reports")}>
-        Relatórios
+      <Link to="/history" className={getNavItemClass("/history")}>
+        Histórico
       </Link>
     </>
   );
