@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,7 +23,6 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract redirect URL from query parameters if it exists
   const searchParams = new URLSearchParams(location.search);
   const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
@@ -72,14 +70,12 @@ const LoginForm = () => {
       console.log('Login bem-sucedido, buscando perfil do usuário');
       
       try {
-        // Use uma consulta com timeout para evitar que a página fique presa
         const profilePromise = supabase
           .from('profiles')
           .select('trial_status')
           .eq('id', result.data.user.id)
           .single();
           
-        // Set a timeout to prevent getting stuck
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Timeout')), 3000)
         );
@@ -88,24 +84,15 @@ const LoginForm = () => {
         
         if (profileResult.error) {
           console.error('Erro ao buscar perfil:', profileResult.error);
-          // Se não conseguirmos obter o perfil, vamos para o dashboard
           toast.success('Login realizado com sucesso!');
           navigate(redirectUrl);
           return;
         }
 
-        if (!profileResult.data?.trial_status || profileResult.data.trial_status === 'not_started') {
-          console.log('Usuário sem trial ativo, redirecionando para welcome');
-          toast.success('Login realizado com sucesso!');
-          navigate('/welcome', { state: { returnTo: redirectUrl } });
-        } else {
-          console.log('Usuário com trial ativo, redirecionando para dashboard');
-          toast.success('Login realizado com sucesso!');
-          navigate(redirectUrl);
-        }
+        toast.success('Login realizado com sucesso!');
+        navigate(redirectUrl);
       } catch (profileError) {
         console.error('Erro ou timeout ao buscar perfil:', profileError);
-        // Em caso de erro ou timeout na busca do perfil, vamos para o dashboard
         toast.success('Login realizado com sucesso!');
         navigate(redirectUrl);
       }
@@ -135,8 +122,6 @@ const LoginForm = () => {
         throw error;
       }
       
-      // No need for success toast here as the redirect will happen automatically
-      // The success message will be shown in the callback handler
     } catch (error: any) {
       console.error('Erro ao fazer login com Google:', error);
       setAuthError('Erro ao fazer login com Google. Tente novamente mais tarde.');

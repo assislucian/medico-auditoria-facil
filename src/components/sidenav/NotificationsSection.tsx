@@ -7,8 +7,11 @@ import { useNotifications } from "@/contexts/NotificationContext";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function NotificationsSection() {
-  const { unreadCount } = useNotifications();
   const location = useLocation();
+  const notificationContext = useNotifications();
+  
+  // Fallback in case context is not available (this shouldn't happen with our fixed provider setup)
+  const unreadCount = notificationContext?.unreadCount || 0;
 
   return (
     <div className="px-3 py-2">
