@@ -5,7 +5,7 @@ import {
   TrendingUp, 
   Clock, 
   FileSpreadsheet, 
-  CloudCheck, 
+  CheckCircle, 
   Database,
   ShieldCheck
 } from "lucide-react";
@@ -28,7 +28,7 @@ export function BenefitsSection() {
       description: "Acesse análises completas e visualize todo o potencial de recuperação."
     },
     {
-      icon: <CloudCheck className="h-8 w-8 text-primary" />,
+      icon: <CheckCircle className="h-8 w-8 text-primary" />,
       title: "Tecnologia em Nuvem",
       description: "Acesse seus dados de qualquer lugar, a qualquer momento, com total segurança."
     },
