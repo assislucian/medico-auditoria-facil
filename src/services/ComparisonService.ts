@@ -12,6 +12,7 @@ export class ComparisonService {
    */
   static async compareGuideWithStatements(guideId: string): Promise<ComparisonResult | null> {
     try {
+      // First, retrieve the analysis result with its procedures
       const { data: analysis, error: analysisError } = await supabase
         .from('analysis_results')
         .select(`
@@ -28,9 +29,10 @@ export class ComparisonService {
       }
       
       const guideNumber = analysis.numero;
-      const proceduresFromAnalysis = analysis.procedures || [];
-      const procedures = Array.isArray(proceduresFromAnalysis) ? proceduresFromAnalysis : [];
+      // Ensure procedures is properly handled as an array
+      const procedures = Array.isArray(analysis.procedures) ? analysis.procedures : [];
       
+      // Now get payment procedures linked to this guide number
       const { data: paymentProcs, error: paymentError } = await supabase
         .from('procedures')
         .select('*')
@@ -39,6 +41,7 @@ export class ComparisonService {
         
       if (paymentError) throw paymentError;
       
+      // Transform the data into our domain models
       const guide: MedicalGuideDetailed = {
         numero: guideNumber,
         dataExecucao: procedures[0]?.created_at ? new Date(procedures[0].created_at).toLocaleDateString('pt-BR') : '',
@@ -51,6 +54,7 @@ export class ComparisonService {
           nome: 'Prestador não especificado'
         },
         procedimentos: procedures.map((proc: any) => {
+          // Safely handle doctor participations
           const safeParticipacoes = Array.isArray(proc.doctors) 
             ? proc.doctors.map((doctor: any) => ({
                 funcao: doctor.role || '',
@@ -74,7 +78,10 @@ export class ComparisonService {
         })
       };
       
+      // Ensure payment procedures array is handled safely
       const paymentProcsArray = Array.isArray(paymentProcs) ? paymentProcs : [];
+      
+      // Transform payment procedures to domain model
       const demonstrativoProcs: ProcedimentoDemonstrativo[] = paymentProcsArray.map((proc: any) => ({
         lote: proc.guia?.split('-')[0] || '',
         conta: proc.id,
@@ -93,7 +100,8 @@ export class ComparisonService {
         tipo: 'honorario'
       }));
       
-      interface SimpleDiscrepancy {
+      // Define the discrepancy type directly to avoid excessive type instantiation
+      type SimpleDiscrepancy = {
         tipo: 'nao_pago' | 'pago_parcialmente' | 'funcao_incorreta' | 'outro';
         procedimentoGuia: {
           codigo: string;
@@ -113,8 +121,9 @@ export class ComparisonService {
         };
         procedimentoDemonstrativo?: ProcedimentoDemonstrativo;
         descricao: string;
-      }
+      };
       
+      // Find discrepancies between the guide and payment statements
       const discrepancias: SimpleDiscrepancy[] = [];
       
       for (const procGuia of guide.procedimentos) {
