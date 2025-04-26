@@ -4,7 +4,7 @@ import { ReferenceTablesSettings } from '@/components/settings/ReferenceTablesSe
 
 const ReferenceTablesPage = () => {
   return (
-    <MainLayout>
+    <MainLayout title="Tabelas de Referência">
       <ReferenceTablesSettings />
     </MainLayout>
   );

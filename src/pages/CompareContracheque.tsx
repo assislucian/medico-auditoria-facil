@@ -34,11 +34,25 @@ const CompareContracheque = () => {
           // Fetch procedures related to this analysis
           const procedures = await fetchProceduresByAnalysisId(analysis.id);
           
-          // Combine data
-          setAnalysisData({
-            ...analysis,
-            procedures
-          } as ExtractedData);
+          // Transform the data to match the ExtractedData type
+          const transformedData: ExtractedData = {
+            id: analysis.id,
+            procedures: procedures.map(proc => ({
+              id: proc.id,
+              codigo: proc.codigo,
+              procedimento: proc.procedimento,
+              papel: proc.papel || undefined,
+              valorCBHPM: proc.valor_cbhpm || 0,
+              valorPago: proc.valor_pago || 0,
+              diferenca: proc.diferenca || 0,
+              pago: proc.pago || false,
+              guia: proc.guia || undefined,
+              beneficiario: proc.beneficiario || undefined,
+              doctors: proc.doctors || []
+            }))
+          };
+          
+          setAnalysisData(transformedData);
         }
       } catch (error) {
         console.error('Error fetching analysis:', error);

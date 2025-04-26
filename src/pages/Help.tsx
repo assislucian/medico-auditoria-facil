@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -103,7 +102,7 @@ const HelpPage = () => {
                         <div className="py-2">
                           <h3 className="text-lg font-medium">{article.title}</h3>
                           <p className="mt-1 text-sm text-muted-foreground">
-                            {article.excerpt || article.content.substring(0, 150)}...
+                            {article.content.substring(0, 150)}...
                           </p>
                         </div>
                         {index < groupedArticles[category].length - 1 && <Separator />}

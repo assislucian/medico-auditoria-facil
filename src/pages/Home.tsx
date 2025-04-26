@@ -7,7 +7,7 @@ import { PricingSection } from "@/components/landing/PricingSection";
 
 const HomePage = () => {
   return (
-    <MainLayout>
+    <MainLayout title="Home">
       <HeroSection />
       <BenefitsSection />
       <DemoSection />
