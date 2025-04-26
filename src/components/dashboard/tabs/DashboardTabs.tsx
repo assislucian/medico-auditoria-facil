@@ -1,8 +1,8 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProceduresTab } from "./ProceduresTab";
-import { PaymentsTab } from "./PaymentsTab";
-import { GlosasTab } from "./GlosasTab";
+import ProceduresTab from "./ProceduresTab";
+import PaymentsTab from "./PaymentsTab";
+import GlosasTab from "./GlosasTab";
 
 export function DashboardTabs() {
   return (
