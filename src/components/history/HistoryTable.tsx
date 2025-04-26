@@ -1,4 +1,3 @@
-
 /**
  * HistoryTable.tsx
  * 
@@ -53,7 +52,7 @@ export function HistoryTable({ items }: HistoryTableProps) {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-muted/50">
                 <TableHead>Data</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Descrição</TableHead>
@@ -66,21 +65,21 @@ export function HistoryTable({ items }: HistoryTableProps) {
             <TableBody>
               {items.length > 0 ? (
                 items.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow key={item.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium">{item.date}</TableCell>
                     <TableCell>
                       {item.type === "Guia" ? (
-                        <Badge variant="outline" className="bg-medblue-600/10 text-medblue-600 border-medblue-200">
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                           <FileText className="mr-1 h-3 w-3" />
                           Guia
                         </Badge>
                       ) : item.type === "Demonstrativo" ? (
-                        <Badge variant="outline" className="bg-green-600/10 text-green-600 border-green-200">
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                           <FileCheck className="mr-1 h-3 w-3" />
                           Demonstrativo
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-purple-600/10 text-purple-600 border-purple-200">
+                        <Badge variant="outline" className="bg-secondary/10 text-secondary-foreground border-secondary/20">
                           <FileText className="mr-1 h-3 w-3" />
                           Ambos
                         </Badge>
@@ -89,7 +88,7 @@ export function HistoryTable({ items }: HistoryTableProps) {
                     <TableCell>{item.description}</TableCell>
                     <TableCell className="text-center">{item.procedimentos}</TableCell>
                     <TableCell className="text-center">
-                      <span className={`font-medium ${item.glosados > 0 ? "text-red-500" : "text-green-500"}`}>
+                      <span className={`font-medium ${item.glosados > 0 ? "text-destructive" : "text-success"}`}>
                         {item.glosados}
                       </span>
                     </TableCell>
@@ -102,6 +101,7 @@ export function HistoryTable({ items }: HistoryTableProps) {
                         size="icon"
                         onClick={() => handleViewDetails(item.id)}
                         title="Ver detalhes"
+                        className="hover:bg-primary/10 hover:text-primary"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -110,6 +110,7 @@ export function HistoryTable({ items }: HistoryTableProps) {
                         size="icon"
                         onClick={() => handleDownloadReport(item)}
                         title="Baixar relatório"
+                        className="hover:bg-primary/10 hover:text-primary"
                       >
                         <Download className="h-4 w-4" />
                       </Button>

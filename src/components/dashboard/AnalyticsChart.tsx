@@ -7,7 +7,6 @@ import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 export function AnalyticsChart() {
   const { data, isLoading } = useDashboardStats();
 
-  // Format currency for tooltips
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -35,22 +34,28 @@ export function AnalyticsChart() {
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data?.monthlyData || []} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/50" />
+                <XAxis dataKey="name" className="text-muted-foreground text-xs" />
                 <YAxis 
                   tickFormatter={(value) => `R$${value/1000}k`} 
                   domain={['auto', 'auto']} 
+                  className="text-muted-foreground text-xs"
                 />
                 <Tooltip
                   formatter={(value: number) => [formatCurrency(value), undefined]}
                   labelFormatter={(label) => `Mês: ${label}`}
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))',
+                    borderRadius: '0.5rem',
+                    border: '1px solid hsl(var(--border))',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
                 />
-                <ReferenceLine y={0} stroke="#000" />
+                <ReferenceLine y={0} stroke="hsl(var(--border))" />
                 <Bar 
                   dataKey="recebido" 
                   name="Recebido" 
-                  fill="#1E40AF" 
+                  fill="hsl(var(--success))"
                   radius={[4, 4, 0, 0]} 
                   maxBarSize={40} 
                   animationDuration={1500}
@@ -58,7 +63,7 @@ export function AnalyticsChart() {
                 <Bar 
                   dataKey="glosado" 
                   name="Glosado" 
-                  fill="#EF4444" 
+                  fill="hsl(var(--destructive))"
                   radius={[4, 4, 0, 0]} 
                   maxBarSize={40} 
                   animationDuration={1500}
