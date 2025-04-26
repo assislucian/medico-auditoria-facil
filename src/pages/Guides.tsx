@@ -46,7 +46,7 @@ const guidesColumns = [
     headerName: 'Status', 
     width: 120,
     renderCell: ({ value }) => {
-      let variant = "default";
+      let variant: "default" | "success" | "warning" | "destructive" = "default";
       
       if (value === "Fechada") variant = "success";
       if (value === "Pendente") variant = "warning";
