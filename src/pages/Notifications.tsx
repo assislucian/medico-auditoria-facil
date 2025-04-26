@@ -10,9 +10,7 @@ import { BellRing, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NotificationsPage = () => {
-  const { notifications, markAsRead, markAllAsRead } = useNotifications();
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
 
   return (
     <MainLayout title="Notificações">
@@ -68,7 +66,7 @@ const NotificationsPage = () => {
                     {notification.type && (
                       <Badge variant={
                         notification.type === 'success' ? 'success' : 
-                        notification.type === 'warning' ? 'warning' : 
+                        notification.type === 'warning' ? 'default' : 
                         notification.type === 'error' ? 'destructive' : 
                         'default'
                       }>

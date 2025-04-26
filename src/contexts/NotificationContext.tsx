@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { AlertType } from '@/utils/alertUtils';
 
 export interface Notification {
@@ -17,6 +17,7 @@ export interface Notification {
 
 interface NotificationContextType {
   notifications: Notification[];
+  unreadCount: number; // Added this property
   addNotification: (notification: Omit<Notification, 'id' | 'read' | 'createdAt' | 'time'>) => void;
   removeNotification: (id: string) => void;
   markAsRead: (id: string) => void;
@@ -40,6 +41,11 @@ interface NotificationProviderProps {
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Calculate unread count
+  const unreadCount = useMemo(() => {
+    return notifications.filter(notification => !notification.read).length;
+  }, [notifications]);
 
   // Load notifications from localStorage on component mount
   useEffect(() => {
@@ -105,6 +111,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     <NotificationContext.Provider
       value={{
         notifications,
+        unreadCount,
         addNotification,
         removeNotification,
         markAsRead,

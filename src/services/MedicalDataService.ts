@@ -502,7 +502,12 @@ export class MedicalDataService {
       }));
       
       // Now compare procedures to find discrepancies
-      const discrepancias = [];
+      const discrepancias: Array<{
+        tipo: 'nao_pago' | 'pago_parcialmente';
+        procedimentoGuia: ProcedimentoGuia;
+        procedimentoDemonstrativo?: ProcedimentoDemonstrativo;
+        descricao: string;
+      }> = [];
       
       for (const procGuia of guide.procedimentos) {
         // Find matching procedures in the payment statement
@@ -513,7 +518,7 @@ export class MedicalDataService {
         if (matchingProcs.length === 0) {
           // Procedure not found in any payment statement
           discrepancias.push({
-            tipo: 'nao_pago' as const,
+            tipo: 'nao_pago',
             procedimentoGuia: procGuia,
             descricao: `O procedimento ${procGuia.codigo} - ${procGuia.descricao} não foi encontrado em nenhum demonstrativo.`
           });
@@ -526,7 +531,7 @@ export class MedicalDataService {
         // Here we would check against CBHPM value, but for now we'll just check if any payment was made
         if (valorTotalPago === 0) {
           discrepancias.push({
-            tipo: 'nao_pago' as const,
+            tipo: 'nao_pago',
             procedimentoGuia: procGuia,
             procedimentoDemonstrativo: matchingProcs[0],
             descricao: `O procedimento ${procGuia.codigo} - ${procGuia.descricao} não teve pagamento liberado.`
@@ -537,11 +542,10 @@ export class MedicalDataService {
           const hasGlosa = matchingProcs.some(p => p.glosa > 0);
           
           if (hasGlosa) {
-            // Use type assertion to avoid infinite type instantiation
             const glosaProc = matchingProcs.find(p => p.glosa > 0);
             if (glosaProc) {
               discrepancias.push({
-                tipo: 'pago_parcialmente' as const,
+                tipo: 'pago_parcialmente',
                 procedimentoGuia: procGuia,
                 procedimentoDemonstrativo: glosaProc,
                 descricao: `O procedimento ${procGuia.codigo} - ${procGuia.descricao} teve glosa aplicada.`
