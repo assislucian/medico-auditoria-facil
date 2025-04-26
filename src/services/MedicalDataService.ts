@@ -449,22 +449,29 @@ export class MedicalDataService {
           codigo: '',
           nome: 'Prestador não especificado'
         },
-        procedimentos: procedures.map((proc: any) => ({
-          codigo: proc.codigo,
-          descricao: proc.procedimento,
-          dataExecucao: proc.created_at ? new Date(proc.created_at).toLocaleDateString('pt-BR') : '',
-          quantidade: 1,
-          status: proc.pago ? 'Fechada' : 'Aberta',
-          valorPago: proc.valor_pago,
-          participacoes: Array.isArray(proc.doctors) ? proc.doctors.map((doctor: any) => ({
-            funcao: doctor.role,
-            crm: doctor.code,
-            nome: doctor.name,
-            dataInicio: doctor.startTime,
-            dataFim: doctor.endTime,
-            status: doctor.status
-          })) : []
-        }))
+        procedimentos: procedures.map((proc: any) => {
+          // Create a safe version of participacoes that won't cause infinite recursion
+          const safeParticipacoes = Array.isArray(proc.doctors) 
+            ? proc.doctors.map((doctor: any) => ({
+                funcao: doctor.role || '',
+                crm: doctor.code || '',
+                nome: doctor.name || '',
+                dataInicio: doctor.startTime || '',
+                dataFim: doctor.endTime || '',
+                status: doctor.status || ''
+              }))
+            : [];
+            
+          return {
+            codigo: proc.codigo,
+            descricao: proc.procedimento,
+            dataExecucao: proc.created_at ? new Date(proc.created_at).toLocaleDateString('pt-BR') : '',
+            quantidade: 1,
+            status: proc.pago ? 'Fechada' : 'Aberta',
+            valorPago: proc.valor_pago || 0,
+            participacoes: safeParticipacoes
+          };
+        })
       };
       
       // Transform payment procedures data to our frontend model
