@@ -10,22 +10,30 @@ describe('procedureHelpers', () => {
       { id: '2', codigo: 'TEST2', procedimento: 'Test Procedure 2' }
     ]
 
-    vi.spyOn(supabase, 'from').mockImplementation(() => ({
-      select: () => ({
-        eq: () => Promise.resolve({ data: mockProcedures, error: null })
-      })
-    }))
+    const mockSelect = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ data: mockProcedures, error: null })
+    });
+    
+    const mockFrom = vi.fn().mockReturnValue({
+      select: mockSelect
+    });
+
+    vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
 
     const result = await fetchProceduresByAnalysisId('test-analysis-id')
     expect(result).toEqual(mockProcedures)
   })
 
   it('returns empty array on error', async () => {
-    vi.spyOn(supabase, 'from').mockImplementation(() => ({
-      select: () => ({
-        eq: () => Promise.resolve({ data: null, error: { message: 'Error' } })
-      })
-    }))
+    const mockSelect = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'Error' } })
+    });
+    
+    const mockFrom = vi.fn().mockReturnValue({
+      select: mockSelect
+    });
+
+    vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
 
     const result = await fetchProceduresByAnalysisId('test-analysis-id')
     expect(result).toEqual([])

@@ -2,6 +2,15 @@
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAnalysisById, fetchProceduresByAnalysisId } from '@/utils/supabase';
 
+interface AnalysisSummary {
+  totalCBHPM?: number;
+  totalPago?: number;
+  totalDiferenca?: number;
+  procedimentosNaoPagos?: number;
+  procedimentosTotal?: number;
+  [key: string]: any;
+}
+
 /**
  * Retrieves analysis by ID with all related data
  */
@@ -17,6 +26,9 @@ export async function getAnalysisById(analysisId: string) {
     
     const proceduresData = await fetchProceduresByAnalysisId(analysisId);
     console.log(`Encontrados ${proceduresData.length} procedimentos para a análise`);
+    
+    // Type assertion for the summary field
+    const summary = analysisData.summary as AnalysisSummary;
     
     return {
       demonstrativoInfo: {
@@ -40,10 +52,10 @@ export async function getAnalysisById(analysisId: string) {
         doctors: proc.doctors || []
       })),
       totais: {
-        valorCBHPM: analysisData.summary?.totalCBHPM || 0,
-        valorPago: analysisData.summary?.totalPago || 0,
-        diferenca: analysisData.summary?.totalDiferenca || 0,
-        procedimentosNaoPagos: analysisData.summary?.procedimentosNaoPagos || 0
+        valorCBHPM: summary?.totalCBHPM || 0,
+        valorPago: summary?.totalPago || 0,
+        diferenca: summary?.totalDiferenca || 0,
+        procedimentosNaoPagos: summary?.procedimentosNaoPagos || 0
       }
     };
   } catch (error) {

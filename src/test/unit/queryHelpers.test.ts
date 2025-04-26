@@ -41,7 +41,7 @@ describe('queryHelpers', () => {
   it('returns null when error exists', () => {
     const response: PostgrestSingleResponse<any> = { 
       error: { message: 'Test error' } as PostgrestError, 
-      data: { test: 'data' },
+      data: null,
       count: null,
       status: 400,
       statusText: 'Bad Request'

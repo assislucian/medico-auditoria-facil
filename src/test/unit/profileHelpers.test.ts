@@ -13,26 +13,42 @@ describe('profileHelpers', () => {
       specialty: 'Cardiologia'
     }
 
-    vi.spyOn(supabase, 'from').mockImplementation(() => ({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: () => Promise.resolve({ data: mockProfile, error: null })
-        })
-      })
-    }))
+    const mockMaybeSingle = vi.fn().mockResolvedValue({ data: mockProfile, error: null });
+    
+    const mockEq = vi.fn().mockReturnValue({
+      maybeSingle: mockMaybeSingle
+    });
+    
+    const mockSelect = vi.fn().mockReturnValue({
+      eq: mockEq
+    });
+    
+    const mockFrom = vi.fn().mockReturnValue({
+      select: mockSelect
+    });
+
+    vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
 
     const result = await getProfileData('test-id')
     expect(result).toEqual(mockProfile)
   })
 
   it('returns null when profile not found', async () => {
-    vi.spyOn(supabase, 'from').mockImplementation(() => ({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: () => Promise.resolve({ data: null, error: null })
-        })
-      })
-    }))
+    const mockMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+    
+    const mockEq = vi.fn().mockReturnValue({
+      maybeSingle: mockMaybeSingle
+    });
+    
+    const mockSelect = vi.fn().mockReturnValue({
+      eq: mockEq
+    });
+    
+    const mockFrom = vi.fn().mockReturnValue({
+      select: mockSelect
+    });
+
+    vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
 
     const result = await getProfileData('non-existent')
     expect(result).toBeNull()

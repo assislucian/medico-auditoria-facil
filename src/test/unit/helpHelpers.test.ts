@@ -10,22 +10,30 @@ describe('helpHelpers', () => {
       { id: '2', title: 'Test Article 2', published: true }
     ]
 
-    vi.spyOn(supabase, 'from').mockImplementation(() => ({
-      select: () => ({
-        eq: () => Promise.resolve({ data: mockArticles, error: null })
-      })
-    }))
+    const mockSelect = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ data: mockArticles, error: null })
+    });
+    
+    const mockFrom = vi.fn().mockReturnValue({
+      select: mockSelect
+    });
+
+    vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
 
     const result = await fetchHelpArticles({ published: true })
     expect(result).toEqual(mockArticles)
   })
 
   it('returns empty array on error', async () => {
-    vi.spyOn(supabase, 'from').mockImplementation(() => ({
-      select: () => ({
-        eq: () => Promise.resolve({ data: null, error: { message: 'Error' } })
-      })
-    }))
+    const mockSelect = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'Error' } })
+    });
+    
+    const mockFrom = vi.fn().mockReturnValue({
+      select: mockSelect
+    });
+
+    vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
 
     const result = await fetchHelpArticles()
     expect(result).toEqual([])

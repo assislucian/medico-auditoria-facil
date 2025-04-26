@@ -17,26 +17,30 @@ describe('analysisHelpers', () => {
       created_at: '2025-01-01'
     };
 
-    vi.spyOn(supabase, 'from').mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          single: () => Promise.resolve({ data: mockAnalysis, error: null })
+    const mockFrom = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: mockAnalysis, error: null })
         })
       })
-    } as any);
+    });
+
+    vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
 
     const result = await fetchAnalysisById('test-id');
     expect(result).toEqual(mockAnalysis);
   });
 
   it('returns null on error', async () => {
-    vi.spyOn(supabase, 'from').mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          single: () => Promise.resolve({ data: null, error: { message: 'Error' } })
+    const mockFrom = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: null, error: { message: 'Error' } })
         })
       })
-    } as any);
+    });
+
+    vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
 
     const result = await fetchAnalysisById('test-id');
     expect(result).toBeNull();

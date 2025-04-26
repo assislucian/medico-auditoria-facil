@@ -1,5 +1,5 @@
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchAnalysisDetails } from '@/services/history/analysisDetails';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -56,28 +56,36 @@ describe('fetchAnalysisDetails', () => {
 
     vi.spyOn(supabase.auth, 'getUser').mockResolvedValue({ data: { user: mockUser }, error: null });
     
-    const mockFrom = vi.fn().mockImplementation((table) => {
+    const mockFromImplementation = (table: string) => {
       if (table === 'analysis_results') {
+        const mockSingle = vi.fn().mockResolvedValue({ data: mockAnalysis, error: null });
+        const mockEqInner = vi.fn().mockReturnValue({
+          single: mockSingle
+        });
+        const mockEq = vi.fn().mockReturnValue({
+          eq: mockEqInner
+        });
+        const mockSelect = vi.fn().mockReturnValue({
+          eq: mockEq
+        });
         return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({ data: mockAnalysis, error: null })
-              })
-            })
-          })
+          select: mockSelect
+        };
+      } else {
+        const mockEqInner = vi.fn().mockResolvedValue({ data: mockProcedures, error: null });
+        const mockEq = vi.fn().mockReturnValue({
+          eq: mockEqInner
+        });
+        const mockSelect = vi.fn().mockReturnValue({
+          eq: mockEq
+        });
+        return {
+          select: mockSelect
         };
       }
-      return {
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: mockProcedures, error: null })
-          })
-        })
-      };
-    });
+    };
 
-    vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
+    vi.spyOn(supabase, 'from').mockImplementation(mockFromImplementation);
 
     const result = await fetchAnalysisDetails('test-id');
     expect(result).toBeTruthy();

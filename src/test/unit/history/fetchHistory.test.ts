@@ -46,13 +46,22 @@ describe('fetchHistoryData', () => {
     }];
 
     vi.spyOn(supabase.auth, 'getUser').mockResolvedValue({ data: { user: mockUser }, error: null });
-    vi.spyOn(supabase, 'from').mockImplementation(() => ({
-      select: () => ({
-        eq: () => ({
-          order: () => Promise.resolve({ data: mockHistoryData, error: null })
-        })
-      })
-    } as any));
+    
+    const mockOrder = vi.fn().mockResolvedValue({ data: mockHistoryData, error: null });
+    
+    const mockEq = vi.fn().mockReturnValue({
+      order: mockOrder
+    });
+    
+    const mockSelect = vi.fn().mockReturnValue({
+      eq: mockEq
+    });
+    
+    const mockFrom = vi.fn().mockReturnValue({
+      select: mockSelect
+    });
+
+    vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
 
     const result = await fetchHistoryData();
     expect(result).toHaveLength(1);

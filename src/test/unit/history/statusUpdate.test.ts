@@ -1,5 +1,5 @@
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { updateAnalysisStatus } from '@/services/history/statusUpdate';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,10 +15,14 @@ describe('updateAnalysisStatus', () => {
   });
 
   it('returns true on successful status update', async () => {
+    const mockEq = vi.fn().mockResolvedValue({ error: null });
+    
+    const mockUpdate = vi.fn().mockReturnValue({
+      eq: mockEq
+    });
+    
     const mockFrom = vi.fn().mockReturnValue({
-      update: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ error: null })
-      })
+      update: mockUpdate
     });
 
     vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
@@ -28,10 +32,14 @@ describe('updateAnalysisStatus', () => {
   });
 
   it('returns false when update fails', async () => {
+    const mockEq = vi.fn().mockResolvedValue({ error: new Error('Update failed') });
+    
+    const mockUpdate = vi.fn().mockReturnValue({
+      eq: mockEq
+    });
+    
     const mockFrom = vi.fn().mockReturnValue({
-      update: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ error: new Error('Update failed') })
-      })
+      update: mockUpdate
     });
 
     vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
@@ -41,10 +49,14 @@ describe('updateAnalysisStatus', () => {
   });
 
   it('returns false on exception', async () => {
+    const mockEq = vi.fn().mockRejectedValue(new Error('Network error'));
+    
+    const mockUpdate = vi.fn().mockReturnValue({
+      eq: mockEq
+    });
+    
     const mockFrom = vi.fn().mockReturnValue({
-      update: vi.fn().mockReturnValue({
-        eq: vi.fn().mockRejectedValue(new Error('Network error'))
-      })
+      update: mockUpdate
     });
 
     vi.spyOn(supabase, 'from').mockImplementation(mockFrom);
