@@ -53,21 +53,26 @@ export const useProfileNotifications = () => {
       // Obtém dados atuais do perfil
       const profileData = await getProfile(supabase, session.user.id);
       
-      // Preserva preferências existentes e mescla com novas
+      // Merge notification preferences properly
       const currentNotificationPrefs = profileData && 
-        profileData.notification_preferences
+        profileData.notification_preferences && 
+        typeof profileData.notification_preferences === 'object' 
         ? profileData.notification_preferences 
         : {};
       
-      // Correctly merge the objects without using spread on potentially non-object value
-      const prefJson = {
-        email: preferences.email,
-        sms: preferences.sms
-      };
+      // Create a new object by copying existing properties safely
+      const prefJson: Record<string, any> = {};
       
-      if (typeof currentNotificationPrefs === 'object') {
-        Object.assign(prefJson, currentNotificationPrefs);
+      // Only copy if it's a valid object
+      if (typeof currentNotificationPrefs === 'object' && currentNotificationPrefs !== null) {
+        Object.entries(currentNotificationPrefs as Record<string, any>).forEach(([key, value]) => {
+          prefJson[key] = value;
+        });
       }
+      
+      // Add the new preferences
+      prefJson.email = preferences.email;
+      prefJson.sms = preferences.sms;
       
       // Atualiza o perfil com as novas preferências
       const success = await updateProfile(supabase, session.user.id, {

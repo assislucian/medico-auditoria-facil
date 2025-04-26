@@ -9,7 +9,7 @@ import {
   createSupportTicket, 
   sendTicketMessage,
   TicketData 
-} from '../utils/supabase/supabaseHelpers';
+} from '../utils/supabase';
 
 /**
  * Custom hook for managing support tickets
@@ -36,13 +36,15 @@ export const useTickets = (userId: string | undefined) => {
     setLoading(true);
     try {
       const userTickets = await fetchUserTickets(userId);
-      // Map DB ticket data to match Ticket interface type
-      const mappedTickets = userTickets.map((ticket: any) => ({
+      
+      // Map DB ticket data to match Ticket interface type with proper type casting
+      const mappedTickets: Ticket[] = userTickets.map((ticket: any) => ({
         ...ticket,
         status: ticket.status as TicketStatus,
         priority: ticket.priority as TicketPriority,
         category: ticket.category as TicketCategory
       }));
+      
       setTickets(mappedTickets);
     } catch (error) {
       console.error('Error in fetchTickets:', error);

@@ -87,8 +87,11 @@ export const useProfileData = () => {
       // Create properly typed object without spread
       const updatedNotificationPrefs: Record<string, any> = {};
       
-      if (typeof currentNotificationPrefs === 'object') {
-        Object.assign(updatedNotificationPrefs, currentNotificationPrefs);
+      if (typeof currentNotificationPrefs === 'object' && currentNotificationPrefs !== null) {
+        // Use Object.entries to safely copy properties
+        Object.entries(currentNotificationPrefs as Record<string, any>).forEach(([key, value]) => {
+          updatedNotificationPrefs[key] = value;
+        });
       }
       
       // Add avatar_url if available
