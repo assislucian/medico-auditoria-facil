@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   PaymentStatementDetailed, 
@@ -502,6 +501,7 @@ export class MedicalDataService {
       }));
       
       // Now compare procedures to find discrepancies
+      // Define explicit type for discrepancias array to avoid deep instantiation issues
       const discrepancias: Array<{
         tipo: 'nao_pago' | 'pago_parcialmente';
         procedimentoGuia: ProcedimentoGuia;
