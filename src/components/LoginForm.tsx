@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Extract redirect URL from query parameters if it exists
   const searchParams = new URLSearchParams(location.search);
   const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
@@ -70,12 +72,14 @@ const LoginForm = () => {
       console.log('Login bem-sucedido, buscando perfil do usuário');
       
       try {
+        // Use uma consulta com timeout para evitar que a página fique presa
         const profilePromise = supabase
           .from('profiles')
           .select('trial_status')
           .eq('id', result.data.user.id)
           .single();
           
+        // Set a timeout to prevent getting stuck
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Timeout')), 3000)
         );
@@ -84,6 +88,7 @@ const LoginForm = () => {
         
         if (profileResult.error) {
           console.error('Erro ao buscar perfil:', profileResult.error);
+          // Se não conseguirmos obter o perfil, vamos para o dashboard
           toast.success('Login realizado com sucesso!');
           navigate(redirectUrl);
           return;
@@ -100,6 +105,7 @@ const LoginForm = () => {
         }
       } catch (profileError) {
         console.error('Erro ou timeout ao buscar perfil:', profileError);
+        // Em caso de erro ou timeout na busca do perfil, vamos para o dashboard
         toast.success('Login realizado com sucesso!');
         navigate(redirectUrl);
       }

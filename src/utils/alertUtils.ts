@@ -1,93 +1,108 @@
 
-import { toast } from 'sonner';
+import { toast } from "sonner";
+import { useNotifications } from "@/contexts/NotificationContext";
 
-export type AlertType = 'info' | 'success' | 'warning' | 'error';
+type AlertType = 'success' | 'error' | 'warning' | 'info';
 
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  description: string;
-  type: AlertType;
-  link: string;
-  read: boolean;
-  createdAt: Date;
-  time: string; // Added the missing time property
-  data: Record<string, any>;
-}
-
-/**
- * Add a notification to the notifications store
- * This is a simplified version that uses toast instead of a store
- */
-export const addNotification = (
-  title: string,
+export const showAlert = (
+  title: string, 
   message: string,
-  description: string,
   type: AlertType = 'info',
-  link: string = '',
-  data: Record<string, any> = {}
+  options?: {
+    duration?: number;
+    action?: {
+      label: string;
+      onClick: () => void;
+    };
+    onDismiss?: () => void;
+    onAutoClose?: () => void;
+  }
 ) => {
-  // Get the current time in HH:MM format
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const time = `${hours}:${minutes}`;
+  const alertOptions: any = {
+    duration: options?.duration || 5000,
+    onDismiss: options?.onDismiss,
+    onAutoClose: options?.onAutoClose,
+  };
 
-  // Show toast based on type
-  switch(type) {
+  if (options?.action) {
+    alertOptions.action = options.action;
+  }
+
+  switch (type) {
     case 'success':
-      toast.success(title, { description: message });
+      toast.success(title, {
+        description: message,
+        ...alertOptions
+      });
       break;
     case 'error':
-      toast.error(title, { description: message });
+      toast.error(title, {
+        description: message,
+        ...alertOptions
+      });
       break;
     case 'warning':
-      toast.warning(title, { description: message });
+      toast.warning(title, {
+        description: message,
+        ...alertOptions
+      });
       break;
     case 'info':
-      toast.info(title, { description: message });
-      break;
     default:
-      toast(title, { description: message });
+      toast.info(title, {
+        description: message,
+        ...alertOptions
+      });
+      break;
   }
-  
-  // Log for debugging
-  console.log('Notification:', {
-    title,
-    message,
-    description,
-    type,
-    link,
-    data,
-    time
-  });
 };
 
-/**
- * Hook for simplified alert functions
- */
 export const useAlert = () => {
-  const showSuccess = (title: string, message: string) => {
-    addNotification(title, message, message, 'success');
+  const { addNotification } = useNotifications();
+  
+  const showNotification = (
+    title: string,
+    description: string,
+    type: AlertType = 'info',
+    options?: {
+      showToast?: boolean;
+      link?: string;
+      data?: Record<string, any>;
+    }
+  ) => {
+    // Add notification to the context
+    addNotification({
+      title,
+      message: description,
+      description,
+      type,
+      time: new Date().toISOString(), // Add the missing time property
+      link: options?.link,
+      data: options?.data
+    });
+    
+    // Optionally show toast as well
+    if (options?.showToast !== false) {
+      showAlert(title, description, type, options?.link ? {
+        action: {
+          label: 'Ver',
+          onClick: () => {
+            window.location.href = options.link!;
+          }
+        }
+      } : undefined);
+    }
   };
-
-  const showError = (title: string, message: string) => {
-    addNotification(title, message, message, 'error');
-  };
-
-  const showWarning = (title: string, message: string) => {
-    addNotification(title, message, message, 'warning');
-  };
-
-  const showInfo = (title: string, message: string) => {
-    addNotification(title, message, message, 'info');
-  };
-
+  
   return {
-    showSuccess,
-    showError,
-    showWarning,
-    showInfo
+    showNotification,
+    showSuccess: (title: string, description: string, options?: { showToast?: boolean, link?: string }) => 
+      showNotification(title, description, 'success', options),
+    showError: (title: string, description: string, options?: { showToast?: boolean, link?: string }) => 
+      showNotification(title, description, 'error', options),
+    showWarning: (title: string, description: string, options?: { showToast?: boolean, link?: string }) => 
+      showNotification(title, description, 'warning', options),
+    showInfo: (title: string, description: string, options?: { showToast?: boolean, link?: string }) => 
+      showNotification(title, description, 'info', options),
   };
 };
