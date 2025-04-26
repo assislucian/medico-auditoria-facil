@@ -19,6 +19,16 @@ export const useAuthActions = (userId: string | undefined) => {
     });
   };
 
+  // Sign in with Google
+  const signInWithGoogle = async () => {
+    return await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/auth/callback',
+      }
+    });
+  };
+
   // Sign out the current user
   const signOut = async () => {
     return await supabase.auth.signOut();
@@ -78,6 +88,7 @@ export const useAuthActions = (userId: string | undefined) => {
   return {
     signUp,
     signInWithPassword,
+    signInWithGoogle,
     signOut,
     getProfile,
     updateProfile,

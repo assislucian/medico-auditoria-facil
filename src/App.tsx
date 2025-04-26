@@ -20,6 +20,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import NotFoundPage from "./pages/NotFound";
 import SupportPage from "./pages/Support";
+import AuthCallback from "./pages/AuthCallback";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/uploads" element={<NewAuditPage />} />
