@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
-export function PaymentsTab() {
+const PaymentsTab = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <Card>
@@ -119,4 +119,7 @@ export function PaymentsTab() {
       </Card>
     </div>
   );
-}
+};
+
+export default PaymentsTab;
+
