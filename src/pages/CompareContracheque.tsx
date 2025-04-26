@@ -48,7 +48,7 @@ const CompareContracheque = () => {
               pago: proc.pago || false,
               guia: proc.guia || undefined,
               beneficiario: proc.beneficiario || undefined,
-              doctors: proc.doctors || []
+              doctors: Array.isArray(proc.doctors) ? proc.doctors : []
             }))
           };
           

@@ -61,16 +61,17 @@ export function MainNavigation() {
           <TooltipProvider key={item.href}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link to={item.href}>
-                  <Button
-                    variant={location.pathname === item.href ? "secondary" : "ghost"}
-                    size="sm"
-                    className="w-full justify-start"
-                  >
+                <Button
+                  variant={location.pathname === item.href ? "secondary" : "ghost"}
+                  size="sm"
+                  className="w-full justify-start"
+                  asChild
+                >
+                  <Link to={item.href}>
                     <item.icon className="mr-2 h-4 w-4" />
                     {item.name}
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </TooltipTrigger>
               <TooltipContent side="right">{item.name}</TooltipContent>
             </Tooltip>

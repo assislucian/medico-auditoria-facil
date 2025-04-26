@@ -1,11 +1,4 @@
 
-/**
- * HelpSection.tsx
- * 
- * Componente que renderiza a seção de ajuda na barra lateral.
- * Inclui links para a página de ajuda e a opção para reiniciar o tour guiado.
- */
-
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HelpCircle, PlayCircle } from "lucide-react";
@@ -34,16 +27,17 @@ export function HelpSection() {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Link to="/help">
-                <Button
-                  variant={location.pathname === "/help" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="w-full justify-start"
-                >
+              <Button
+                variant={location.pathname === "/help" ? "secondary" : "ghost"}
+                size="sm"
+                className="w-full justify-start"
+                asChild
+              >
+                <Link to="/help">
                   <HelpCircle className="mr-2 h-4 w-4" />
                   Ajuda
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </TooltipTrigger>
             <TooltipContent side="right">Ajuda</TooltipContent>
           </Tooltip>

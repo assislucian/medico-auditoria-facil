@@ -41,5 +41,6 @@ export type ExtractedData = {
 
 export type HelpArticle = Database['public']['Tables']['help_articles']['Row'];
 
+// Export other types but avoid duplicate exports
 export * from './upload';
 export * from './medical';

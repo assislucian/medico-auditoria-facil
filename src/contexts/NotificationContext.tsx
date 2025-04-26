@@ -1,34 +1,29 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type NotificationType = 'info' | 'success' | 'warning' | 'error';
+// Define the context value type
+interface NotificationContextType {
+  unreadCount: number;
+  notifications: Notification[];
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
+  fetchNotifications: () => Promise<void>;
+}
 
+// Define notification type
 export interface Notification {
   id: string;
   title: string;
-  description: string;
-  time: string; // ISO string
+  message: string;
   read: boolean;
-  type: NotificationType;
-  link?: string;
-  data?: Record<string, any>;
+  createdAt: string;
+  type: 'info' | 'success' | 'warning' | 'error';
 }
 
-interface NotificationContextType {
-  notifications: Notification[];
-  unreadCount: number;
-  addNotification: (notification: Omit<Notification, 'id' | 'time' | 'read'>) => void;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
-  removeNotification: (id: string) => void;
-  clearNotifications: () => void;
-}
-
+// Create the context with default values
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
+// Custom hook to use the notification context
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (!context) {
@@ -37,208 +32,97 @@ export const useNotifications = () => {
   return context;
 };
 
-export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface NotificationProviderProps {
+  children: ReactNode;
+}
+
+// Provider component
+export const NotificationProvider = ({ children }: NotificationProviderProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const { user } = useAuth();
-  
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    if (!user) {
-      setNotifications([]);
-      return;
-    }
-    
-    // Load notifications from localStorage to start with something
-    const savedNotifications = localStorage.getItem('medcheck_notifications');
-    if (savedNotifications) {
-      try {
-        setNotifications(JSON.parse(savedNotifications));
-      } catch (error) {
-        console.error("Failed to parse saved notifications", error);
-      }
-    }
-
-    // For the MVP, we'll just use localStorage to store notifications
-    // In the future, this would be replaced with actual database calls
-    
-    // Simulating a real-time notification for demo purposes
-    const interval = setInterval(() => {
-      // This would normally come from a Supabase real-time subscription
-    }, 30000);
-    
-    return () => {
-      clearInterval(interval);
-    };
-  }, [user]);
-
-  const addNotification = (notification: Omit<Notification, 'id' | 'time' | 'read'>) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: crypto.randomUUID(),
-      time: new Date().toISOString(),
+  // Sample notification data - would be replaced with real API call
+  const mockNotifications: Notification[] = [
+    {
+      id: '1',
+      title: 'Nova análise concluída',
+      message: 'Sua análise de contracheque foi processada com sucesso.',
       read: false,
-    };
-
-    setNotifications(prev => [newNotification, ...prev]);
-    
-    // Save to localStorage
-    const updatedNotifications = [newNotification, ...notifications];
-    localStorage.setItem('medcheck_notifications', JSON.stringify(updatedNotifications));
-    
-    // Show toast notification
-    toast(notification.title, {
-      description: notification.description,
-      action: notification.link ? {
-        label: "Visualizar",
-        onClick: () => window.location.href = notification.link!
-      } : undefined
-    });
-    
-    // When database is ready, uncomment this code:
-    /*
-    if (user) {
-      try {
-        supabase.from('user_notifications').insert({
-          user_id: user.id,
-          title: notification.title,
-          description: notification.description,
-          type: notification.type,
-          link: notification.link,
-          data: notification.data
-        }).then(({ error }) => {
-          if (error) console.error("Failed to save notification to database", error);
-        });
-      } catch (error) {
-        console.error("Failed to save notification", error);
-      }
+      createdAt: new Date().toISOString(),
+      type: 'success'
+    },
+    {
+      id: '2',
+      title: 'Atualização disponível',
+      message: 'Uma nova versão do sistema está disponível.',
+      read: true,
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      type: 'info'
+    },
+    {
+      id: '3',
+      title: 'Discrepância detectada',
+      message: 'Encontramos uma discrepância em seu último pagamento.',
+      read: false,
+      createdAt: new Date(Date.now() - 172800000).toISOString(),
+      type: 'warning'
     }
-    */
+  ];
+
+  // Fetch notifications from API/mock
+  const fetchNotifications = async () => {
+    try {
+      // This would be replaced with a real API call
+      setNotifications(mockNotifications);
+      updateUnreadCount(mockNotifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
   };
 
+  // Update unread count
+  const updateUnreadCount = (notifs: Notification[]) => {
+    const count = notifs.filter(notification => !notification.read).length;
+    setUnreadCount(count);
+  };
+
+  // Mark a notification as read
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notif => 
-        notif.id === id ? { ...notif, read: true } : notif
-      )
+    const updatedNotifications = notifications.map(notification => 
+      notification.id === id ? { ...notification, read: true } : notification
     );
-    
-    // Update localStorage
-    const updatedNotifications = notifications.map(notif => 
-      notif.id === id ? { ...notif, read: true } : notif
-    );
-    localStorage.setItem('medcheck_notifications', JSON.stringify(updatedNotifications));
-    
-    // Update database if available (future implementation)
-    /*
-    if (user) {
-      try {
-        supabase
-          .from('user_notifications')
-          .update({ read: true })
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .then(({ error }) => {
-            if (error) console.error("Failed to update notification in database", error);
-          });
-      } catch (error) {
-        console.error("Failed to mark notification as read", error);
-      }
-    }
-    */
+    setNotifications(updatedNotifications);
+    updateUnreadCount(updatedNotifications);
   };
 
+  // Mark all notifications as read
   const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notif => ({ ...notif, read: true }))
-    );
-    
-    // Update localStorage
-    const updatedNotifications = notifications.map(notif => ({ ...notif, read: true }));
-    localStorage.setItem('medcheck_notifications', JSON.stringify(updatedNotifications));
-    
-    // Update database if available (future implementation)
-    /*
-    if (user) {
-      try {
-        supabase
-          .from('user_notifications')
-          .update({ read: true })
-          .eq('user_id', user.id)
-          .in('id', notifications.filter(n => !n.read).map(n => n.id))
-          .then(({ error }) => {
-            if (error) console.error("Failed to update all notifications in database", error);
-          });
-      } catch (error) {
-        console.error("Failed to mark all notifications as read", error);
-      }
-    }
-    */
+    const updatedNotifications = notifications.map(notification => ({ 
+      ...notification, 
+      read: true 
+    }));
+    setNotifications(updatedNotifications);
+    setUnreadCount(0);
   };
 
-  const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
-    
-    // Update localStorage
-    const updatedNotifications = notifications.filter(notif => notif.id !== id);
-    localStorage.setItem('medcheck_notifications', JSON.stringify(updatedNotifications));
-    
-    // Remove from database if available (future implementation)
-    /*
-    if (user) {
-      try {
-        supabase
-          .from('user_notifications')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .then(({ error }) => {
-            if (error) console.error("Failed to delete notification from database", error);
-          });
-      } catch (error) {
-        console.error("Failed to remove notification", error);
-      }
-    }
-    */
-  };
+  // Load notifications on mount
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
-  const clearNotifications = () => {
-    setNotifications([]);
-    
-    // Clear localStorage
-    localStorage.removeItem('medcheck_notifications');
-    
-    // Clear database notifications if available (future implementation)
-    /*
-    if (user) {
-      try {
-        supabase
-          .from('user_notifications')
-          .delete()
-          .eq('user_id', user.id)
-          .then(({ error }) => {
-            if (error) console.error("Failed to clear all notifications from database", error);
-          });
-      } catch (error) {
-        console.error("Failed to clear notifications", error);
-      }
-    }
-    */
+  const value = {
+    unreadCount,
+    notifications,
+    markAsRead,
+    markAllAsRead,
+    fetchNotifications
   };
 
   return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        unreadCount,
-        addNotification,
-        markAsRead,
-        markAllAsRead,
-        removeNotification,
-        clearNotifications,
-      }}
-    >
+    <NotificationContext.Provider value={value}>
       {children}
     </NotificationContext.Provider>
   );
 };
+
+export default NotificationProvider;
