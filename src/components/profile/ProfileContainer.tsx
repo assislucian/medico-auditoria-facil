@@ -9,7 +9,7 @@ import { SecurityForm } from "./security/SecurityForm";
 import { NotificationsTab } from "./tabs/NotificationsTab";
 
 export const ProfileContainer = () => {
-  const { loading } = useProfile();
+  const { loading, updateProfile, updateNotificationPreferences } = useProfile();
 
   return (
     <div className="space-y-6">
@@ -44,7 +44,10 @@ export const ProfileContainer = () => {
         </TabsContent>
 
         <TabsContent value="notifications">
-          <NotificationsTab loading={loading} />
+          <NotificationsTab 
+            loading={loading} 
+            onSubmit={updateNotificationPreferences} 
+          />
         </TabsContent>
       </Tabs>
     </div>

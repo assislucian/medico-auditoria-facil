@@ -7,19 +7,7 @@ import { NotificationsTab } from "./tabs/NotificationsTab";
 import { Scroll, Bell } from "lucide-react";
 
 export const ProfileTabs = () => {
-  const { loading, updateProfile, updateNotificationPreferences } = useProfile();
-
-  // Create wrapper functions to handle the void return type expected by the form components
-  const handleUpdateProfile = async (
-    data: { name: string; email: string; telefone: string; crm: string; especialidade: string; hospital: string; bio: string; }, 
-    selectedImage: File | null
-  ) => {
-    await updateProfile(data, selectedImage);
-  };
-
-  const handleUpdateNotifications = async (data: any) => {
-    await updateNotificationPreferences(data);
-  };
+  const { loading, updateNotificationPreferences } = useProfile();
 
   return (
     <Tabs defaultValue="info" className="w-full">
@@ -46,13 +34,16 @@ export const ProfileTabs = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ProfileForm loading={loading} onSubmit={handleUpdateProfile} />
+            <ProfileForm loading={loading} />
           </CardContent>
         </Card>
       </TabsContent>
 
       <TabsContent value="notifications" className="mt-4">
-        <NotificationsTab loading={loading} onSubmit={handleUpdateNotifications} />
+        <NotificationsTab 
+          loading={loading} 
+          onSubmit={updateNotificationPreferences}
+        />
       </TabsContent>
     </Tabs>
   );

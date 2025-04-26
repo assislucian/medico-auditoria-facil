@@ -5,7 +5,7 @@ import { useProfileForm } from "@/hooks/use-profile-form";
 import { BasicInfoFields } from "../form-fields/BasicInfoFields";
 import { ProfessionalFields } from "../form-fields/ProfessionalFields";
 
-interface ProfileFormProps {
+export interface ProfileFormProps {
   loading?: boolean;
 }
 
