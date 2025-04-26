@@ -131,7 +131,7 @@ export const GuideStatementComparison: React.FC<GuideStatementComparisonProps> =
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Badge>Outros problemas</Badge>
+                  <Badge variant="default">Outros problemas</Badge>
                 </div>
                 <div className="font-medium">
                   {discrepancias.filter(d => d.tipo === 'outro').length}

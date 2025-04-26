@@ -258,7 +258,7 @@ export class MedicalDataService {
           nome: 'Nome do Médico', // We'd get this from profiles
           crm: 'CRM', // We'd get this from profiles
           cpf: 'CPF', // We'd get this from profiles
-          procedimentos: procedures.map((proc: any) => ({
+          procedimentos: Array.isArray(procedures) ? procedures.map((proc: any) => ({
             lote: proc.guia?.split('-')[0] || '',
             conta: proc.id,
             guia: proc.guia || '',
@@ -274,12 +274,12 @@ export class MedicalDataService {
             proRata: 0,
             glosa: (proc.valor_cbhpm || 0) - (proc.valor_pago || 0),
             tipo: 'honorario'
-          })),
+          })) : [],
           totais: {
             consultas: 0,
             honorarios: this.sumProcedureValues(procedures, 'valor_pago'),
             total: this.sumProcedureValues(procedures, 'valor_pago'),
-            qtdProcedimentos: procedures.length,
+            qtdProcedimentos: Array.isArray(procedures) ? procedures.length : 0,
             glosas: this.countUnpaidProcedures(procedures),
             valorGlosas: this.calculateTotalGlosas(procedures)
           },
@@ -298,15 +298,18 @@ export class MedicalDataService {
   }
   
   // Helper methods to avoid await in non-async arrow functions
-  private static sumProcedureValues(procedures: any[], field: string): number {
+  private static sumProcedureValues(procedures: any[] | null, field: string): number {
+    if (!procedures || !Array.isArray(procedures)) return 0;
     return procedures.reduce((sum: number, proc: any) => sum + (proc[field] || 0), 0);
   }
   
-  private static countUnpaidProcedures(procedures: any[]): number {
+  private static countUnpaidProcedures(procedures: any[] | null): number {
+    if (!procedures || !Array.isArray(procedures)) return 0;
     return procedures.filter((p: any) => !p.pago).length;
   }
   
-  private static calculateTotalGlosas(procedures: any[]): number {
+  private static calculateTotalGlosas(procedures: any[] | null): number {
+    if (!procedures || !Array.isArray(procedures)) return 0;
     return procedures.reduce((sum: number, proc: any) => 
       sum + ((proc.valor_cbhpm || 0) - (proc.valor_pago || 0)), 0);
   }
@@ -335,6 +338,8 @@ export class MedicalDataService {
       
       for (const analysis of analyses) {
         const procedures = analysis.procedures || [];
+        
+        if (!Array.isArray(procedures)) continue;
         
         // Group procedures by guide number
         const proceduresByGuide: Record<string, any[]> = {};
@@ -414,7 +419,7 @@ export class MedicalDataService {
       }
       
       const guideNumber = analysis.numero;
-      const procedures = analysis.procedures || [];
+      const procedures = Array.isArray(analysis.procedures) ? analysis.procedures : [];
       
       // Find procedures from payment statements with matching guide number
       const { data: paymentProcs, error: paymentError } = await supabase

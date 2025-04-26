@@ -1,6 +1,5 @@
 
-// Fix the time property missing error in alertUtils.ts
-// We'll add a proper time property to the notification object
+import { toast } from 'sonner';
 
 export type AlertType = 'info' | 'success' | 'warning' | 'error';
 
@@ -35,7 +34,25 @@ export const addNotification = (
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const time = `${hours}:${minutes}`;
 
-  // In a real application, we would dispatch this to a store
+  // Show toast based on type
+  switch(type) {
+    case 'success':
+      toast.success(title, { description: message });
+      break;
+    case 'error':
+      toast.error(title, { description: message });
+      break;
+    case 'warning':
+      toast.warning(title, { description: message });
+      break;
+    case 'info':
+      toast.info(title, { description: message });
+      break;
+    default:
+      toast(title, { description: message });
+  }
+  
+  // Log for debugging
   console.log('Notification:', {
     title,
     message,
