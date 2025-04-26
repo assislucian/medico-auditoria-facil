@@ -100,26 +100,11 @@ export class ComparisonService {
         tipo: 'honorario'
       }));
       
-      // Define the discrepancy type directly to avoid excessive type instantiation
+      // Define a simpler discrepancy type directly to avoid excessive type instantiation
       type SimpleDiscrepancy = {
         tipo: 'nao_pago' | 'pago_parcialmente' | 'funcao_incorreta' | 'outro';
-        procedimentoGuia: {
-          codigo: string;
-          descricao: string;
-          dataExecucao: string;
-          quantidade: number;
-          status: string;
-          valorPago?: number;
-          participacoes: Array<{
-            funcao: string;
-            crm: string;
-            nome: string;
-            dataInicio: string;
-            dataFim: string;
-            status: string;
-          }>;
-        };
-        procedimentoDemonstrativo?: ProcedimentoDemonstrativo;
+        procedimentoGuia: any; // Simplify this type to avoid deep nesting
+        procedimentoDemonstrativo?: any; // Simplify this type to avoid deep nesting
         descricao: string;
       };
       

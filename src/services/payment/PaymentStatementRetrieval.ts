@@ -57,7 +57,7 @@ export class PaymentStatementRetrieval {
             lote: proc.guia?.split('-')[0] || '',
             conta: proc.id,
             guia: proc.guia || '',
-            data: new Date(proc.created_at).toLocaleDateString('pt-BR'),
+            data: proc.created_at ? new Date(proc.created_at).toLocaleDateString('pt-BR') : '',
             carteira: '',
             nome: proc.beneficiario || '',
             acomodacao: '',
