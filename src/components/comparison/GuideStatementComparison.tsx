@@ -234,7 +234,7 @@ const DiscrepancyBadge: React.FC<{ tipo: string }> = ({ tipo }) => {
     case 'funcao_incorreta':
       return <Badge variant="outline">Função incorreta</Badge>;
     default:
-      return <Badge>Outro problema</Badge>;
+      return <Badge variant="default">Outro problema</Badge>;
   }
 };
 

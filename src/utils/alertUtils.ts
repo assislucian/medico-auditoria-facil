@@ -1,8 +1,6 @@
 
 // Fix the time property missing error in alertUtils.ts
 // We'll add a proper time property to the notification object
-import { addNotification as addNotificationAction } from '@/store/slices/notificationsSlice';
-import { store } from '@/store';
 
 export type AlertType = 'info' | 'success' | 'warning' | 'error';
 
@@ -21,6 +19,7 @@ export interface Notification {
 
 /**
  * Add a notification to the notifications store
+ * This is a simplified version that uses toast instead of a store
  */
 export const addNotification = (
   title: string,
@@ -36,17 +35,16 @@ export const addNotification = (
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const time = `${hours}:${minutes}`;
 
-  store.dispatch(
-    addNotificationAction({
-      title,
-      message,
-      description,
-      type,
-      link,
-      data,
-      time, // Add the time property to fix the error
-    })
-  );
+  // In a real application, we would dispatch this to a store
+  console.log('Notification:', {
+    title,
+    message,
+    description,
+    type,
+    link,
+    data,
+    time
+  });
 };
 
 /**

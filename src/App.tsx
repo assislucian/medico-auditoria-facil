@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -52,7 +51,7 @@ const App: React.FC = () => {
 };
 
 const AppRoutes: React.FC = () => {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const location = useLocation();
   
@@ -61,17 +60,21 @@ const AppRoutes: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       if (isLoggedIn) {
-        const fetchedProfile = await getProfile();
-        setProfile(fetchedProfile);
+        try {
+          const fetchedProfile = await getProfile(null, user.id);
+          setProfile(fetchedProfile);
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        }
       } else {
         setProfile(null);
       }
     };
 
     fetchProfile();
-  }, [isLoggedIn]);
+  }, [isLoggedIn, user]);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <LoadingSpinner size="lg" text="Carregando..." />

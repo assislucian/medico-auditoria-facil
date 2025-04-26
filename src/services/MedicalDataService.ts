@@ -69,6 +69,14 @@ export class MedicalDataService {
    */
   static async savePaymentStatement(paymentStatement: PaymentStatementDetailed): Promise<{ success: boolean, id?: string, error?: string }> {
     try {
+      // Get current user
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      
+      if (!userId) {
+        return { success: false, error: 'Usuário não autenticado' };
+      }
+
       // Note: This implementation is a temporary mock until the tables are created
       // For now, we'll create a row in analysis_results to track this payment statement
       const { data: analysisData, error: analysisError } = await supabase
@@ -76,7 +84,7 @@ export class MedicalDataService {
         .insert({
           file_name: `demonstrativo_${paymentStatement.periodo.replace(/\s+/g, '_')}`,
           file_type: 'demonstrativo',
-          user_id: (await supabase.auth.getUser()).data.user?.id,
+          user_id: userId,
           summary: {
             totalProcedimentos: paymentStatement.totais.qtdProcedimentos,
             totalPago: paymentStatement.totais.total,
@@ -92,7 +100,7 @@ export class MedicalDataService {
       // This is a simplified version until the proper schema is created
       const proceduresData = paymentStatement.procedimentos.map(proc => ({
         analysis_id: analysisData.id,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+        user_id: userId,
         codigo: proc.codigoServico,
         procedimento: proc.descricaoServico,
         valor_pago: proc.valorLiberado,
@@ -124,6 +132,17 @@ export class MedicalDataService {
    */
   static async saveMedicalGuide(medicalGuide: MedicalGuideDetailed): Promise<{ success: boolean, id?: string, error?: string }> {
     try {
+      // Get current user
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      
+      if (!userId) {
+        return { success: false, error: 'Usuário não autenticado' };
+      }
+
+      // Get user profile for CRM data
+      const userProfile = await this.getUserProfile(userId);
+
       // Note: This implementation is a temporary mock until the tables are created
       // For now, we'll create a row in analysis_results to track this guide
       const { data: analysisData, error: analysisError } = await supabase
@@ -132,7 +151,7 @@ export class MedicalDataService {
           file_name: `guia_${medicalGuide.numero}`,
           file_type: 'guia',
           numero: medicalGuide.numero,
-          user_id: (await supabase.auth.getUser()).data.user?.id,
+          user_id: userId,
           summary: {
             totalProcedimentos: medicalGuide.procedimentos.length
           }
@@ -145,10 +164,10 @@ export class MedicalDataService {
       // Store each procedure as a row in the procedures table
       for (const proc of medicalGuide.procedimentos) {
         // Find the doctor who is the user
-        const userId = (await supabase.auth.getUser()).data.user?.id;
-        const userParticipation = proc.participacoes.find(p => 
-          p.crm === (await this.getUserProfile(userId))?.crm
-        );
+        const userCrm = userProfile?.crm;
+        const userParticipation = userCrm ? 
+          proc.participacoes.find(p => p.crm === userCrm) : 
+          undefined;
         
         const { error: procError } = await supabase
           .from('procedures')
@@ -189,18 +208,23 @@ export class MedicalDataService {
   private static async getUserProfile(userId?: string): Promise<any> {
     if (!userId) return null;
     
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
       
-    if (error) {
-      console.error('Error fetching user profile:', error);
+      return data;
+    } catch (err) {
+      console.error('Exception in getUserProfile:', err);
       return null;
     }
-    
-    return data;
   }
   
   /**
@@ -222,6 +246,8 @@ export class MedicalDataService {
       
       // Transform the data to match our frontend model
       const statements: PaymentStatementDetailed[] = [];
+      
+      if (!analyses) return [];
       
       for (const analysis of analyses) {
         const procedures = analysis.procedures || [];
@@ -251,11 +277,11 @@ export class MedicalDataService {
           })),
           totais: {
             consultas: 0,
-            honorarios: procedures.reduce((sum: number, proc: any) => sum + (proc.valor_pago || 0), 0),
-            total: procedures.reduce((sum: number, proc: any) => sum + (proc.valor_pago || 0), 0),
+            honorarios: this.sumProcedureValues(procedures, 'valor_pago'),
+            total: this.sumProcedureValues(procedures, 'valor_pago'),
             qtdProcedimentos: procedures.length,
-            glosas: procedures.filter((p: any) => !p.pago).length,
-            valorGlosas: procedures.reduce((sum: number, proc: any) => sum + ((proc.valor_cbhpm || 0) - (proc.valor_pago || 0)), 0)
+            glosas: this.countUnpaidProcedures(procedures),
+            valorGlosas: this.calculateTotalGlosas(procedures)
           },
           glosas: []
         };
@@ -269,6 +295,20 @@ export class MedicalDataService {
       console.error('Error fetching payment statements:', error);
       return [];
     }
+  }
+  
+  // Helper methods to avoid await in non-async arrow functions
+  private static sumProcedureValues(procedures: any[], field: string): number {
+    return procedures.reduce((sum: number, proc: any) => sum + (proc[field] || 0), 0);
+  }
+  
+  private static countUnpaidProcedures(procedures: any[]): number {
+    return procedures.filter((p: any) => !p.pago).length;
+  }
+  
+  private static calculateTotalGlosas(procedures: any[]): number {
+    return procedures.reduce((sum: number, proc: any) => 
+      sum + ((proc.valor_cbhpm || 0) - (proc.valor_pago || 0)), 0);
   }
   
   /**
@@ -290,6 +330,8 @@ export class MedicalDataService {
       
       // Transform the data to match our frontend model
       const guides: MedicalGuideDetailed[] = [];
+      
+      if (!analyses) return [];
       
       for (const analysis of analyses) {
         const procedures = analysis.procedures || [];
@@ -366,6 +408,10 @@ export class MedicalDataService {
         .single();
         
       if (analysisError) throw analysisError;
+      
+      if (!analysis || !analysis.procedures) {
+        throw new Error("Analysis or procedures not found");
+      }
       
       const guideNumber = analysis.numero;
       const procedures = analysis.procedures || [];
