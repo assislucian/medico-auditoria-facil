@@ -14,7 +14,6 @@ import HelpPage from "./pages/Help";
 import NotificationsPage from "./pages/Notifications";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeProvider";
-import { NotificationProvider } from "./contexts/NotificationContext";
 import { Toaster } from "sonner";
 import { HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -28,28 +27,24 @@ function App() {
       <HelmetProvider>
         <ThemeProvider>
           <BrowserRouter>
-            <AuthProvider>
-              <NotificationProvider>
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/uploads" element={<NewAuditPage />} />
-                  <Route path="/analysis/:id" element={<AnalysisPage />} />
-                  <Route path="/compare" element={<CompareContracheque />} />
-                  <Route path="/history" element={<HistoryPage />} />
-                  <Route path="/reference-tables" element={<ReferenceTablesPage />} />
-                  <Route path="/help" element={<HelpPage />} />
-                  <Route path="/notifications" element={<NotificationsPage />} />
-                  <Route path="/support" element={<SupportPage />} />
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-                <Toaster richColors position="top-right" />
-              </NotificationProvider>
-            </AuthProvider>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/uploads" element={<NewAuditPage />} />
+              <Route path="/analysis/:id" element={<AnalysisPage />} />
+              <Route path="/compare" element={<CompareContracheque />} />
+              <Route path="/history" element={<HistoryPage />} />
+              <Route path="/reference-tables" element={<ReferenceTablesPage />} />
+              <Route path="/help" element={<HelpPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/support" element={<SupportPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+            <Toaster richColors position="top-right" />
           </BrowserRouter>
         </ThemeProvider>
       </HelmetProvider>
