@@ -3,7 +3,7 @@ import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card";
 import { DataGrid } from "@/components/ui/data-grid";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileText, Filter, Upload } from "lucide-react";
+import { FileText, Filter, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,53 +12,81 @@ import { useFileUpload } from "@/hooks/useFileUpload";
 import { FileType } from "@/types/upload";
 import FileList from "@/components/upload/FileList";
 import { toast } from "sonner";
+import { GuideDetailDialog } from "@/components/guides/GuideDetailDialog";
 
-// Dados mock de exemplo para a demonstração
+// Dados mock melhorados para refletir o formato real das guias
 const mockGuides = [
-  { 
-    id: "g1", 
-    numero: "10467538", 
-    paciente: "Maria Silva", 
-    data: "19/04/2025", 
-    qtdItens: 3, 
-    status: "Fechada" 
-  },
-  { 
-    id: "g2", 
-    numero: "10467539", 
-    paciente: "João Pereira", 
-    data: "20/04/2025", 
-    qtdItens: 1, 
-    status: "Pendente" 
-  },
-  { 
-    id: "g3", 
-    numero: "10467540", 
-    paciente: "Ana Souza", 
-    data: "21/04/2025", 
-    qtdItens: 2, 
-    status: "Glosada" 
-  },
+  {
+    id: "g1",
+    numero: "10714706",
+    execucao: "193026",
+    dataExecucao: "05/09/2024",
+    beneficiario: "NUBIA KATIA PEREIRA MARQUES",
+    prestador: "LIGA NORTERIOG CANCER POLICLINIC",
+    qtdProcedimentos: 4,
+    status: "Fechada",
+    procedimentos: [
+      {
+        code: "30602076",
+        description: "Exérese De Lesão Da Mama Por Marcação Estereotáxica",
+        quantity: 1,
+        status: "Fechada",
+        doctors: [
+          {
+            role: "Anestesista",
+            crm: "7897",
+            name: "DIEGO HERBERT DUARTE DA SILVA",
+            startTime: "05/09/2024 18:38",
+            endTime: "05/09/2024 22:15",
+            status: "Fechada"
+          },
+          {
+            role: "Cirurgião",
+            crm: "7546",
+            name: "ANA BEATRIZ OLIVEIRA GERMANO",
+            startTime: "05/09/2024 18:10",
+            endTime: "05/09/2024 22:15",
+            status: "Fechada"
+          },
+          {
+            role: "Primeiro Auxiliar",
+            crm: "6091",
+            name: "MOISES DE OLIVEIRA SCHOTS",
+            startTime: "05/09/2024 18:11",
+            endTime: "05/09/2024 22:25",
+            status: "Fechada"
+          }
+        ]
+      },
+      // ... outros procedimentos da guia
+    ]
+  }
 ];
 
 const guidesColumns = [
-  { field: 'numero', headerName: 'Nº Guia', width: 150 },
-  { field: 'paciente', headerName: 'Paciente', flex: 1 },
-  { field: 'data', headerName: 'Data', width: 120 },
-  { field: 'qtdItens', headerName: 'Qty Itens', width: 100 },
+  { field: 'numero', headerName: 'Nº Guia', width: 120 },
+  { field: 'execucao', headerName: 'Execução', width: 100 },
+  { field: 'dataExecucao', headerName: 'Data', width: 120 },
+  { field: 'beneficiario', headerName: 'Beneficiário', flex: 1 },
+  { field: 'qtdProcedimentos', headerName: 'Procedimentos', width: 120 },
   { 
     field: 'status', 
     headerName: 'Status', 
     width: 120,
     renderCell: ({ value }) => {
-      let variant: "default" | "success" | "warning" | "destructive" = "default";
-      
-      if (value === "Fechada") variant = "success";
-      if (value === "Pendente") variant = "warning";
-      if (value === "Glosada") variant = "destructive";
+      const variant = value === "Fechada" ? "success" : 
+                     value === "Pendente" ? "warning" : "default";
       
       return <Badge variant={variant}>{value}</Badge>;
     }
+  },
+  { 
+    field: 'actions', 
+    headerName: 'Ações', 
+    width: 100,
+    renderCell: ({ row }) => (
+      <GuideDetailDialog guide={row} />
+    )
   }
 ];
 
@@ -110,31 +138,23 @@ const GuidesPage = () => {
           <div>
             <h2 className="text-2xl font-bold">Guias Médicas</h2>
             <p className="text-muted-foreground">
-              Acompanhe e gerencie suas guias médicas
+              Acompanhe suas guias médicas
             </p>
           </div>
           <div className="flex space-x-2">
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => setActiveTab("list")}
             >
               <Filter className="w-4 h-4 mr-2" />
               Filtrar
             </Button>
             <Button 
-              variant={activeTab === "upload" ? "secondary" : "default"}
+              variant={activeTab === "upload" ? "secondary" : "outline"}
               size="sm"
               onClick={() => setActiveTab("upload")}
             >
               <Upload className="w-4 h-4 mr-2" />
-              Upload
-            </Button>
-            <Button 
-              size="sm"
-              onClick={() => setActiveTab("list")}
-            >
-              <PlusCircle className="w-4 h-4 mr-2" />
               Nova Guia
             </Button>
           </div>
@@ -161,8 +181,6 @@ const GuidesPage = () => {
                   rows={guides}
                   columns={guidesColumns}
                   pageSize={10}
-                  rowsPerPageOptions={[10, 25, 50]}
-                  disableSelectionOnClick
                   className="min-h-[500px]"
                 />
               </CardContent>
@@ -174,7 +192,7 @@ const GuidesPage = () => {
               <CardHeader>
                 <CardTitle className="text-xl">Upload de Guias</CardTitle>
                 <CardDescription>
-                  Faça upload de guias TISS para processamento e análise
+                  Faça upload de guias TISS para processamento
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
