@@ -19,20 +19,23 @@ const AuthCallback = () => {
         const code = new URLSearchParams(location.search).get('code');
 
         if (!code) {
-          throw new Error('No code parameter found in the URL');
+          throw new Error('Código de autenticação não encontrado na URL');
         }
 
+        console.log('Processando código de autenticação:', code);
+
         // Exchange the code for a session
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (error) {
           throw error;
         }
 
+        console.log('Autenticação concluída com sucesso');
         toast.success('Login realizado com sucesso!');
       } catch (err: any) {
-        console.error('Error in auth callback:', err);
-        setError(err.message || 'An error occurred during authentication');
+        console.error('Erro no callback de autenticação:', err);
+        setError(err.message || 'Ocorreu um erro durante a autenticação');
         toast.error('Erro de autenticação. Tente novamente.');
       } finally {
         setLoading(false);
@@ -50,7 +53,7 @@ const AuthCallback = () => {
     );
   }
 
-  // If there's an error, you might want to show it or redirect to an error page
+  // Se houver um erro, mostramos para o usuário
   if (error) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center space-y-4">
@@ -63,7 +66,7 @@ const AuthCallback = () => {
     );
   }
 
-  // If successful, redirect to the dashboard
+  // Se for bem-sucedido, redireciona para o dashboard
   return <Navigate to="/dashboard" replace />;
 };
 
