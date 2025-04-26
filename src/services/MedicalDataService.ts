@@ -277,9 +277,9 @@ export class MedicalDataService {
           })) : [],
           totais: {
             consultas: 0,
-            honorarios: this.sumProcedureValues(procedures, 'valor_pago'),
-            total: this.sumProcedureValues(procedures, 'valor_pago'),
-            qtdProcedimentos: Array.isArray(procedures) ? procedures.length : 0,
+            honorarios: this.sumProcedureValues(procedures),
+            total: this.sumProcedureValues(procedures),
+            qtdProcedimentos: this.getArrayLength(procedures),
             glosas: this.countUnpaidProcedures(procedures),
             valorGlosas: this.calculateTotalGlosas(procedures)
           },
@@ -297,19 +297,23 @@ export class MedicalDataService {
     }
   }
   
-  // Helper methods to avoid await in non-async arrow functions
-  private static sumProcedureValues(procedures: any[] | null, field: string): number {
-    if (!procedures || !Array.isArray(procedures)) return 0;
-    return procedures.reduce((sum: number, proc: any) => sum + (proc[field] || 0), 0);
+  // Helper methods to avoid errors with potentially non-array values
+  private static getArrayLength(data: any): number {
+    return Array.isArray(data) ? data.length : 0;
+  }
+
+  private static sumProcedureValues(procedures: any): number {
+    if (!Array.isArray(procedures)) return 0;
+    return procedures.reduce((sum: number, proc: any) => sum + (proc.valor_pago || 0), 0);
   }
   
-  private static countUnpaidProcedures(procedures: any[] | null): number {
-    if (!procedures || !Array.isArray(procedures)) return 0;
+  private static countUnpaidProcedures(procedures: any): number {
+    if (!Array.isArray(procedures)) return 0;
     return procedures.filter((p: any) => !p.pago).length;
   }
   
-  private static calculateTotalGlosas(procedures: any[] | null): number {
-    if (!procedures || !Array.isArray(procedures)) return 0;
+  private static calculateTotalGlosas(procedures: any): number {
+    if (!Array.isArray(procedures)) return 0;
     return procedures.reduce((sum: number, proc: any) => 
       sum + ((proc.valor_cbhpm || 0) - (proc.valor_pago || 0)), 0);
   }
@@ -414,12 +418,15 @@ export class MedicalDataService {
         
       if (analysisError) throw analysisError;
       
-      if (!analysis || !analysis.procedures) {
-        throw new Error("Analysis or procedures not found");
+      if (!analysis) {
+        throw new Error("Analysis not found");
       }
       
       const guideNumber = analysis.numero;
-      const procedures = Array.isArray(analysis.procedures) ? analysis.procedures : [];
+      const proceduresFromAnalysis = analysis.procedures || [];
+      
+      // Ensure procedures is an array
+      const procedures = Array.isArray(proceduresFromAnalysis) ? proceduresFromAnalysis : [];
       
       // Find procedures from payment statements with matching guide number
       const { data: paymentProcs, error: paymentError } = await supabase
@@ -449,7 +456,7 @@ export class MedicalDataService {
           quantidade: 1,
           status: proc.pago ? 'Fechada' : 'Aberta',
           valorPago: proc.valor_pago,
-          participacoes: proc.doctors ? proc.doctors.map((doctor: any) => ({
+          participacoes: Array.isArray(proc.doctors) ? proc.doctors.map((doctor: any) => ({
             funcao: doctor.role,
             crm: doctor.code,
             nome: doctor.name,
@@ -461,7 +468,8 @@ export class MedicalDataService {
       };
       
       // Transform payment procedures data to our frontend model
-      const demonstrativoProcs: ProcedimentoDemonstrativo[] = paymentProcs ? paymentProcs.map((proc: any) => ({
+      const paymentProcsArray = Array.isArray(paymentProcs) ? paymentProcs : [];
+      const demonstrativoProcs: ProcedimentoDemonstrativo[] = paymentProcsArray.map((proc: any) => ({
         lote: proc.guia?.split('-')[0] || '',
         conta: proc.id,
         guia: proc.guia || '',
@@ -477,7 +485,7 @@ export class MedicalDataService {
         proRata: 0,
         glosa: (proc.valor_cbhpm || 0) - (proc.valor_pago || 0),
         tipo: 'honorario'
-      })) : [];
+      }));
       
       // Now compare procedures to find discrepancies
       const discrepancias = [];
