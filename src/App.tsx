@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -14,7 +13,6 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { getProfile } from '@/utils/supabase';
 import { Profile } from '@/types';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { NotificationProvider } from '@/contexts/NotificationContext';
 
 // Import das páginas
 import LoginPage from '@/pages/Login';
@@ -31,7 +29,6 @@ import HelpPage from '@/pages/Help';
 import SupportPage from '@/pages/Support';
 import AnalysisPage from '@/pages/Analysis';
 import UploadsPage from '@/pages/Uploads';
-import NotificationsPage from '@/pages/Notifications';
 
 // Add the new pages to the router configuration
 import GuiasPage from '@/pages/GuiasPage';
@@ -43,12 +40,10 @@ const App: React.FC = () => {
     <HelmetProvider>
       <ThemeProvider defaultTheme="system" storageKey="medcheck-theme">
         <AuthProvider>
-          <NotificationProvider>
-            <Router>
-              <AppRoutes />
-            </Router>
-            <Toaster richColors />
-          </NotificationProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+          <Toaster richColors />
         </AuthProvider>
       </ThemeProvider>
     </HelmetProvider>
@@ -180,16 +175,6 @@ const AppRoutes: React.FC = () => {
         element={
           isLoggedIn ? (
             <UploadsPage />
-          ) : (
-            <Navigate to={`/login?redirect=${location.pathname}`} replace />
-          )
-        }
-      />
-      <Route
-        path="/notifications"
-        element={
-          isLoggedIn ? (
-            <NotificationsPage />
           ) : (
             <Navigate to={`/login?redirect=${location.pathname}`} replace />
           )
