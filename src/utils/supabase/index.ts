@@ -1,34 +1,41 @@
-
-// Re-export all helper modules but handle name conflicts by using explicit re-exports
+// ---------------------------------------------------------------------
+// Re-exporta MÓDULOS ESPECÍFICOS (sem conflitos de nomes)
+// ---------------------------------------------------------------------
 export * from './profileHelpers';
 export * from './queryHelpers';
 export * from './procedureHelpers';
 export * from './analysisHelpers';
 export * from './helpHelpers';
 
-// Import supabaseHelpers and re-export with renamed conflicting exports to avoid ambiguity
+// ---------------------------------------------------------------------
+// Re-exporta, um-a-um, as funções que vivem em supabaseHelpers
+// ---------------------------------------------------------------------
 import {
   getProfile,
-  updateProfile as updateProfileBase,
-  toJson as toJsonBase,
-  fetchProceduresByAnalysisId as fetchProceduresByAnalysisIdBase,
-  fetchHelpArticles as fetchHelpArticlesBase,
+  updateProfile,
+  toJson,
+  fetchProceduresByAnalysisId,
+  fetchHelpArticles,
   fetchUserTickets,
   fetchTicketMessages,
   createSupportTicket,
   sendTicketMessage,
-  TicketData
 } from './supabaseHelpers';
 
-// Re-export with renamed exports to avoid conflicts
 export {
   getProfile,
-  updateProfileBase,
-  toJsonBase,
-  fetchProceduresByAnalysisIdBase,
+  updateProfile,
+  toJson,
+  fetchProceduresByAnalysisId,
+  fetchHelpArticles,
   fetchUserTickets,
   fetchTicketMessages,
   createSupportTicket,
   sendTicketMessage,
-  TicketData
 };
+
+// ---------------------------------------------------------------------
+// Re-exporta o **tipo** TicketData — precisa da palavra-chave `type`
+// para não disparar o erro TS1205 quando `isolatedModules` estiver ativo.
+// ---------------------------------------------------------------------
+export type { TicketData } from './supabaseHelpers';
