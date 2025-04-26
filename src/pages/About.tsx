@@ -1,6 +1,5 @@
 
-import { Helmet } from 'react-helmet-async';
-import { PublicLayout } from "@/components/layout/PublicLayout";
+import { PublicLayout } from "@/layout/PublicLayout";
 import { MissionSection } from "@/components/about/MissionSection";
 import { ProblemsSection } from "@/components/about/ProblemsSection";
 import { SolutionsSection } from "@/components/about/SolutionsSection";
@@ -13,6 +12,7 @@ const About = () => {
     <PublicLayout 
       title="Sobre o MedCheck"
       description="Conheça a plataforma que está revolucionando a gestão de honorários médicos no Brasil."
+      showBackButton={true}
     >
       <div className="flex flex-col">
         <MissionSection />

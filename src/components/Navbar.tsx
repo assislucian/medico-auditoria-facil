@@ -25,7 +25,7 @@ const Navbar = ({ isLoggedIn: propIsLoggedIn, showBackButton = false }: NavbarPr
   const navigate = useNavigate();
   const isLoggedIn = propIsLoggedIn !== undefined ? propIsLoggedIn : !!user;
   const [profileData, setProfileData] = useState({
-    name: "Carregando...",
+    name: "Usuário",
     specialty: "",
     email: "",
     avatarUrl: ""
@@ -34,21 +34,25 @@ const Navbar = ({ isLoggedIn: propIsLoggedIn, showBackButton = false }: NavbarPr
   useEffect(() => {
     const loadProfile = async () => {
       if (isLoggedIn && user) {
-        const profile = await getProfile();
-        if (profile) {
-          let avatarUrl;
-          if (profile.notification_preferences && 
-              typeof profile.notification_preferences === 'object' && 
-              'avatar_url' in profile.notification_preferences) {
-            avatarUrl = profile.notification_preferences.avatar_url;
+        try {
+          const profile = await getProfile();
+          if (profile) {
+            let avatarUrl = "";
+            if (profile.notification_preferences && 
+                typeof profile.notification_preferences === 'object' && 
+                'avatar_url' in profile.notification_preferences) {
+              avatarUrl = profile.notification_preferences.avatar_url || "";
+            }
+            
+            setProfileData({
+              name: profile.name || "Usuário",
+              specialty: profile.specialty || "",
+              email: profile.email || user.email || "",
+              avatarUrl: avatarUrl
+            });
           }
-          
-          setProfileData({
-            name: profile.name || "Usuário",
-            specialty: profile.specialty || "",
-            email: profile.email || user.email || "",
-            avatarUrl: avatarUrl || ""
-          });
+        } catch (error) {
+          console.error("Erro ao carregar perfil:", error);
         }
       }
     };
@@ -87,6 +91,7 @@ const Navbar = ({ isLoggedIn: propIsLoggedIn, showBackButton = false }: NavbarPr
                 title="Voltar"
               >
                 <ChevronLeft className="h-5 w-5" />
+                <span className="sr-only">Voltar</span>
               </Button>
             ) : null}
             <Link to="/" className="flex items-center">
@@ -119,7 +124,7 @@ const Navbar = ({ isLoggedIn: propIsLoggedIn, showBackButton = false }: NavbarPr
           <div className="md:hidden flex items-center">
             {isLoggedIn && (
               <>
-                <Button variant="ghost" size="icon" className="relative mr-2">
+                <Button variant="ghost" size="icon" className="relative mr-2" as={Link} to="/notifications">
                   <Bell size={18} />
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">3</Badge>
                   <span className="sr-only">Notificações</span>

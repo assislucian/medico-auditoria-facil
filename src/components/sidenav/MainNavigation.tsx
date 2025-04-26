@@ -58,9 +58,9 @@ export function MainNavigation() {
         Navegação
       </h2>
       <div className="space-y-1">
-        {navItems.map((item) => (
-          <TooltipProvider key={item.href}>
-            <Tooltip>
+        <TooltipProvider>
+          {navItems.map((item) => (
+            <Tooltip key={item.href}>
               <TooltipTrigger asChild>
                 <Button
                   variant={location.pathname === item.href ? "secondary" : "ghost"}
@@ -74,8 +74,8 @@ export function MainNavigation() {
               </TooltipTrigger>
               <TooltipContent side="right">{item.name}</TooltipContent>
             </Tooltip>
-          </TooltipProvider>
-        ))}
+          ))}
+        </TooltipProvider>
       </div>
     </div>
   );

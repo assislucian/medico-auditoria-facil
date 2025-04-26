@@ -1,129 +1,130 @@
 
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut } from 'lucide-react';
+import { Fragment } from 'react';
 
 interface MobileMenuProps {
   isLoggedIn: boolean;
   isOpen: boolean;
-  profileData?: {
+  profileData: {
     name: string;
     email: string;
+    specialty?: string;
     avatarUrl?: string;
   };
-  onLogout?: () => void;
+  onLogout: () => Promise<void>;
 }
 
 export const MobileMenu = ({ isLoggedIn, isOpen, profileData, onLogout }: MobileMenuProps) => {
   if (!isOpen) return null;
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
-
   return (
-    <div className="md:hidden absolute w-full bg-background border-b border-border animate-fade-in">
-      <div className="px-4 pt-2 pb-4 space-y-1 sm:px-3">
-        {isLoggedIn && profileData ? (
-          <>
-            <div className="flex items-center p-4 border-b">
-              <Avatar className="h-10 w-10 mr-3">
-                <AvatarImage src={profileData.avatarUrl} alt="Avatar" />
-                <AvatarFallback>{getInitials(profileData.name)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{profileData.name}</p>
-                <p className="text-xs text-muted-foreground">{profileData.email}</p>
-              </div>
+    <div className="md:hidden bg-background border-b shadow-lg">
+      <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        {isLoggedIn ? (
+          <Fragment>
+            <div className="px-5 py-3 border-b">
+              <div className="text-lg font-semibold">{profileData.name}</div>
+              {profileData.specialty && (
+                <div className="text-sm text-muted-foreground">{profileData.specialty}</div>
+              )}
+              <div className="text-sm text-muted-foreground">{profileData.email}</div>
             </div>
-            
-            <Link to="/dashboard" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
+            <Link
+              to="/dashboard"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+            >
               Dashboard
             </Link>
-            <Link to="/uploads" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
-              Uploads
+            <Link
+              to="/guides"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+            >
+              Guias
             </Link>
-            <Link to="/history" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
+            <Link
+              to="/demonstratives"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+            >
+              Demonstrativos
+            </Link>
+            <Link
+              to="/unpaid-procedures"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+            >
+              Não Pagos
+            </Link>
+            <Link
+              to="/history"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+            >
               Histórico
             </Link>
-            <Link to="/reports" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
-              Relatórios
-            </Link>
-            
-            <div className="pt-2 pb-2 border-t border-border">
-              <p className="px-3 py-1 text-xs font-semibold text-muted-foreground">
-                Perfil
-              </p>
-            </div>
-            
-            <Link to="/profile" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
-              Meu Perfil
-            </Link>
-            <Link to="/settings" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
-              Configurações
-            </Link>
-            
-            <div className="pt-2 pb-2 border-t border-border">
-              <p className="px-3 py-1 text-xs font-semibold text-muted-foreground">
-                Ajuda
-              </p>
-            </div>
-            
-            <Link to="/help" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
-              Central de Ajuda
-            </Link>
-            <Link to="/contact" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
-              Contato
-            </Link>
-            <Link to="/about" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
-              Sobre o MedCheck
-            </Link>
-            
-            <Button 
-              variant="destructive" 
-              className="w-full mt-4"
-              onClick={onLogout}
+            <Link
+              to="/profile"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
             >
-              <LogOut size={16} className="mr-2" />
+              Perfil
+            </Link>
+            <Link
+              to="/notifications"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+            >
+              Notificações
+            </Link>
+            <Link
+              to="/help"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+            >
+              Ajuda
+            </Link>
+            <button
+              onClick={onLogout}
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-destructive hover:bg-destructive/10"
+            >
               Sair
-            </Button>
-          </>
+            </button>
+          </Fragment>
         ) : (
-          <>
-            <Link to="/about" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
+          <Fragment>
+            <Link
+              to="/about"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+            >
               Quem Somos
             </Link>
-            <Link to="/pricing" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
+            <Link
+              to="/pricing"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+            >
               Planos
             </Link>
-            <Link to="/help" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
+            <Link
+              to="/help"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+            >
               Como Funciona
             </Link>
-            <Link to="/contact" className="block px-3 py-2 text-base font-medium text-foreground hover:bg-secondary rounded-md">
+            <Link
+              to="/contact"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+            >
               Contato
             </Link>
-            
-            <div className="flex items-center px-3 py-2">
-              <span className="text-sm mr-2">Tema:</span>
-              <ThemeToggle />
+            <div className="pt-4 pb-2 border-t border-border">
+              <Link
+                to="/login"
+                className="block px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+              >
+                Entrar
+              </Link>
+              <Link
+                to="/register"
+                className="block px-3 py-2 rounded-md text-base font-medium text-white bg-primary hover:bg-primary/90 mt-2 text-center"
+              >
+                Cadastrar
+              </Link>
             </div>
-            
-            <div className="flex flex-col space-y-2 mt-3">
-              <Button variant="outline" asChild className="w-full">
-                <Link to="/login">Entrar</Link>
-              </Button>
-              <Button asChild className="w-full">
-                <Link to="/register">Cadastrar</Link>
-              </Button>
-            </div>
-          </>
+          </Fragment>
         )}
       </div>
     </div>

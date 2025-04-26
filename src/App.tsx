@@ -21,6 +21,8 @@ import AuthCallback from "./pages/AuthCallback";
 import GuidesPage from "./pages/Guides";
 import DemonstrativesPage from "./pages/Demonstratives";
 import UnpaidProceduresPage from "./pages/UnpaidProcedures";
+import AboutPage from "./pages/About";
+import ContactPage from "./pages/Contact";
 
 function App() {
   return (
@@ -45,6 +47,8 @@ function App() {
                 <Route path="/help" element={<HelpPage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/support" element={<SupportPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/contact" element={<ContactPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
               <Toaster richColors position="top-right" />

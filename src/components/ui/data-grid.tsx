@@ -32,7 +32,7 @@ export function DataGrid({
   // Função para obter o valor de uma célula com segurança
   const getCellValue = (row: any, field: string) => {
     if (!row) return null;
-    return row[field];
+    return row[field] !== undefined ? row[field] : null;
   };
   
   return (
@@ -66,7 +66,7 @@ export function DataGrid({
                     ) : column.valueFormatter ? (
                       column.valueFormatter({ value: cellValue })
                     ) : (
-                      cellValue
+                      cellValue !== null && cellValue !== undefined ? cellValue : ''
                     )}
                   </TableCell>
                 );
