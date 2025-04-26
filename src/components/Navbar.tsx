@@ -41,7 +41,9 @@ const Navbar = ({ isLoggedIn: propIsLoggedIn, showBackButton = false }: NavbarPr
             if (profile.notification_preferences && 
                 typeof profile.notification_preferences === 'object' && 
                 'avatar_url' in profile.notification_preferences) {
-              avatarUrl = profile.notification_preferences.avatar_url || "";
+              // Fix error 1: Convert any non-string avatar_url to string
+              const rawAvatarUrl = profile.notification_preferences.avatar_url;
+              avatarUrl = rawAvatarUrl ? String(rawAvatarUrl) : "";
             }
             
             setProfileData({
@@ -124,7 +126,13 @@ const Navbar = ({ isLoggedIn: propIsLoggedIn, showBackButton = false }: NavbarPr
           <div className="md:hidden flex items-center">
             {isLoggedIn && (
               <>
-                <Button variant="ghost" size="icon" className="relative mr-2" as={Link} to="/notifications">
+                {/* Fix error 2: Remove 'as' prop and use proper button with onClick */}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative mr-2" 
+                  onClick={() => navigate('/notifications')}
+                >
                   <Bell size={18} />
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">3</Badge>
                   <span className="sr-only">Notificações</span>
