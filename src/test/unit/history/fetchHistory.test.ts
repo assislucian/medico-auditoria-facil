@@ -2,6 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { fetchHistoryData } from '@/services/history/fetchHistory';
 import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
@@ -21,7 +22,19 @@ describe('fetchHistoryData', () => {
   });
 
   it('returns mapped history items on successful fetch', async () => {
-    const mockUser = { id: 'test-user' };
+    const mockUser: User = {
+      id: 'test-user',
+      app_metadata: {},
+      user_metadata: {},
+      aud: 'authenticated',
+      created_at: '2024-01-01',
+      updated_at: '2024-01-01',
+      email: 'test@example.com',
+      phone: '',
+      role: '',
+      factors: null
+    };
+
     const mockHistoryData = [{
       id: '1',
       date: '2025-01-01',
@@ -33,13 +46,13 @@ describe('fetchHistoryData', () => {
     }];
 
     vi.spyOn(supabase.auth, 'getUser').mockResolvedValue({ data: { user: mockUser }, error: null });
-    vi.spyOn(supabase, 'from').mockReturnValue({
+    vi.spyOn(supabase, 'from').mockImplementation(() => ({
       select: () => ({
         eq: () => ({
           order: () => Promise.resolve({ data: mockHistoryData, error: null })
         })
       })
-    } as any);
+    } as any));
 
     const result = await fetchHistoryData();
     expect(result).toHaveLength(1);
