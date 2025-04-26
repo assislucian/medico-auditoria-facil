@@ -16,6 +16,7 @@ interface StatusCardProps {
   };
   className?: string;
   tooltipContent?: string;
+  variant?: 'default' | 'success' | 'error' | 'warning';
 }
 
 export function StatusCard({
@@ -26,9 +27,17 @@ export function StatusCard({
   trend,
   className,
   tooltipContent,
+  variant = 'default'
 }: StatusCardProps) {
+  const variantStyles = {
+    default: 'border-primary/20 bg-primary/5 hover:border-primary/30',
+    success: 'border-success/20 bg-success/5 hover:border-success/30',
+    error: 'border-destructive/20 bg-destructive/5 hover:border-destructive/30',
+    warning: 'border-warning/20 bg-warning/5 hover:border-warning/30'
+  };
+
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card className={cn("overflow-hidden transition-colors", variantStyles[variant], className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium flex items-center">
           {title}
@@ -45,7 +54,12 @@ export function StatusCard({
             </TooltipProvider>
           )}
         </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <Icon className={cn("h-4 w-4", {
+          "text-primary": variant === 'default',
+          "text-success": variant === 'success',
+          "text-destructive": variant === 'error',
+          "text-warning": variant === 'warning'
+        })} />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
@@ -54,7 +68,7 @@ export function StatusCard({
             <span
               className={cn(
                 "mr-1",
-                trend.isPositive ? "text-green-500" : "text-red-500"
+                trend.isPositive ? "text-success" : "text-destructive"
               )}
             >
               {trend.isPositive ? "+" : "-"}{Math.abs(trend.value)}%

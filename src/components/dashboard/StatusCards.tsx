@@ -2,8 +2,6 @@
 import { FileText, AlertCircle, Clock, TrendingUp } from "lucide-react";
 import { StatusCard } from "@/components/StatusCard";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
 
 export function StatusCards() {
   const { data, isLoading } = useDashboardStats();
@@ -23,14 +21,14 @@ export function StatusCards() {
         icon={FileText}
         trend={{ value: 8, isPositive: true }}
         description="Pagamentos em 2025"
-        className="border-primary/20 bg-primary/5 hover:border-primary/30 transition-colors"
+        variant="success"
       />
       <StatusCard
         title="Total Glosado"
         value={isLoading ? "Carregando..." : formatCurrency(data?.totals.totalGlosado || 0)}
         icon={AlertCircle}
         trend={{ value: 12, isPositive: false }}
-        className="border-destructive/20 bg-destructive/5 hover:border-destructive/30 transition-colors"
+        variant="error"
         description="Valor glosado em 2025"
         tooltipContent="Este é o valor total glosado pelos planos de saúde que poderia ter sido recebido"
       />
@@ -39,13 +37,13 @@ export function StatusCards() {
         value={isLoading ? "Carregando..." : String(data?.totals.totalProcedimentos || 0)}
         icon={TrendingUp}
         description="Procedimentos analisados"
-        className="border-primary/20 bg-primary/5 hover:border-primary/30 transition-colors"
+        variant="default"
       />
       <StatusCard
         title="Auditorias Pendentes"
         value={isLoading ? "Carregando..." : String(data?.totals.auditoriaPendente || 0)}
         icon={Clock}
-        className="border-warning/20 bg-warning/5 hover:border-warning/30 transition-colors"
+        variant="warning"
         description="Uploads pendentes"
         tooltipContent="Auditorias que aguardam sua revisão"
       />
