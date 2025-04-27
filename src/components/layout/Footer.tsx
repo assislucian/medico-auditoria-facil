@@ -1,7 +1,18 @@
+
 import { Link } from "react-router-dom";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+
+  const scrollToPricing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const pricingSection = document.getElementById('pricing');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.location.href = '/#pricing';
+    }
+  };
 
   return (
     <footer className="border-t bg-secondary/20">
@@ -27,9 +38,9 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <a href="/#pricing" onClick={scrollToPricing} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Planos
-                </Link>
+                </a>
               </li>
               <li>
                 <Link to="/about#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
