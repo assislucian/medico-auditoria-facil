@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
 import {
@@ -10,6 +11,15 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const GuestNavigation = () => {
+  const location = useLocation();
+
+  const handleAboutClick = (e: React.MouseEvent) => {
+    if (location.pathname === '/about') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -24,7 +34,7 @@ export const GuestNavigation = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="center">
           <DropdownMenuItem asChild>
-            <Link to="/about">Quem Somos</Link>
+            <Link to="/about" onClick={handleAboutClick}>Quem Somos</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/pricing">Planos</Link>

@@ -1,7 +1,16 @@
 import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const location = useLocation();
+
+  const handleAboutClick = (e: React.MouseEvent) => {
+    if (location.pathname === '/about') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <footer className="border-t bg-secondary/20">
@@ -22,7 +31,7 @@ export function Footer() {
             <h4 className="font-medium mb-4">Produto</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/about" onClick={handleAboutClick} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Quem Somos
                 </Link>
               </li>
