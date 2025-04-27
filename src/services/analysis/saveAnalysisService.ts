@@ -2,6 +2,7 @@
 import { ExtractedData } from '@/types/upload';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Save analysis data to Supabase
@@ -46,7 +47,7 @@ export const saveAnalysis = async (
       throw error;
     }
 
-    // Insert procedure results
+    // Insert procedure results - properly casting to Json where needed
     const proceduresData = data.procedimentos.map(proc => ({
       analysis_id: analysis.id,
       codigo: proc.codigo,
@@ -58,7 +59,7 @@ export const saveAnalysis = async (
       pago: proc.pago,
       guia: proc.guia,
       beneficiario: proc.beneficiario,
-      doctors: proc.doctors
+      doctors: proc.doctors as unknown as Json
     }));
 
     if (proceduresData.length > 0) {
@@ -81,3 +82,6 @@ export const saveAnalysis = async (
     return null;
   }
 };
+
+// Export additional function that may be needed elsewhere
+export const saveAnalysisToDatabase = saveAnalysis;

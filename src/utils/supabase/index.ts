@@ -1,6 +1,6 @@
 
 // ---------------------------------------------------------------------
-// Re-export SPECIFIC MODULES (no name conflicts)
+// Re-export all helper modules (no name conflicts)
 // ---------------------------------------------------------------------
 export * from './profileHelpers';
 export * from './queryHelpers';
@@ -9,36 +9,28 @@ export * from './analysisHelpers';
 export * from './helpHelpers';
 
 // ---------------------------------------------------------------------
-// Re-export functions from supabaseHelpers one by one
+// Re-export functions from supabaseHelpers that aren't already exported
 // ---------------------------------------------------------------------
 import {
-  getProfile,
-  updateProfile,
-  toJson,
-  fetchProceduresByAnalysisId,
   fetchHelpArticles,
   fetchUserTickets,
   fetchTicketMessages,
   createSupportTicket,
   sendTicketMessage,
-  fetchAnalysisById,
+  toJson,
+  TicketData
 } from './supabaseHelpers';
 
 export {
-  getProfile,
-  updateProfile,
-  toJson,
-  fetchProceduresByAnalysisId,
   fetchHelpArticles,
   fetchUserTickets,
   fetchTicketMessages,
   createSupportTicket,
   sendTicketMessage,
-  fetchAnalysisById,
+  toJson
 };
 
 // ---------------------------------------------------------------------
-// Re-export the **type** TicketData — needs `type` keyword
-// to avoid TS1205 when `isolatedModules` is active.
+// Re-export the TicketData type
 // ---------------------------------------------------------------------
-export type { TicketData } from './supabaseHelpers';
+export type { TicketData };

@@ -1,8 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Re-export from profileHelpers
-export { getProfile, updateProfile, toJson } from './profileHelpers';
+export { getProfile, updateProfile } from './profileHelpers';
 
 // Re-export from analysisHelpers
 export { fetchAnalysisById, fetchProceduresByAnalysisId } from './analysisHelpers';
