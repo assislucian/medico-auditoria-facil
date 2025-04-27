@@ -11,6 +11,17 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const GuestNavigation = () => {
+  const scrollToPricing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const pricingSection = document.getElementById('pricing');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // Se não encontrar a seção (estamos em outra página), navegar para home#pricing
+      window.location.href = '/#pricing';
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -27,8 +38,8 @@ export const GuestNavigation = () => {
           <DropdownMenuItem asChild>
             <Link to="/about">Quem Somos</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to="/pricing">Planos</Link>
+          <DropdownMenuItem>
+            <a href="/#pricing" onClick={scrollToPricing}>Planos</a>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/about#how-it-works">Como Funciona</Link>

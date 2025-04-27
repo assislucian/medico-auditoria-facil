@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import LoginPage from "./pages/Login";
@@ -22,7 +21,6 @@ import DemonstrativesPage from "./pages/Demonstratives";
 import UnpaidProceduresPage from "./pages/UnpaidProcedures";
 import AboutPage from "./pages/About";
 import ContactPage from "./pages/Contact";
-import PricingPage from "./pages/Pricing";
 import PrivacyPage from "./pages/Privacy";
 import TermsPage from "./pages/Terms";
 import PublicHelpPage from "./pages/PublicHelp";
@@ -78,7 +76,11 @@ function App() {
                 {/* Rotas públicas */}
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
-                <Route path="/pricing" element={<PricingPage />} />
+                
+                {/* Redirecionar /pricing para /#pricing */}
+                <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
+                
+                {/* Rotas públicas */}
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
