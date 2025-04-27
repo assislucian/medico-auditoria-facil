@@ -1,49 +1,54 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Json } from '@/integrations/supabase/types';
 
 /**
- * Get profile data for a user
+ * Helper to convert data to JSON
  */
-export const getProfile = async (supabaseClient: any, userId: string) => {
+export const toJson = <T>(data: T): T => {
+  return JSON.parse(JSON.stringify(data));
+};
+
+/**
+ * Get user profile data
+ */
+export async function getProfile() {
   try {
-    const { data, error } = await supabaseClient
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return null;
+
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('id', session.user.id)
       .single();
-      
-    if (error) throw error;
     
+    if (error) throw error;
     return data;
   } catch (error) {
     console.error('Error fetching profile:', error);
     return null;
   }
-};
+}
 
 /**
- * Update profile data for a user
+ * Update user profile data
  */
-export const updateProfile = async (supabaseClient: any, userId: string, updates: any) => {
+export async function updateProfile(updates: Record<string, any>) {
   try {
-    const { error } = await supabaseClient
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No authenticated session');
+
+    const { data, error } = await supabase
       .from('profiles')
       .update(updates)
-      .eq('id', userId);
-      
-    if (error) throw error;
+      .eq('id', session.user.id)
+      .select()
+      .single();
     
-    return true;
+    if (error) throw error;
+    return data;
   } catch (error) {
     console.error('Error updating profile:', error);
-    return false;
+    throw error;
   }
-};
-
-/**
- * Convert data to JSON for Supabase storage
- */
-export const toJson = (data: any): Json => {
-  return data as Json;
-};
+}

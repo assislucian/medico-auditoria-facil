@@ -1,92 +1,77 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Index from "./pages/Index";
-import LoginPage from "./pages/Login";
-import RegisterPage from "./pages/Register";
-import DashboardPage from "./pages/Dashboard";
-import ProfilePage from "./pages/Profile";
-import CompareContracheque from "./pages/CompareContracheque";
-import HistoryPage from "./pages/History";
-import HelpPage from "./pages/Help";
-import NotificationsPage from "./pages/Notifications";
-import { AuthProvider } from "./contexts/AuthContext";
-import { ThemeProvider } from "./contexts/ThemeProvider";
-import { Toaster } from "sonner";
-import { HelmetProvider } from "react-helmet-async";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import NotFoundPage from "./pages/NotFound";
-import SupportPage from "./pages/Support";
-import AuthCallback from "./pages/AuthCallback";
-import GuidesPage from "./pages/Guides";
-import DemonstrativesPage from "./pages/Demonstratives";
-import UnpaidProceduresPage from "./pages/UnpaidProcedures";
-import AboutPage from "./pages/About";
-import ContactPage from "./pages/Contact";
-import PrivacyPage from "./pages/Privacy";
-import TermsPage from "./pages/Terms";
-import PublicHelpPage from "./pages/PublicHelp";
-import { PrivateRoute } from "./components/PrivateRoute";
-import PricingPage from "./pages/Pricing";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate
+} from "react-router-dom";
+import { useAuth } from "@/contexts/auth/AuthContext";
+import { Index } from "@/pages/Index";
+import { Login } from "@/pages/Login";
+import { Register } from "@/pages/Register";
+import { About } from "@/pages/About";
+import { ForgotPassword } from "@/pages/ForgotPassword";
+import { ResetPassword } from "@/pages/ResetPassword";
+import { Dashboard } from "@/pages/Dashboard";
+import { Uploads } from "@/pages/Uploads";
+import { History } from "@/pages/History";
+import { CompareContracheque } from "@/pages/CompareContracheque";
+import { Help } from "@/pages/Help";
+import { UnpaidProcedures } from "@/pages/UnpaidProcedures";
+import { Profile } from "@/pages/Profile";
+import { Settings } from "@/pages/Settings";
+import { Support } from "@/pages/Support";
+import { NotFound } from "@/pages/NotFound";
+import { AuthCallback } from "@/pages/AuthCallback";
+
+// Import the new GuideAnalysisPage
+import GuideAnalysisPage from './pages/GuideAnalysis';
+
+function PrivateRoute({ children }: { children: JSX.Element }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <div>Carregando...</div>; // Pode ser substituído por um spinner
+  }
+
+  return isAuthenticated ? children : <Navigate to="/login" />;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      
+      {/* Protected routes */}
+      <Route element={<PrivateRoute />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/uploads" element={<Uploads />} />
+        <Route path="/analysis/:id" element={<GuideAnalysisPage />} />
+        <Route path="/history" element={<History />} />
+        <Route path="/compare" element={<CompareContracheque />} />
+        <Route path="/help" element={<Help />} />
+        <Route path="/divergences" element={<UnpaidProcedures />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/support" element={<Support />} />
+      </Route>
+      
+      {/* 404 page */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
-    <ErrorBoundary>
-      <HelmetProvider>
-        <ThemeProvider>
-          <BrowserRouter>
-            <AuthProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/help" element={<PublicHelpPage />} />
-                
-                <Route
-                  path="/dashboard"
-                  element={
-                    <PrivateRoute>
-                      <DashboardPage />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/help/private"
-                  element={
-                    <PrivateRoute>
-                      <HelpPage />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/support"
-                  element={
-                    <PrivateRoute>
-                      <SupportPage />
-                    </PrivateRoute>
-                  }
-                />
-                <Route path="/guides" element={<PrivateRoute><GuidesPage /></PrivateRoute>} />
-                <Route path="/demonstratives" element={<PrivateRoute><DemonstrativesPage /></PrivateRoute>} />
-                <Route path="/unpaid-procedures" element={<PrivateRoute><UnpaidProceduresPage /></PrivateRoute>} />
-                <Route path="/compare" element={<PrivateRoute><CompareContracheque /></PrivateRoute>} />
-                <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-                <Route path="/history" element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
-                <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
-                
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/pricing" element={<PricingPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-              <Toaster richColors position="top-right" />
-            </AuthProvider>
-          </BrowserRouter>
-        </ThemeProvider>
-      </HelmetProvider>
-    </ErrorBoundary>
+    <Router>
+      <AppRoutes />
+    </Router>
   );
 }
 
