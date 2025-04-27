@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, Download, FileX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { ResourceDialog } from "@/components/unpaid-procedures/ResourceDialog";
 
 // Dados mock de exemplo para a demonstração
 const mockUnpaidProcedures = [
@@ -55,7 +56,16 @@ const unpaidColumns = [
       }).format(params.value);
     }
   },
-  { field: 'motivoNaoPagamento', headerName: 'Motivo', width: 200 },
+  { 
+    field: 'motivoNaoPagamento', 
+    headerName: 'Motivo', 
+    width: 200,
+    renderCell: ({ value }: { value: string }) => (
+      <Badge variant="destructive" className="bg-red-500/10">
+        {value}
+      </Badge>
+    )
+  },
   { 
     field: 'status', 
     headerName: 'Status', 
@@ -73,17 +83,9 @@ const unpaidColumns = [
     field: 'actions',
     headerName: 'Ações',
     width: 120,
-    renderCell: ({ row }: { row: any }) => {
-      return (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          disabled={row.status === "Negado"}
-        >
-          Recurso
-        </Button>
-      );
-    }
+    renderCell: ({ row }: { row: any }) => (
+      <ResourceDialog procedure={row} />
+    )
   }
 ];
 
@@ -93,38 +95,34 @@ const UnpaidProceduresPage = () => {
   return (
     <AuthenticatedLayout title="Procedimentos Não Pagos">
       <div className="space-y-6">
-        <div className="flex justify-end">
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Exportar
-            </Button>
-          </div>
+        <div className="flex justify-between items-center">
+          <Card className="flex-1 mr-4 border-amber-500/20 bg-amber-500/5">
+            <CardContent className="p-4 flex items-center">
+              <div className="bg-amber-500/10 p-2 rounded-full mr-4">
+                <AlertCircle className="h-6 w-6 text-amber-500" />
+              </div>
+              <div>
+                <p className="font-medium">
+                  Existem {unpaidProcedures.filter(p => p.status !== "Negado").length} procedimentos que podem ser contestados
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Conteste em até 30 dias para garantir a análise pelo convênio
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Button variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Exportar Relatório
+          </Button>
         </div>
-
-        <Card className="border-amber-500/20 bg-amber-500/5">
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-amber-500/10 p-2 rounded-full mr-4">
-              <AlertCircle className="h-6 w-6 text-amber-500" />
-            </div>
-            <div>
-              <p className="font-medium">
-                Existem 2 procedimentos não pagos que podem ser contestados!
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Conteste em até 30 dias para garantir a análise pelo convênio.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <FileX className="w-5 h-5 text-primary mb-2" />
-                <h3 className="font-medium">Procedimentos Não Pagos</h3>
-              </div>
+            <div className="flex items-center gap-2">
+              <FileX className="w-5 h-5 text-primary" />
+              <h3 className="font-medium">Lista de Procedimentos Não Pagos</h3>
             </div>
           </CardHeader>
           <CardContent>
