@@ -1,5 +1,5 @@
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DataGrid } from "@/components/ui/data-grid";
 import { Button } from "@/components/ui/button";
 import { FileText, Filter, Upload } from "lucide-react";
@@ -12,7 +12,6 @@ import { FileType } from "@/types/upload";
 import FileList from "@/components/upload/FileList";
 import { toast } from "sonner";
 import { GuideDetailDialog } from "@/components/guides/GuideDetailDialog";
-import { CardTitle, CardDescription } from "@/components/ui/card";
 
 const mockGuides = [
   {
