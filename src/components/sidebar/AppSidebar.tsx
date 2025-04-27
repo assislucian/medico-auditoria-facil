@@ -5,10 +5,8 @@ import {
   FileBarChart, 
   FileX,
   History,
-  BookOpen,
-  Settings,
-  Bell,
   HelpCircle,
+  Bell,
   User,
   Play,
   LogOut
@@ -52,8 +50,6 @@ export function AppSidebar() {
     { icon: FileBarChart, label: "Demonstrativos", href: "/demonstratives" },
     { icon: FileX, label: "Não Pagos", href: "/unpaid-procedures" },
     { icon: History, label: "Histórico", href: "/history" },
-    { icon: BookOpen, label: "Tabelas", href: "/reference-tables" },
-    { icon: Settings, label: "Configurações", href: "/settings" },
     { icon: HelpCircle, label: "Suporte", href: "/support" },
   ];
 

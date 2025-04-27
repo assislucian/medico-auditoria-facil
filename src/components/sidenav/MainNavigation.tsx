@@ -6,7 +6,8 @@ import {
   FileText, 
   FileBarChart, 
   FileQuestion, 
-  History
+  History,
+  HelpCircle
 } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -39,6 +40,11 @@ export function MainNavigation() {
       name: "Histórico",
       href: "/history",
       icon: History,
+    },
+    {
+      name: "Suporte",
+      href: "/support",
+      icon: HelpCircle,
     }
   ];
 

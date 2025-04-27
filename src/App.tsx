@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import LoginPage from "./pages/Login";
@@ -6,7 +7,6 @@ import DashboardPage from "./pages/Dashboard";
 import ProfilePage from "./pages/Profile";
 import CompareContracheque from "./pages/CompareContracheque";
 import HistoryPage from "./pages/History";
-import ReferenceTablesPage from "./pages/ReferenceTables";
 import HelpPage from "./pages/Help";
 import NotificationsPage from "./pages/Notifications";
 import { AuthProvider } from "./contexts/AuthContext";
