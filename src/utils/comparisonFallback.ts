@@ -1,6 +1,7 @@
 
-import { ExtractedData } from '@/types/upload';
+import { ExtractedData, DoctorParticipation } from '@/types/upload';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Get fallback comparison data from database when edge function fails
@@ -50,13 +51,13 @@ export const getFallbackComparisonData = async (analysisId: string): Promise<Ext
         pago: proc.pago || false,
         guia: proc.guia || '',
         beneficiario: proc.beneficiario || '',
-        doctors: Array.isArray(proc.doctors) ? proc.doctors : []
+        doctors: parseDoctors(proc.doctors)
       })),
       totais: {
-        valorCBHPM: analysisData.summary?.totalCBHPM || 0,
-        valorPago: analysisData.summary?.totalPago || 0,
-        diferenca: analysisData.summary?.totalDiferenca || 0,
-        procedimentosNaoPagos: analysisData.summary?.procedimentosNaoPagos || 0
+        valorCBHPM: getSummaryValue(analysisData.summary, 'totalCBHPM'),
+        valorPago: getSummaryValue(analysisData.summary, 'totalPago'),
+        diferenca: getSummaryValue(analysisData.summary, 'totalDiferenca'),
+        procedimentosNaoPagos: getSummaryValue(analysisData.summary, 'procedimentosNaoPagos')
       }
     };
 
@@ -66,6 +67,40 @@ export const getFallbackComparisonData = async (analysisId: string): Promise<Ext
     return null;
   }
 };
+
+// Helper function to safely parse summary values
+function getSummaryValue(summary: Json | null, key: string): number {
+  if (!summary) return 0;
+  
+  try {
+    const obj = typeof summary === 'string' ? JSON.parse(summary) : summary;
+    return typeof obj[key] === 'number' ? obj[key] : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+// Helper function to safely parse doctors data
+function parseDoctors(doctorsJson: Json | null): DoctorParticipation[] {
+  if (!doctorsJson) return [];
+  
+  try {
+    const doctors = typeof doctorsJson === 'string' ? JSON.parse(doctorsJson) : doctorsJson;
+    if (!Array.isArray(doctors)) return [];
+    
+    return doctors.map(doctor => ({
+      code: doctor.code || '',
+      name: doctor.name || '',
+      role: doctor.role || '',
+      startTime: doctor.startTime || '',
+      endTime: doctor.endTime || '',
+      status: doctor.status || ''
+    }));
+  } catch (e) {
+    console.error('Error parsing doctors data:', e);
+    return [];
+  }
+}
 
 /**
  * Create simulation data for local development

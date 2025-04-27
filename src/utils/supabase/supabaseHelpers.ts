@@ -1,17 +1,14 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
-// Re-export from profileHelpers
-export { getProfile, updateProfile } from './profileHelpers';
+// Do not re-export these functions as they are already exported from profileHelpers
+// Instead, import and re-export them from profileHelpers directly
+import { getProfile, updateProfile, toJson } from './profileHelpers';
+
+export { getProfile, updateProfile };
 
 // Re-export from analysisHelpers
 export { fetchAnalysisById, fetchProceduresByAnalysisId } from './analysisHelpers';
-
-/**
- * Format JSON data for storage
- */
-export const toJson = (data: any) => {
-  return data as any;
-};
 
 /**
  * Ticket data type

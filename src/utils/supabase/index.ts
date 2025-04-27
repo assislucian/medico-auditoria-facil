@@ -4,7 +4,9 @@
 // ---------------------------------------------------------------------
 export * from './profileHelpers';
 export * from './queryHelpers';
-export * from './procedureHelpers';
+// Explicitly re-export from procedureHelpers to avoid ambiguity
+import { fetchProceduresByAnalysisId as fetchProcedures } from './procedureHelpers';
+export { fetchProcedures };
 export * from './analysisHelpers';
 export * from './helpHelpers';
 
@@ -16,9 +18,7 @@ import {
   fetchUserTickets,
   fetchTicketMessages,
   createSupportTicket,
-  sendTicketMessage,
-  toJson,
-  TicketData
+  sendTicketMessage
 } from './supabaseHelpers';
 
 export {
@@ -26,11 +26,10 @@ export {
   fetchUserTickets,
   fetchTicketMessages,
   createSupportTicket,
-  sendTicketMessage,
-  toJson
+  sendTicketMessage
 };
 
 // ---------------------------------------------------------------------
 // Re-export the TicketData type
 // ---------------------------------------------------------------------
-export type { TicketData };
+export type { TicketData } from './supabaseHelpers';

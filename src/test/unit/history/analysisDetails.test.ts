@@ -1,34 +1,27 @@
+
 import { describe, it, expect, vi } from 'vitest';
 import { getAuditDetails } from '@/services/history/analysisDetails';
 import { PostgrestFilterBuilder } from '@supabase/postgrest-js';
 
 // Mock the Supabase client
 vi.mock('@/integrations/supabase/client', () => {
-  const mockSelect = vi.fn();
-  const mockFrom = vi.fn(() => ({
-    select: mockSelect
-  }));
-  
-  // Create a proper mock for PostgrestFilterBuilder
-  const createPostgrestMock = () => {
-    const postgrestMethods = {
-      eq: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      single: vi.fn().mockReturnThis(),
-      then: vi.fn().mockImplementation(callback => {
-        callback({ data: [], error: null });
-        return postgrestMethods;
-      }),
-      catch: vi.fn().mockReturnThis()
+  // Create a mock select function that returns a chainable object
+  const createMockChain = () => {
+    const chain = {
+      eq: vi.fn(() => chain),
+      select: vi.fn(() => chain),
+      order: vi.fn(() => chain),
+      single: vi.fn(() => ({ data: [], error: null }))
     };
-    return postgrestMethods;
+    return chain;
   };
+
+  // Mock the from function to return our chainable object
+  const mockFrom = vi.fn(() => createMockChain());
   
   return {
     supabase: {
-      from: mockFrom,
-      rpc: vi.fn(() => createPostgrestMock())
+      from: mockFrom
     }
   };
 });
