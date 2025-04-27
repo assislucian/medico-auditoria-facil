@@ -1,11 +1,13 @@
+
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DataGrid } from "@/components/ui/data-grid";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Download, FileX } from "lucide-react";
+import { AlertCircle, Download, FileX, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { ResourceDialog } from "@/components/unpaid-procedures/ResourceDialog";
+import { formatCurrency } from "@/utils/format";
 
 // Dados mock de exemplo para a demonstração
 const mockUnpaidProcedures = [
@@ -46,15 +48,7 @@ const unpaidColumns = [
     field: 'valorApresentado', 
     headerName: 'Valor Apresentado', 
     width: 150,
-    valueFormatter: (params: any) => {
-      if (params.value === undefined || params.value === null) {
-        return 'R$ 0,00';
-      }
-      return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(params.value);
-    }
+    valueFormatter: (params: any) => formatCurrency(params.value)
   },
   { 
     field: 'motivoNaoPagamento', 
@@ -95,9 +89,9 @@ const UnpaidProceduresPage = () => {
   return (
     <AuthenticatedLayout title="Procedimentos Não Pagos">
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <Card className="flex-1 mr-4 border-amber-500/20 bg-amber-500/5">
-            <CardContent className="p-4 flex items-center">
+        <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
+          <Card className="flex-1 border-amber-500/20 bg-amber-500/5">
+            <CardContent className="p-4 flex items-start md:items-center">
               <div className="bg-amber-500/10 p-2 rounded-full mr-4">
                 <AlertCircle className="h-6 w-6 text-amber-500" />
               </div>
@@ -112,10 +106,16 @@ const UnpaidProceduresPage = () => {
             </CardContent>
           </Card>
           
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Exportar Relatório
-          </Button>
+          <div className="flex gap-2 self-end">
+            <Button variant="outline" size="sm">
+              <Filter className="w-4 h-4 mr-2" />
+              Filtrar
+            </Button>
+            <Button variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Exportar
+            </Button>
+          </div>
         </div>
 
         <Card>

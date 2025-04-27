@@ -1,10 +1,12 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, FilePlus, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/utils/format";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface ResourceDialogProps {
   procedure: {
@@ -19,6 +21,34 @@ interface ResourceDialogProps {
 
 export function ResourceDialog({ procedure }: ResourceDialogProps) {
   const { user, userProfile } = useAuth();
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  const handleGenerateResource = async () => {
+    setIsGenerating(true);
+    
+    // Simulação de geração do documento
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      toast.success("Documento de recurso gerado com sucesso!");
+      
+      // Aqui seria implementada a lógica real de geração do PDF com o CRM do médico
+      console.log(`Gerando recurso para o procedimento ${procedure.guia} usando o CRM ${userProfile?.crm}`);
+      
+      // Simulação de download
+      const link = document.createElement("a");
+      link.href = "#";
+      link.download = `recurso-${procedure.guia}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+    } catch (error) {
+      console.error("Erro ao gerar recurso:", error);
+      toast.error("Erro ao gerar documento. Tente novamente.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
   
   return (
     <Dialog>
@@ -72,10 +102,27 @@ export function ResourceDialog({ procedure }: ResourceDialogProps) {
           </div>
 
           <div>
-            <Button className="w-full" size="lg">
-              <FileText className="h-4 w-4 mr-2" />
-              Gerar Documento de Recurso
+            <Button 
+              className="w-full" 
+              size="lg" 
+              onClick={handleGenerateResource}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <>
+                  <FilePlus className="h-4 w-4 mr-2 animate-pulse" />
+                  Gerando Documento...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Gerar e Baixar Documento de Recurso
+                </>
+              )}
             </Button>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              O documento será gerado com o CRM {userProfile?.crm || "[não informado]"} e estará pronto para envio à operadora.
+            </p>
           </div>
         </div>
       </DialogContent>
