@@ -49,7 +49,7 @@ export function MainNavigation() {
   return (
     <div className="px-3 py-2">
       <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
-        Navegação
+        Principal
       </h2>
       <div className="space-y-1">
         <TooltipProvider>

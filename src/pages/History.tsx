@@ -67,12 +67,6 @@ const HistoryPage = () => {
     <AuthenticatedLayout title="Histórico">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold">Histórico de Análises</h2>
-            <p className="text-muted-foreground">
-              Acompanhe o histórico das suas análises
-            </p>
-          </div>
           <div className="flex space-x-2">
             <Button variant="outline" size="sm">
               <FileText className="w-4 h-4 mr-2" />
