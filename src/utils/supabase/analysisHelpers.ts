@@ -1,6 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * Fetch analysis by ID
+ */
 export async function fetchAnalysisById(analysisId: string) {
   try {
     const { data, error } = await supabase

@@ -1,11 +1,15 @@
 
-import { Profile } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
+import { Profile } from '@/types';
 
-export async function getProfileData(userId: string): Promise<Profile | null> {
+/**
+ * Get a user's profile data
+ */
+export async function getProfile(supabaseClient: any, userId: string): Promise<Profile | null> {
   try {
     console.log('Fetching profile data for user:', userId);
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -24,12 +28,15 @@ export async function getProfileData(userId: string): Promise<Profile | null> {
     console.log('Profile data retrieved successfully');
     return data as Profile;
   } catch (error) {
-    console.error("Exception in getProfileData:", error);
+    console.error("Exception in getProfile:", error);
     return null;
   }
 }
 
-export async function updateProfile(supabaseClient: any, userId: string, data: ProfileUpdatePayload) {
+/**
+ * Update a user's profile data
+ */
+export async function updateProfile(supabaseClient: any, userId: string, data: any): Promise<boolean> {
   try {
     const { error } = await supabaseClient
       .from('profiles')
@@ -44,12 +51,9 @@ export async function updateProfile(supabaseClient: any, userId: string, data: P
   }
 }
 
-export type ProfileUpdatePayload = {
-  name?: string;
-  email?: string;
-  crm?: string;
-  specialty?: string;
-  notification_preferences?: any;
-  reference_tables_preferences?: any;
-  updated_at?: string;
-};
+/**
+ * Convert data to JSON for Supabase
+ */
+export function toJson(data: any): Json {
+  return data as Json;
+}

@@ -33,7 +33,7 @@ export function DemoRequestForm() {
       
       const { error } = await supabase
         .from('demo_requests')
-        .insert([validatedData]);
+        .insert(validatedData);
 
       if (error) throw error;
       

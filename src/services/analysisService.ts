@@ -1,4 +1,3 @@
-
 /**
  * analysisService.ts
  * 
@@ -237,51 +236,19 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
             data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
             beneficiario: proceduresData[0]?.beneficiario || 'Paciente'
           },
-          procedimentos: proceduresData.map(proc => {
-            // Processa médicos com segurança de tipos
-            let doctors: DoctorParticipation[] = [];
-            
-            if (proc.doctors) {
-              if (isDoctorParticipationArray(proc.doctors)) {
-                doctors = proc.doctors;
-              } else if (Array.isArray(proc.doctors)) {
-                // Converte cada item para o formato esperado com cast explícito de tipo
-                doctors = (proc.doctors as any[])
-                  .filter(d => 
-                    typeof d === 'object' && 
-                    d !== null &&
-                    'code' in d && 
-                    'name' in d && 
-                    'role' in d &&
-                    'startTime' in d &&
-                    'endTime' in d &&
-                    'status' in d
-                  )
-                  .map(d => ({
-                    code: String(d.code || ''),
-                    name: String(d.name || ''),
-                    role: String(d.role || ''),
-                    startTime: String(d.startTime || ''),
-                    endTime: String(d.endTime || ''),
-                    status: String(d.status || '')
-                  }));
-              }
-            }
-              
-            return {
-              id: proc.id,
-              codigo: proc.codigo,
-              procedimento: proc.procedimento,
-              papel: proc.papel || '',
-              valorCBHPM: proc.valor_cbhpm || 0,
-              valorPago: proc.valor_pago || 0,
-              diferenca: proc.diferenca || 0,
-              pago: !!proc.pago,
-              guia: proc.guia || '',
-              beneficiario: proc.beneficiario || '',
-              doctors
-            };
-          }),
+          procedimentos: proceduresData.map(proc => ({
+            id: proc.id,
+            codigo: proc.codigo,
+            procedimento: proc.procedimento,
+            papel: proc.papel || '',
+            valorCBHPM: proc.valor_cbhpm || 0,
+            valorPago: proc.valor_pago || 0,
+            diferenca: proc.diferenca || 0,
+            pago: !!proc.pago,
+            guia: proc.guia || '',
+            beneficiario: proc.beneficiario || '',
+            doctors: proc.doctors as any || []
+          })),
           totais: {
             valorCBHPM: getSafeNumericValue(analysisData.summary, 'totalCBHPM'),
             valorPago: getSafeNumericValue(analysisData.summary, 'totalPago'),
