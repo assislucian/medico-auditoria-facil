@@ -1,9 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-// Do not re-export these functions as they are already exported from profileHelpers
-// Instead, import and re-export them from profileHelpers directly
-import { getProfile, updateProfile, toJson } from './profileHelpers';
+// Import these from profileHelpers, don't redefine them
+import { getProfile, updateProfile } from './profileHelpers';
 
 export { getProfile, updateProfile };
 
