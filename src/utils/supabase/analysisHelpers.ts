@@ -20,3 +20,22 @@ export async function fetchAnalysisById(analysisId: string) {
     return null;
   }
 }
+
+/**
+ * Fetch procedures by analysis ID
+ */
+export async function fetchProceduresByAnalysisId(analysisId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('procedure_results')
+      .select('*')
+      .eq('analysis_id', analysisId);
+      
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching procedures:', error);
+    return [];
+  }
+}

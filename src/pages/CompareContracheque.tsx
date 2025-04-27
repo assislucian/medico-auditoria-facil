@@ -1,10 +1,10 @@
-// Update the import statements to use supabase client directly
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import ComparisonView from '@/components/ComparisonView';
 import { supabase } from '@/integrations/supabase/client';
 import { getExtractedData } from '@/services/analysisService';
-import { ExtractedData } from '@/types';
+import { ExtractedData } from '@/types/upload';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const CompareContracheque = () => {
@@ -17,7 +17,9 @@ const CompareContracheque = () => {
       if (analysisId) {
         try {
           const data = await getExtractedData(analysisId);
-          setExtractedData(data);
+          if (data) {
+            setExtractedData(data);
+          }
         } catch (error) {
           console.error('Error fetching analysis data:', error);
           // Handle error appropriately, e.g., show an error message

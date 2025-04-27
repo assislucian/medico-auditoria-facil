@@ -1,12 +1,6 @@
 
 export interface ExtractedData {
-  demonstrativoInfo: {
-    numero: string;
-    competencia: string;
-    hospital: string;
-    data: string;
-    beneficiario: string;
-  };
+  demonstrativoInfo: DemonstrativoInfo;
   procedimentos: Procedure[];
   totais: {
     valorCBHPM: number;
@@ -14,6 +8,14 @@ export interface ExtractedData {
     diferenca: number;
     procedimentosNaoPagos: number;
   };
+}
+
+export interface DemonstrativoInfo {
+  numero: string;
+  competencia: string;
+  hospital: string;
+  data: string;
+  beneficiario: string;
 }
 
 export interface Procedure {
@@ -38,3 +40,19 @@ export interface DoctorParticipation {
   endTime: string;
   status: string;
 }
+
+export type FileType = 'guia' | 'demonstrativo';
+
+export type FileStatus = 'processing' | 'valid' | 'invalid';
+
+export interface FileWithStatus {
+  id?: string;
+  name: string;
+  file: File;
+  type: FileType;
+  status: FileStatus;
+}
+
+export type ProcessingStage = 'idle' | 'extracting' | 'uploading' | 'analyzing' | 'comparing' | 'complete' | 'error';
+
+export type ProcessMode = 'complete' | 'guia-only' | 'demonstrativo-only';

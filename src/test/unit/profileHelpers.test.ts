@@ -1,47 +1,62 @@
 
-import { describe, it, expect, vi } from 'vitest';
-import { getProfileData, updateProfile } from '@/utils/supabase/profileHelpers';
-import { supabase } from '@/integrations/supabase/client';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { getProfile, updateProfile } from '@/utils/supabase/profileHelpers';
 
-// Mock the Supabase client
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn()
-  }
-}));
+// Mock Supabase client
+const mockSupabase = {
+  from: vi.fn().mockReturnThis(),
+  select: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  update: vi.fn().mockReturnThis(),
+  single: vi.fn(),
+};
 
 describe('profileHelpers', () => {
-  it('fetches profile data successfully', async () => {
-    const mockProfile = {
-      id: 'test-id',
-      name: 'Test User',
-      email: 'test@example.com',
-      crm: '12345',
-      specialty: 'Cardiologia'
-    };
-
-    const mockMaybeSingle = vi.fn().mockResolvedValue({ data: mockProfile, error: null });
-    const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
-    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
-    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect });
-
-    // Use vi.mocked to properly type the mock
-    vi.mocked(supabase.from).mockImplementation(mockFrom);
-
-    const result = await getProfileData('test-id');
-    expect(result).toEqual(mockProfile);
+  beforeEach(() => {
+    vi.resetAllMocks();
   });
 
-  it('returns null when profile not found', async () => {
-    const mockMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
-    const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
-    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
-    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect });
+  describe('getProfile', () => {
+    it('should return profile data when successful', async () => {
+      const mockProfileData = { id: 'test-id', name: 'Test User' };
+      mockSupabase.single.mockResolvedValue({ data: mockProfileData, error: null });
 
-    // Use vi.mocked to properly type the mock
-    vi.mocked(supabase.from).mockImplementation(mockFrom);
+      const result = await getProfile(mockSupabase, 'test-id');
 
-    const result = await getProfileData('non-existent');
-    expect(result).toBeNull();
+      expect(mockSupabase.from).toHaveBeenCalledWith('profiles');
+      expect(mockSupabase.select).toHaveBeenCalledWith('*');
+      expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'test-id');
+      expect(mockSupabase.single).toHaveBeenCalled();
+      expect(result).toEqual(mockProfileData);
+    });
+
+    it('should return null when there is an error', async () => {
+      mockSupabase.single.mockResolvedValue({ data: null, error: new Error('Test error') });
+
+      const result = await getProfile(mockSupabase, 'test-id');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('should return true when update is successful', async () => {
+      mockSupabase.update.mockResolvedValue({ error: null });
+
+      const result = await updateProfile(mockSupabase, 'test-id', { name: 'Updated Name' });
+
+      expect(mockSupabase.from).toHaveBeenCalledWith('profiles');
+      expect(mockSupabase.update).toHaveBeenCalledWith({ name: 'Updated Name' });
+      expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'test-id');
+      expect(result).toBe(true);
+    });
+
+    it('should return false when there is an error', async () => {
+      mockSupabase.update.mockResolvedValue({ error: new Error('Test error') });
+
+      const result = await updateProfile(mockSupabase, 'test-id', { name: 'Updated Name' });
+
+      expect(result).toBe(false);
+    });
   });
 });

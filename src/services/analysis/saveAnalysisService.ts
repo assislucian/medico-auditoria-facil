@@ -1,63 +1,83 @@
 
+import { ExtractedData } from '@/types/upload';
 import { supabase } from '@/integrations/supabase/client';
-import { type ExtractedData } from '@/types';
+import { toast } from 'sonner';
 
-export async function saveAnalysisToDatabase(data: ExtractedData) {
+/**
+ * Save analysis data to Supabase
+ * @param data Extracted data from the analysis
+ * @param filesUsed Array of file IDs and types used in the analysis
+ * @returns Analysis ID if saved successfully
+ */
+export const saveAnalysis = async (
+  data: ExtractedData,
+  filesUsed: { id: string; type: string }[]
+): Promise<string | null> => {
   try {
-    const { procedures } = data;
+    const { data: session } = await supabase.auth.getSession();
+    if (!session.session) {
+      toast.error('Você precisa estar logado para salvar análises');
+      return null;
+    }
 
-    // Map the procedures to the format expected by the procedure_results table
-    const procedureResultsData = procedures.map(proc => ({
-      codigo: proc.codigo,
-      procedimento: proc.procedimento,
-      guia: proc.guia,
-      papel: proc.papel || '',
-      valor_cbhpm: proc.valorCBHPM || 0,
-      valor_pago: proc.valorPago || 0,
-      diferenca: proc.diferenca || 0,
-      pago: !!proc.pago,
-      beneficiario: proc.beneficiario || '',
-      doctors: proc.doctors || []
-    }));
-
-    // First, save the analysis to get its ID
-    const { data: analysisData, error: analysisError } = await supabase
+    // Insert analysis results
+    const { data: analysis, error } = await supabase
       .from('analysis_results')
       .insert({
-        file_name: 'analysis-' + Date.now(),
-        file_type: 'json',
-        user_id: (await supabase.auth.getUser()).data.user?.id || '',
+        user_id: session.session.user.id,
+        file_type: filesUsed.map(f => f.type).join(','),
+        file_name: filesUsed[0]?.id || 'local-analysis',
+        numero: data.demonstrativoInfo?.numero || '',
+        competencia: data.demonstrativoInfo?.competencia || '',
+        hospital: data.demonstrativoInfo?.hospital || '',
         summary: {
-          totalCBHPM: data.totais?.valorCBHPM || 0,
-          totalPago: data.totais?.valorPago || 0,
-          totalDiferenca: data.totais?.diferenca || 0,
-          procedimentosNaoPagos: data.totais?.procedimentosNaoPagos || 0,
-          procedimentosTotal: procedures.length
+          totalCBHPM: data.totais.valorCBHPM,
+          totalPago: data.totais.valorPago,
+          totalDiferenca: data.totais.diferenca,
+          procedimentosNaoPagos: data.totais.procedimentosNaoPagos,
+          procedimentosTotal: data.procedimentos.length
         }
       })
       .select('id')
       .single();
 
-    if (analysisError) {
-      throw analysisError;
+    if (error) {
+      console.error('Error saving analysis:', error);
+      throw error;
     }
 
-    // Then save the procedures with the analysis ID
-    const { data: savedProcedures, error: proceduresError } = await supabase
-      .from('procedure_results')
-      .insert(procedureResultsData.map(proc => ({
-        ...proc,
-        analysis_id: analysisData.id
-      })))
-      .select();
+    // Insert procedure results
+    const proceduresData = data.procedimentos.map(proc => ({
+      analysis_id: analysis.id,
+      codigo: proc.codigo,
+      procedimento: proc.procedimento,
+      papel: proc.papel,
+      valor_cbhpm: proc.valorCBHPM,
+      valor_pago: proc.valorPago,
+      diferenca: proc.diferenca,
+      pago: proc.pago,
+      guia: proc.guia,
+      beneficiario: proc.beneficiario,
+      doctors: proc.doctors
+    }));
 
-    if (proceduresError) {
-      throw proceduresError;
+    if (proceduresData.length > 0) {
+      const { error: procError } = await supabase
+        .from('procedure_results')
+        .insert(proceduresData);
+
+      if (procError) {
+        console.error('Error saving procedure results:', procError);
+        // Don't throw here, we still want to return the analysis ID
+      }
     }
 
-    return { success: true, data: savedProcedures };
+    return analysis.id;
   } catch (error) {
-    console.error('Error saving analysis:', error);
-    return { success: false, error };
+    console.error('Error in saveAnalysis:', error);
+    toast.error('Erro ao salvar análise', {
+      description: 'Tente novamente mais tarde.',
+    });
+    return null;
   }
-}
+};
