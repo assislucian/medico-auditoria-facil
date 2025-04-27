@@ -25,6 +25,7 @@ import PrivacyPage from "./pages/Privacy";
 import TermsPage from "./pages/Terms";
 import PublicHelpPage from "./pages/PublicHelp";
 import { PrivateRoute } from "./components/PrivateRoute";
+import PricingPage from "./pages/Pricing";
 
 function App() {
   return (
@@ -40,7 +41,6 @@ function App() {
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/help" element={<PublicHelpPage />} />
                 
-                {/* Rotas protegidas */}
                 <Route
                   path="/dashboard"
                   element={
@@ -73,14 +73,10 @@ function App() {
                 <Route path="/history" element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
                 <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
                 
-                {/* Rotas públicas */}
                 <Route path="/about" element={<AboutPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 
-                {/* Redirecionar /pricing para /#pricing */}
-                <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
-                
-                {/* Rotas públicas */}
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="*" element={<NotFoundPage />} />

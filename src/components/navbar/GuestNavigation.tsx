@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
@@ -11,17 +10,6 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const GuestNavigation = () => {
-  const scrollToPricing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const pricingSection = document.getElementById('pricing');
-    if (pricingSection) {
-      pricingSection.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      // Se não encontrar a seção (estamos em outra página), navegar para home#pricing
-      window.location.href = '/#pricing';
-    }
-  };
-
   return (
     <>
       <DropdownMenu>
@@ -30,7 +18,7 @@ export const GuestNavigation = () => {
             variant="ghost"
             className="flex items-center gap-1 text-foreground/80 hover:text-foreground px-3 py-2 text-sm font-medium transition-colors"
           >
-            Sobre
+            Produto
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -38,11 +26,11 @@ export const GuestNavigation = () => {
           <DropdownMenuItem asChild>
             <Link to="/about">Quem Somos</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <a href="/#pricing" onClick={scrollToPricing}>Planos</a>
+          <DropdownMenuItem asChild>
+            <Link to="/pricing">Planos</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/about#how-it-works">Como Funciona</Link>
+            <Link to="/how-it-works">Como Funciona</Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
