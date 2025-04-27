@@ -12,6 +12,7 @@ import { FileType } from "@/types/upload";
 import FileList from "@/components/upload/FileList";
 import { toast } from "sonner";
 import { GuideDetailDialog } from "@/components/guides/GuideDetailDialog";
+import { CardTitle, CardDescription } from "@/components/ui/card";
 
 const mockGuides = [
   {

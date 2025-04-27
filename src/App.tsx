@@ -73,9 +73,9 @@ function App() {
                 <Route path="/compare" element={<PrivateRoute><CompareContracheque /></PrivateRoute>} />
                 <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
                 <Route path="/history" element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
-                <Route path="/reference-tables" element={<PrivateRoute><ReferenceTablesPage /></PrivateRoute>} />
                 <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
-                <Route path="/support" element={<PrivateRoute><SupportPage /></PrivateRoute>} />
+                
+                {/* Rotas públicas */}
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/pricing" element={<PricingPage />} />

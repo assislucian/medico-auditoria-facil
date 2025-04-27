@@ -6,8 +6,7 @@ import {
   FileText, 
   FileBarChart, 
   FileQuestion, 
-  History, 
-  Table
+  History
 } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -40,12 +39,7 @@ export function MainNavigation() {
       name: "Histórico",
       href: "/history",
       icon: History,
-    },
-    {
-      name: "Tabelas",
-      href: "/reference-tables",
-      icon: Table,
-    },
+    }
   ];
 
   const handleNavigate = (href: string) => {
