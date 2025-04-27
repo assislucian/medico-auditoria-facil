@@ -7,7 +7,9 @@ import {
   FileBarChart, 
   FileQuestion, 
   History,
-  HelpCircle
+  HelpCircle,
+  Bell,
+  User
 } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -45,6 +47,16 @@ export function MainNavigation() {
       name: "Suporte",
       href: "/support",
       icon: HelpCircle,
+    },
+    {
+      name: "Notificações",
+      href: "/notifications",
+      icon: Bell,
+    },
+    {
+      name: "Perfil",
+      href: "/profile",
+      icon: User,
     }
   ];
 
@@ -55,7 +67,7 @@ export function MainNavigation() {
   return (
     <div className="px-3 py-2">
       <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
-        Principal
+        Menu Principal
       </h2>
       <div className="space-y-1">
         <TooltipProvider>

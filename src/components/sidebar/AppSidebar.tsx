@@ -133,7 +133,7 @@ export function AppSidebar() {
               tooltip="Tour"
             >
               <Play className="h-4 w-4" />
-              <span>Ver Tour Novamente</span>
+              <span>Ver Tour</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
