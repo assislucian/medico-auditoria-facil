@@ -1,6 +1,5 @@
-
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
-import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DataGrid } from "@/components/ui/data-grid";
 import { Button } from "@/components/ui/button";
 import { FileText, Filter, Upload } from "lucide-react";
@@ -14,7 +13,6 @@ import FileList from "@/components/upload/FileList";
 import { toast } from "sonner";
 import { GuideDetailDialog } from "@/components/guides/GuideDetailDialog";
 
-// Dados mock melhorados para refletir o formato real das guias
 const mockGuides = [
   {
     id: "g1",
@@ -57,8 +55,7 @@ const mockGuides = [
             status: "Fechada"
           }
         ]
-      },
-      // ... outros procedimentos da guia
+      }
     ]
   }
 ];
@@ -129,18 +126,9 @@ const GuidesPage = () => {
   };
 
   return (
-    <AuthenticatedLayout 
-      title="Guias Médicas" 
-      description="Visualize e gerencie suas guias médicas"
-    >
+    <AuthenticatedLayout title="Guias Médicas">
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold">Guias Médicas</h2>
-            <p className="text-muted-foreground">
-              Acompanhe suas guias médicas
-            </p>
-          </div>
+        <div className="flex justify-end">
           <div className="flex space-x-2">
             <Button 
               variant="outline" 

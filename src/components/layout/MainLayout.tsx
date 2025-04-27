@@ -3,8 +3,6 @@ import { ReactNode } from "react";
 import { Helmet } from "react-helmet-async";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -36,9 +34,9 @@ export function MainLayout({
           
           <main className="flex-1">
             <div className="p-4">
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-4 mb-8">
                 <SidebarTrigger />
-                <h1 className="text-2xl font-bold">{title}</h1>
+                <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
               </div>
               
               {children}
