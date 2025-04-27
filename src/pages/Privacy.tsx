@@ -1,6 +1,5 @@
-
 import { PublicLayout } from "@/components/layout/PublicLayout";
-import { Shield, ShieldCheck, ShieldLock } from "lucide-react";
+import { Shield, ShieldCheck } from "lucide-react";  // Updated import
 import { Card, CardContent } from "@/components/ui/card";
 
 const PrivacyPage = () => {
@@ -16,7 +15,7 @@ const PrivacyPage = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
-                <Shield className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                <Shield className="h-6 w-6 text-primary flex-shrink-0 mt-1" />  {/* Updated icon */}
                 <div>
                   <h2 className="text-xl font-semibold mb-3">Compromisso com sua Privacidade</h2>
                   <p className="text-muted-foreground">
@@ -49,7 +48,7 @@ const PrivacyPage = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
-                <ShieldLock className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                <ShieldCheck className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                 <div>
                   <h2 className="text-xl font-semibold mb-3">Proteção de Dados</h2>
                   <p className="text-muted-foreground mb-4">
