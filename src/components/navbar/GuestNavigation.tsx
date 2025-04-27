@@ -31,7 +31,7 @@ export const GuestNavigation = () => {
             <Link to="/pricing">Planos</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/help">Como Funciona</Link>
+            <Link to="/about#how-it-works">Como Funciona</Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

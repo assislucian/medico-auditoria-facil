@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import LoginPage from "./pages/Login";
@@ -23,6 +22,9 @@ import DemonstrativesPage from "./pages/Demonstratives";
 import UnpaidProceduresPage from "./pages/UnpaidProcedures";
 import AboutPage from "./pages/About";
 import ContactPage from "./pages/Contact";
+import PricingPage from "./pages/Pricing";
+import PrivacyPage from "./pages/Privacy";
+import TermsPage from "./pages/Terms";
 
 function App() {
   return (
@@ -33,8 +35,6 @@ function App() {
             <AuthProvider>
               <Routes>
                 <Route path="/" element={<Index />} />
-                {/* Redirects de rotas antigas/redundantes */}
-                <Route path="/home" element={<Navigate to="/" replace />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
@@ -51,6 +51,9 @@ function App() {
                 <Route path="/support" element={<SupportPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
               <Toaster richColors position="top-right" />

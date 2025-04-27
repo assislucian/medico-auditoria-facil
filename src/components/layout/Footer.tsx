@@ -1,13 +1,4 @@
-
 import { Link } from "react-router-dom";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -41,7 +32,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/help" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/about#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Como Funciona
                 </Link>
               </li>
@@ -80,11 +71,6 @@ export function Footer() {
               <li>
                 <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Termos de Uso
-                </Link>
-              </li>
-              <li>
-                <Link to="/compliance" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Compliance
                 </Link>
               </li>
             </ul>
