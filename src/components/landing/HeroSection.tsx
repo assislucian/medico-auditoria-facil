@@ -1,46 +1,45 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Shield, Clock, DollarSign } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden py-28 md:py-36 px-6">
+    <section className="relative overflow-hidden pt-24 pb-16 md:pt-28 md:pb-24 px-6">
       {/* Subtle background gradient */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(var(--primary),0.08),transparent_70%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(var(--primary),0.03),transparent_30%)]" />
       </div>
       
       <div className="container mx-auto max-w-6xl">
-        <div className="flex flex-col items-center text-center space-y-12">
+        <div className="grid md:grid-cols-12 gap-12 items-center">
           <motion.div
-            className="max-w-3xl mx-auto space-y-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="md:col-span-6 space-y-6"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
               Auditoria médica
               <span className="block mt-2 bg-gradient-to-r from-primary via-primary to-primary/80 bg-clip-text text-transparent">
-                intuitiva e eficiente
+                simplificada
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed mt-6">
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mt-6 max-w-lg">
               Recupere valores glosados e maximize seus resultados com a 
-              plataforma líder em auditoria para profissionais de saúde.
+              plataforma que já ajudou mais de 10.000 médicos brasileiros.
             </p>
 
-            <div className="flex flex-wrap justify-center gap-4 pt-8">
+            <div className="flex flex-wrap gap-4 pt-6">
               <Button 
                 asChild 
                 size="lg" 
-                className="text-lg px-10 h-14 rounded-full transition-all duration-300 hover:scale-105 shadow-lg shadow-primary/20"
+                className="text-lg px-8 h-12 rounded-md transition-all duration-300 hover:translate-y-[-2px] shadow-lg shadow-primary/20"
               >
                 <Link to="/register">
-                  Começar agora
+                  Comece agora
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -48,70 +47,84 @@ export function HeroSection() {
                 asChild 
                 variant="outline" 
                 size="lg" 
-                className="text-lg px-10 h-14 rounded-full transition-all duration-300 hover:scale-105 border-2"
+                className="text-lg px-8 h-12 rounded-md transition-all duration-300 hover:translate-y-[-2px]"
               >
-                <Link to="/pricing">Ver planos</Link>
+                <Link to="/how-it-works">Como funciona</Link>
               </Button>
+            </div>
+            
+            {/* Trust indicators */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-8">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock size={16} className="text-primary" />
+                <span>Economize até 80% do tempo</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <DollarSign size={16} className="text-primary" />
+                <span>Recupere valores glosados</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Shield size={16} className="text-primary" />
+                <span>Conformidade com LGPD</span>
+              </div>
             </div>
           </motion.div>
 
           {/* Hero image */}
           <motion.div
-            className="w-full max-w-5xl mx-auto mt-16"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="md:col-span-6"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
           >
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/10 border border-border/40 bg-gradient-to-b from-background to-muted/30">
-              <div className="aspect-video relative">
-                <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
-                <img 
-                  src="/assets/dashboard-preview.png" 
-                  alt="MedCheck Platform Preview" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80";
-                    e.currentTarget.style.objectFit = "cover";
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+            <div className="relative rounded-xl overflow-hidden shadow-2xl shadow-primary/10 border border-border/40">
+              <img 
+                src="/assets/dashboard-preview.png" 
+                alt="MedCheck Dashboard" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2340&q=80";
+                }}
+              />
+              
+              {/* Floating card effect */}
+              <div className="absolute -bottom-6 -right-6 bg-background rounded-lg p-4 shadow-lg border border-border/50 transform rotate-3 hidden md:block">
+                <div className="text-3xl font-bold text-primary">+80%</div>
+                <div className="text-sm text-muted-foreground">Economia de tempo</div>
+              </div>
+              
+              <div className="absolute -top-6 -left-6 bg-background rounded-lg p-4 shadow-lg border border-border/50 transform -rotate-3 hidden md:block">
+                <div className="text-3xl font-bold text-primary">99%</div>
+                <div className="text-sm text-muted-foreground">Taxa de precisão</div>
               </div>
             </div>
           </motion.div>
-
-          {/* Trust indicators */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.7 }}
-            className="flex flex-wrap justify-center gap-x-12 gap-y-4 pt-10"
-          >
-            <p className="text-muted-foreground flex items-center text-sm">
-              <span className="inline-block w-5 h-5 mr-2 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="block w-2 h-2 rounded-full bg-primary"></span>
-              </span>
-              Certificado CFM
-            </p>
-            <p className="text-muted-foreground flex items-center text-sm">
-              <span className="inline-block w-5 h-5 mr-2 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="block w-2 h-2 rounded-full bg-primary"></span>
-              </span>
-              Dados protegidos (LGPD)
-            </p>
-            <p className="text-muted-foreground flex items-center text-sm">
-              <span className="inline-block w-5 h-5 mr-2 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="block w-2 h-2 rounded-full bg-primary"></span>
-              </span>
-              Suporte 24/7
-            </p>
-            <p className="text-muted-foreground flex items-center text-sm">
-              <span className="inline-block w-5 h-5 mr-2 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="block w-2 h-2 rounded-full bg-primary"></span>
-              </span>
-              +10.000 médicos
-            </p>
-          </motion.div>
         </div>
+        
+        {/* Testimonial or statistic */}
+        <motion.div 
+          className="mt-16 flex justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.7 }}
+        >
+          <div className="bg-background/80 backdrop-blur-sm border border-border/50 rounded-xl p-6 shadow-lg max-w-3xl">
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              <div className="md:w-1/4 flex justify-center">
+                <img 
+                  src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2340&q=80" 
+                  alt="Dr. Carla Mendes" 
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+              </div>
+              <div className="md:w-3/4">
+                <p className="text-muted-foreground italic">"O MedCheck transformou nossa auditoria médica, aumentando nosso faturamento em 23% no primeiro trimestre de uso. A interface é intuitiva e os resultados são impressionantes."</p>
+                <p className="font-semibold mt-2">Dra. Carla Mendes</p>
+                <p className="text-sm text-muted-foreground">Diretora Clínica, Hospital São Paulo</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
