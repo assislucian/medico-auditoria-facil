@@ -18,7 +18,7 @@ interface ResourceDialogProps {
 }
 
 export function ResourceDialog({ procedure }: ResourceDialogProps) {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   
   return (
     <Dialog>
@@ -49,7 +49,7 @@ export function ResourceDialog({ procedure }: ResourceDialogProps) {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">CRM Médico</p>
-                  <p className="font-medium">{user?.crm || 'N/A'}</p>
+                  <p className="font-medium">{userProfile?.crm || 'N/A'}</p>
                 </div>
               </div>
               <div className="mt-2">
