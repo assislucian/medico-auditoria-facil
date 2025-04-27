@@ -32,15 +32,15 @@ export const GuestNavigation = () => {
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="center">
+        <DropdownMenuContent align="center" className="w-48">
           <DropdownMenuItem asChild>
-            <Link to="/about" onClick={handleAboutClick}>Quem Somos</Link>
+            <Link to="/about" onClick={handleAboutClick} className="flex items-center w-full">Quem Somos</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/pricing">Planos</Link>
+            <Link to="/pricing" className="flex items-center w-full">Planos</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/how-it-works">Como Funciona</Link>
+            <Link to="/how-it-works" className="flex items-center w-full">Como Funciona</Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -53,11 +53,11 @@ export const GuestNavigation = () => {
       
       <div className="flex items-center gap-2">
         <ThemeToggle />
-        <Button variant="outline" asChild>
+        <Button variant="ghost" asChild className="text-sm">
           <Link to="/login">Entrar</Link>
         </Button>
-        <Button asChild>
-          <Link to="/register">Cadastrar</Link>
+        <Button asChild className="rounded-full px-5">
+          <Link to="/register">Começar grátis</Link>
         </Button>
       </div>
     </>

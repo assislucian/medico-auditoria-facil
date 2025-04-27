@@ -1,48 +1,43 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, ShieldCheck, BadgeCheck, Trophy, Microscope, Syringe, BriefcaseMedical } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden py-24 md:py-32 px-6">
-      {/* Enhanced gradient background with medical-themed overlay */}
+    <section className="relative overflow-hidden py-28 md:py-36 px-6">
+      {/* Subtle background gradient */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(var(--primary),0.15),transparent_70%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom_right,rgba(var(--primary),0.05),transparent_50%)]" />
-        <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(var(--primary),0.08),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(var(--primary),0.03),transparent_30%)]" />
       </div>
       
-      <motion.div 
-        className="container mx-auto max-w-6xl"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <div className="container mx-auto max-w-6xl">
+        <div className="flex flex-col items-center text-center space-y-12">
           <motion.div
-            className="text-left space-y-8"
+            className="max-w-3xl mx-auto space-y-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.7 }}
+            transition={{ duration: 0.7 }}
           >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-8">
-              Auditoria médica <br />
-              <span className="bg-gradient-to-r from-primary/90 via-primary to-primary/80 bg-clip-text text-transparent">
-                simplificada e eficiente
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
+              Auditoria médica
+              <span className="block mt-2 bg-gradient-to-r from-primary via-primary to-primary/80 bg-clip-text text-transparent">
+                intuitiva e eficiente
               </span>
             </h1>
             
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              Recupere valores glosados e automatize sua auditoria médica com inteligência artificial.
+            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed mt-6">
+              Recupere valores glosados e maximize seus resultados com a 
+              plataforma líder em auditoria para profissionais de saúde.
             </p>
 
-            <div className="flex flex-wrap gap-4 pt-4">
+            <div className="flex flex-wrap justify-center gap-4 pt-8">
               <Button 
                 asChild 
                 size="lg" 
-                className="text-lg px-8 h-14 animate-scale-in hover:scale-105 transition-transform shadow-lg shadow-primary/20"
+                className="text-lg px-10 h-14 rounded-full transition-all duration-300 hover:scale-105 shadow-lg shadow-primary/20"
               >
                 <Link to="/register">
                   Começar agora
@@ -53,73 +48,71 @@ export function HeroSection() {
                 asChild 
                 variant="outline" 
                 size="lg" 
-                className="text-lg px-8 h-14 animate-scale-in hover:scale-105 transition-transform border-2"
+                className="text-lg px-10 h-14 rounded-full transition-all duration-300 hover:scale-105 border-2"
               >
                 <Link to="/pricing">Ver planos</Link>
               </Button>
             </div>
           </motion.div>
 
+          {/* Hero image */}
           <motion.div
-            className="relative"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, duration: 0.7 }}
+            className="w-full max-w-5xl mx-auto mt-16"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
           >
-            <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10 p-8">
-              <div className="absolute top-0 left-0 w-full h-full bg-grid-pattern opacity-[0.05]" />
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-6">
-                  <div className="bg-background/80 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-border/50">
-                    <Microscope className="h-10 w-10 text-primary mb-4" />
-                    <h3 className="font-semibold">Análise Precisa</h3>
-                    <p className="text-sm text-muted-foreground">Detecção automática de glosas</p>
-                  </div>
-                  <div className="bg-background/80 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-border/50">
-                    <BriefcaseMedical className="h-10 w-10 text-primary mb-4" />
-                    <h3 className="font-semibold">Gestão TISS</h3>
-                    <p className="text-sm text-muted-foreground">Conformidade garantida</p>
-                  </div>
-                </div>
-                <div className="space-y-6 mt-12">
-                  <div className="bg-background/80 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-border/50">
-                    <Syringe className="h-10 w-10 text-primary mb-4" />
-                    <h3 className="font-semibold">CBHPM</h3>
-                    <p className="text-sm text-muted-foreground">Valores atualizados</p>
-                  </div>
-                  <div className="bg-background/80 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-border/50">
-                    <ShieldCheck className="h-10 w-10 text-primary mb-4" />
-                    <h3 className="font-semibold">Certificado</h3>
-                    <p className="text-sm text-muted-foreground">Homologado CFM</p>
-                  </div>
-                </div>
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/10 border border-border/40 bg-gradient-to-b from-background to-muted/30">
+              <div className="aspect-video relative">
+                <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
+                <img 
+                  src="/assets/dashboard-preview.png" 
+                  alt="MedCheck Platform Preview" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80";
+                    e.currentTarget.style.objectFit = "cover";
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
               </div>
             </div>
           </motion.div>
-          
+
+          {/* Trust indicators */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.7 }}
-            className="md:col-span-2 pt-8"
+            className="flex flex-wrap justify-center gap-x-12 gap-y-4 pt-10"
           >
-            <div className="flex flex-wrap justify-center gap-8 text-muted-foreground">
-              <div className="flex items-center gap-3 bg-background/50 backdrop-blur-sm px-6 py-3 rounded-full border border-border/50">
-                <ShieldCheck className="h-5 w-5 text-primary" />
-                <span>Dados protegidos</span>
-              </div>
-              <div className="flex items-center gap-3 bg-background/50 backdrop-blur-sm px-6 py-3 rounded-full border border-border/50">
-                <BadgeCheck className="h-5 w-5 text-primary" />
-                <span>Certificado CFM</span>
-              </div>
-              <div className="flex items-center gap-3 bg-background/50 backdrop-blur-sm px-6 py-3 rounded-full border border-border/50">
-                <Trophy className="h-5 w-5 text-primary" />
-                <span>Líder no mercado</span>
-              </div>
-            </div>
+            <p className="text-muted-foreground flex items-center text-sm">
+              <span className="inline-block w-5 h-5 mr-2 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="block w-2 h-2 rounded-full bg-primary"></span>
+              </span>
+              Certificado CFM
+            </p>
+            <p className="text-muted-foreground flex items-center text-sm">
+              <span className="inline-block w-5 h-5 mr-2 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="block w-2 h-2 rounded-full bg-primary"></span>
+              </span>
+              Dados protegidos (LGPD)
+            </p>
+            <p className="text-muted-foreground flex items-center text-sm">
+              <span className="inline-block w-5 h-5 mr-2 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="block w-2 h-2 rounded-full bg-primary"></span>
+              </span>
+              Suporte 24/7
+            </p>
+            <p className="text-muted-foreground flex items-center text-sm">
+              <span className="inline-block w-5 h-5 mr-2 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="block w-2 h-2 rounded-full bg-primary"></span>
+              </span>
+              +10.000 médicos
+            </p>
           </motion.div>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }
