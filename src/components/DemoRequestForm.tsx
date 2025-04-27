@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
 const demoRequestSchema = z.object({
@@ -30,8 +31,11 @@ export function DemoRequestForm() {
     try {
       const validatedData = demoRequestSchema.parse(formData);
       
-      // Here we would typically send this to a backend endpoint
-      console.log('Demo request:', validatedData);
+      const { error } = await supabase
+        .from('demo_requests')
+        .insert(validatedData);
+
+      if (error) throw error;
       
       toast.success('Solicitação enviada com sucesso! Em breve entraremos em contato.');
       
@@ -46,6 +50,7 @@ export function DemoRequestForm() {
       if (error instanceof z.ZodError) {
         toast.error('Por favor, verifique os dados informados.');
       } else {
+        console.error('Error:', error);
         toast.error('Erro ao enviar solicitação. Tente novamente.');
       }
     } finally {
