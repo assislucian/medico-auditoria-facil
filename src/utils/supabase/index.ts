@@ -1,6 +1,6 @@
 
 // ---------------------------------------------------------------------
-// Re-exporta MÓDULOS ESPECÍFICOS (sem conflitos de nomes)
+// Re-export SPECIFIC MODULES (no name conflicts)
 // ---------------------------------------------------------------------
 export * from './profileHelpers';
 export * from './queryHelpers';
@@ -9,7 +9,7 @@ export * from './analysisHelpers';
 export * from './helpHelpers';
 
 // ---------------------------------------------------------------------
-// Re-exporta, um-a-um, as funções que vivem em supabaseHelpers
+// Re-export functions from supabaseHelpers one by one
 // ---------------------------------------------------------------------
 import {
   getProfile,
@@ -38,7 +38,7 @@ export {
 };
 
 // ---------------------------------------------------------------------
-// Re-exporta o **tipo** TicketData — precisa da palavra-chave `type`
-// para não disparar o erro TS1205 quando `isolatedModules` estiver ativo.
+// Re-export the **type** TicketData — needs `type` keyword
+// to avoid TS1205 when `isolatedModules` is active.
 // ---------------------------------------------------------------------
 export type { TicketData } from './supabaseHelpers';

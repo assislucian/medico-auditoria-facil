@@ -222,6 +222,36 @@ export type Database = {
           },
         ]
       }
+      demo_requests: {
+        Row: {
+          company: string | null
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          phone: string
+          status: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          phone: string
+          status?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       demonstrativos: {
         Row: {
           codigo: string
