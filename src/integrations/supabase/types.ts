@@ -408,6 +408,62 @@ export type Database = {
           },
         ]
       }
+      procedure_results: {
+        Row: {
+          analysis_id: string
+          beneficiario: string | null
+          codigo: string
+          created_at: string | null
+          diferenca: number | null
+          doctors: Json | null
+          guia: string | null
+          id: string
+          pago: boolean | null
+          papel: string | null
+          procedimento: string
+          valor_cbhpm: number | null
+          valor_pago: number | null
+        }
+        Insert: {
+          analysis_id: string
+          beneficiario?: string | null
+          codigo: string
+          created_at?: string | null
+          diferenca?: number | null
+          doctors?: Json | null
+          guia?: string | null
+          id?: string
+          pago?: boolean | null
+          papel?: string | null
+          procedimento: string
+          valor_cbhpm?: number | null
+          valor_pago?: number | null
+        }
+        Update: {
+          analysis_id?: string
+          beneficiario?: string | null
+          codigo?: string
+          created_at?: string | null
+          diferenca?: number | null
+          doctors?: Json | null
+          guia?: string | null
+          id?: string
+          pago?: boolean | null
+          papel?: string | null
+          procedimento?: string
+          valor_cbhpm?: number | null
+          valor_pago?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedure_results_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       procedures: {
         Row: {
           codigo: string
@@ -509,6 +565,77 @@ export type Database = {
           id?: string
           reason_type?: string
           response_text?: string
+        }
+        Relationships: []
+      }
+      support_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          sent_by_user: boolean | null
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          sent_by_user?: boolean | null
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          sent_by_user?: boolean | null
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          priority: string
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description: string
+          id?: string
+          priority: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

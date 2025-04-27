@@ -29,11 +29,17 @@ export function DemoRequestForm() {
     setIsLoading(true);
 
     try {
+      // Make sure formData has all required fields
       const validatedData = demoRequestSchema.parse(formData);
       
       const { error } = await supabase
         .from('demo_requests')
-        .insert(validatedData);
+        .insert({
+          name: validatedData.name,
+          email: validatedData.email,
+          phone: validatedData.phone,
+          company: validatedData.company,
+        });
 
       if (error) throw error;
       

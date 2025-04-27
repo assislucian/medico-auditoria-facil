@@ -181,7 +181,7 @@ const getSafeNumericValue = (summary: any, key: string): number => {
  * @param analysisId ID opcional da análise para buscar dados específicos
  * @returns Os dados extraídos
  */
-export const getExtractedData = async (analysisId?: string | null): Promise<ExtractedData> => {
+export const getExtractedData = async (analysisId?: string | null): Promise<ExtractedData | null> => {
   console.log('Getting extracted data with analysisId:', analysisId);
   
   try {
@@ -214,7 +214,7 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
       console.log('Fetched analysis:', analysisData);
       
       // Depois consulta os procedure_results relacionados
-      const { data: proceduresData, error: proceduresError } = await supabase
+      const { data: procedures, error: proceduresError } = await supabase
         .from('procedure_results')
         .select('*')
         .eq('analysis_id', analysisId);
@@ -224,19 +224,19 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
         throw new Error('Failed to fetch procedure data');
       }
       
-      console.log(`Fetched ${proceduresData.length} procedures`);
+      console.log(`Fetched ${procedures.length} procedures`);
       
-      if (analysisData && proceduresData && proceduresData.length > 0) {
+      if (analysisData && procedures && procedures.length > 0) {
         // Transforma os dados do banco no formato ExtractedData
-        const extractedData: ExtractedData = {
+        return {
           demonstrativoInfo: {
             numero: analysisData.numero || '',
             competencia: analysisData.competencia || '',
             hospital: analysisData.hospital || '',
             data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
-            beneficiario: proceduresData[0]?.beneficiario || 'Paciente'
+            beneficiario: procedures[0]?.beneficiario || ''
           },
-          procedimentos: proceduresData.map(proc => ({
+          procedimentos: procedures.map(proc => ({
             id: proc.id,
             codigo: proc.codigo,
             procedimento: proc.procedimento,
@@ -249,16 +249,18 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
             beneficiario: proc.beneficiario || '',
             doctors: proc.doctors as any || []
           })),
-          totais: {
+          totais: analysisData.summary ? {
             valorCBHPM: getSafeNumericValue(analysisData.summary, 'totalCBHPM'),
             valorPago: getSafeNumericValue(analysisData.summary, 'totalPago'),
             diferenca: getSafeNumericValue(analysisData.summary, 'totalDiferenca'),
             procedimentosNaoPagos: getSafeNumericValue(analysisData.summary, 'procedimentosNaoPagos')
+          } : {
+            valorCBHPM: 0,
+            valorPago: 0,
+            diferenca: 0,
+            procedimentosNaoPagos: 0
           }
         };
-        
-        console.log('Successfully transformed data:', extractedData);
-        return extractedData;
       }
     }
     
