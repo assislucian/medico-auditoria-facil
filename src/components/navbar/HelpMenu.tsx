@@ -2,6 +2,7 @@
 import { HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export const HelpMenu = () => {
+  const { session } = useAuth();
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -24,15 +27,19 @@ export const HelpMenu = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <Link to="/help">Central de Ajuda</Link>
+          <Link to={session ? "/help/private" : "/help"}>Central de Ajuda</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/contact">Contato</Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/about">Sobre o MedCheck</Link>
-        </DropdownMenuItem>
+        {session && (
+          <>
+            <DropdownMenuItem asChild>
+              <Link to="/support">Suporte Técnico</Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/tour">Ver Tour</Link>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
