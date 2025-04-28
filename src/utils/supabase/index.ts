@@ -11,11 +11,15 @@ export * from './queryHelpers';
 // Export everything from procedureHelpers
 export * from './procedureHelpers';
 
-// Export everything from analysisHelpers
-export * from './analysisHelpers';
-
 // Export everything from helpHelpers
 export * from './helpHelpers';
+
+// Rename and export analysisHelpers functions to avoid conflicts
+export { 
+  fetchAnalysisById,
+  // Rename this function to avoid conflict with procedureHelpers.ts
+  fetchProceduresByAnalysisId as fetchProceduresByAnalysisIdFromAnalysis
+} from './analysisHelpers';
 
 // ---------------------------------------------------------------------
 // Re-export functions from supabaseHelpers that aren't already exported
