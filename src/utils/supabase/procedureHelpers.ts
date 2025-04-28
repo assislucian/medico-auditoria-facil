@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Procedure } from '@/types/medical';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Utilities for dealing with medical procedures
@@ -8,6 +8,15 @@ import { Procedure } from '@/types/medical';
 
 // Define procedure types
 export type ProcedureType = 'all' | 'surgical' | 'clinical' | 'diagnostic';
+
+// Define a DoctorParticipation type to use with procedures
+export interface DoctorParticipation {
+  id: string;
+  name?: string;
+  role?: string;
+  crm?: string;
+  value?: number;
+}
 
 // Define a separate interface for procedures with children to avoid circular dependency
 export interface ProcedureWithChildren {
@@ -21,7 +30,7 @@ export interface ProcedureWithChildren {
   pago: boolean;
   guia?: string;
   beneficiario?: string;
-  doctors: any[];
+  doctors: DoctorParticipation[];
   children?: ProcedureWithChildren[] | null;
 }
 
@@ -48,16 +57,35 @@ export async function fetchProcedures(type: ProcedureType = 'all'): Promise<Proc
     codigo: item.codigo,
     procedimento: item.procedimento,
     papel: item.papel,
-    valorCBHPM: item.valor_cbhpm,
-    valorPago: item.valor_pago,
-    diferenca: item.diferenca,
-    pago: item.pago,
+    valorCBHPM: item.valor_cbhpm || 0,
+    valorPago: item.valor_pago || 0,
+    diferenca: item.diferenca || 0,
+    pago: !!item.pago,
     guia: item.guia,
     beneficiario: item.beneficiario,
-    doctors: item.doctors || []
+    doctors: mapDoctorsData(item.doctors)
   })) : [];
   
   return buildProcedureTree(proceduresData);
+}
+
+/**
+ * Helper function to safely map doctors data
+ */
+function mapDoctorsData(doctorsData: Json | null): DoctorParticipation[] {
+  if (!doctorsData) return [];
+  
+  if (Array.isArray(doctorsData)) {
+    return doctorsData.map(doctor => ({
+      id: typeof doctor.id === 'string' ? doctor.id : '',
+      name: typeof doctor.name === 'string' ? doctor.name : undefined,
+      role: typeof doctor.role === 'string' ? doctor.role : undefined,
+      crm: typeof doctor.crm === 'string' ? doctor.crm : undefined,
+      value: typeof doctor.value === 'number' ? doctor.value : undefined
+    }));
+  }
+  
+  return [];
 }
 
 /**
@@ -90,7 +118,7 @@ function buildProcedureTree(procedures: ProcedureWithChildren[]): ProcedureWithC
 /**
  * Search for procedures by name, code or description
  */
-export async function searchProcedures(query: string, type?: ProcedureType): Promise<Procedure[]> {
+export async function searchProcedures(query: string, type?: ProcedureType): Promise<ProcedureWithChildren[]> {
   const searchQuery = query.toLowerCase();
   
   let dbQuery = supabase
@@ -121,14 +149,14 @@ export async function searchProcedures(query: string, type?: ProcedureType): Pro
     pago: !!item.pago,
     guia: item.guia || '',
     beneficiario: item.beneficiario || '',
-    doctors: item.doctors || []
+    doctors: mapDoctorsData(item.doctors)
   })) : [];
 }
 
 /**
  * Get a procedure by ID
  */
-export async function getProcedureById(id: string): Promise<Procedure | null> {
+export async function getProcedureById(id: string): Promise<ProcedureWithChildren | null> {
   const { data, error } = await supabase
     .from('procedure_results')
     .select('*')
@@ -152,14 +180,14 @@ export async function getProcedureById(id: string): Promise<Procedure | null> {
     pago: !!data.pago,
     guia: data.guia || '',
     beneficiario: data.beneficiario || '',
-    doctors: data.doctors || []
+    doctors: mapDoctorsData(data.doctors)
   };
 }
 
 /**
  * Fetch procedures by analysis ID
  */
-export async function fetchProceduresByAnalysisId(analysisId: string): Promise<Procedure[]> {
+export async function fetchProceduresByAnalysisId(analysisId: string): Promise<ProcedureWithChildren[]> {
   const { data, error } = await supabase
     .from('procedure_results')
     .select('*')
@@ -182,6 +210,6 @@ export async function fetchProceduresByAnalysisId(analysisId: string): Promise<P
     pago: !!item.pago,
     guia: item.guia || '',
     beneficiario: item.beneficiario || '',
-    doctors: item.doctors || []
+    doctors: mapDoctorsData(item.doctors)
   })) : [];
 }

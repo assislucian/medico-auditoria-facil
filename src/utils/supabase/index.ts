@@ -1,45 +1,31 @@
 
 // ---------------------------------------------------------------------
-// Re-export all helper modules (no name conflicts)
+// Central export file for all Supabase utilities
 // ---------------------------------------------------------------------
-// Export everything from profileHelpers
-export { getProfile, updateProfile, toJson } from './profileHelpers';
 
-// Export everything from queryHelpers
-export * from './queryHelpers';
+// Export common shared helpers
+export * from './sharedHelpers';
 
-// Export everything from procedureHelpers
-export * from './procedureHelpers';
+// Export profile helpers
+export { getProfile, updateProfile } from './profileHelpers';
 
-// Export everything from helpHelpers
+// Export procedure helpers
+export { 
+  fetchProcedures, 
+  searchProcedures,
+  getProcedureById,
+  fetchProceduresByAnalysisId,
+  type ProcedureType,
+  type ProcedureWithChildren,
+  type DoctorParticipation
+} from './procedureHelpers';
+
+// Export help helpers
 export * from './helpHelpers';
 
-// Rename and export analysisHelpers functions to avoid conflicts
+// Export analysis helpers (avoiding name conflicts)
 export { 
   fetchAnalysisById,
-  // Rename this function to avoid conflict with procedureHelpers.ts
+  // Use a different name to avoid conflicts
   fetchProceduresByAnalysisId as fetchProceduresByAnalysisIdFromAnalysis
 } from './analysisHelpers';
-
-// ---------------------------------------------------------------------
-// Re-export functions from supabaseHelpers that aren't already exported
-// ---------------------------------------------------------------------
-import {
-  fetchHelpArticles,
-  fetchUserTickets,
-  fetchTicketMessages,
-  createSupportTicket,
-  sendTicketMessage,
-  TicketData
-} from './supabaseHelpers';
-
-export {
-  fetchHelpArticles,
-  fetchUserTickets,
-  fetchTicketMessages,
-  createSupportTicket,
-  sendTicketMessage
-};
-
-// Type re-export
-export type { TicketData };
