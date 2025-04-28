@@ -63,7 +63,7 @@ function NavItem({ href, title, icon: Icon }: NavItemProps) {
   )
 }
 
-const MainNavigationItems = [
+const MainNavigationItems: MainNavItem[] = [
   { 
     name: "Dashboard", 
     href: "/dashboard", 
