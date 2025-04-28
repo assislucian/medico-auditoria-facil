@@ -68,6 +68,7 @@ export async function saveAnalysisToDatabase(
 async function saveProcedures(analysisId: string, userId: string, procedures: any[]) {
   if (!procedures?.length) return;
   
+  // Insert into procedure_results rather than procedures
   const proceduresForInsert = procedures.map(proc => ({
     analysis_id: analysisId,
     user_id: userId,
@@ -84,7 +85,7 @@ async function saveProcedures(analysisId: string, userId: string, procedures: an
   }));
   
   const { error: proceduresError } = await supabase
-    .from('procedures')
+    .from('procedure_results') // Changed from procedures to procedure_results
     .insert(proceduresForInsert);
     
   if (proceduresError) {

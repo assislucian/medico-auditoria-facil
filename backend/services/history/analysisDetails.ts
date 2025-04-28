@@ -2,6 +2,21 @@
 import { supabase } from '../../config/supabase';
 import { logger } from '../../utils/logger';
 
+// Define explicit types to avoid deep instantiation issues
+interface ProcedureResult {
+  id: string;
+  codigo: string;
+  procedimento: string;
+  papel?: string;
+  valor_cbhpm: number;
+  valor_pago: number;
+  diferenca: number;
+  pago: boolean;
+  guia?: string;
+  beneficiario?: string;
+  doctors?: any[];
+}
+
 /**
  * Fetch analysis details by ID
  * @param analysisId Analysis ID
@@ -22,6 +37,7 @@ export async function fetchAnalysisDetails(analysisId: string) {
       return null;
     }
     
+    // Use a simpler query to avoid excessive type instantiation
     const { data: proceduresData, error: proceduresError } = await supabase
       .from('procedure_results')
       .select('*')
@@ -32,9 +48,12 @@ export async function fetchAnalysisDetails(analysisId: string) {
       return null;
     }
     
+    // Cast data to the correct type to avoid type errors
+    const typedProcedures = proceduresData as unknown as ProcedureResult[];
+    
     const result = {
       ...analysisData,
-      procedimentos: proceduresData.map((proc: any) => ({
+      procedimentos: typedProcedures.map((proc: ProcedureResult) => ({
         id: proc.id,
         codigo: proc.codigo,
         procedimento: proc.procedimento,

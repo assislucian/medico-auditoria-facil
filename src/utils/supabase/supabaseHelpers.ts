@@ -185,13 +185,14 @@ export async function createSupportTicket(userId: string, ticketData: TicketData
  */
 export async function sendTicketMessage(ticketId: string, userId: string, content: string) {
   try {
-    // First insert the new message
+    // First insert the new message - add user_id to fix the error
     const { data: message, error: messageError } = await supabase
       .from('support_messages')
       .insert({
         ticket_id: ticketId,
         content,
-        sent_by_user: true
+        sent_by_user: true,
+        user_id: userId  // Add the user_id parameter
       })
       .select()
       .single();

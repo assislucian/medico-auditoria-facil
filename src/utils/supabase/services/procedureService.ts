@@ -1,25 +1,24 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
-import { Database } from '@/integrations/supabase/types';
+import { ProcedureResult } from '@/types/database';
 
-// Define a more specific type for procedure results
-type ProcedureResultRow = Database['public']['Tables']['procedure_results']['Row'];
-type ProceduresResponse = ProcedureResultRow[] | null;
+// Define response types to avoid deep instantiation issues
+type ProceduresResponse = ProcedureResult[] | null;
 
 /**
  * Fetch procedures by their type
  */
-export async function getProceduresByType(type: string) {
+export async function getProceduresByType(type: string): Promise<ProceduresResponse> {
   try {
-    // Use the from method with a more direct approach
-    const { data, error } = await supabase
+    // Use explicit result typing
+    const result = await supabase
       .from('procedure_results')
       .select('*')
       .eq('type', type);
 
-    if (error) throw error;
-    return data as ProceduresResponse;
+    if (result.error) throw result.error;
+    return result.data as ProceduresResponse;
   } catch (error) {
     console.error('Error fetching procedures by type:', error);
     return null;
@@ -29,22 +28,24 @@ export async function getProceduresByType(type: string) {
 /**
  * Fetch procedures by procedure ID
  */
-export async function getProcedureById(id: string) {
+export async function getProcedureById(id: string): Promise<ProcedureResult | null> {
   try {
-    const { data, error } = await supabase
+    const result = await supabase
       .from('procedure_results')
       .select('*')
       .eq('id', id)
       .single();
 
-    if (error) throw error;
+    if (result.error) throw result.error;
+    
+    const data = result.data as ProcedureResult;
     
     // Cast the doctors field if present
     if (data && data.doctors) {
       data.doctors = data.doctors as any[];
     }
     
-    return data as ProcedureResultRow | null;
+    return data;
   } catch (error) {
     console.error('Error fetching procedure by ID:', error);
     return null;
@@ -54,17 +55,17 @@ export async function getProcedureById(id: string) {
 /**
  * Fetch procedures by analysis ID
  */
-export async function getProceduresByAnalysisId(analysisId: string) {
+export async function getProceduresByAnalysisId(analysisId: string): Promise<ProceduresResponse> {
   try {
-    const { data, error } = await supabase
+    const result = await supabase
       .from('procedure_results')
       .select('*')
       .eq('analysis_id', analysisId);
 
-    if (error) throw error;
+    if (result.error) throw result.error;
     
     // Process doctors field for each procedure
-    const processedData = data?.map(proc => {
+    const processedData = result.data?.map(proc => {
       return {
         ...proc,
         doctors: proc.doctors as any[] || []
@@ -81,23 +82,23 @@ export async function getProceduresByAnalysisId(analysisId: string) {
 /**
  * Fetch procedures by guide number
  */
-export async function getProceduresByGuia(guia: string) {
+export async function getProceduresByGuia(guia: string): Promise<ProceduresResponse> {
   try {
-    const { data, error } = await supabase
+    const result = await supabase
       .from('procedure_results')
       .select('*')
       .eq('guia', guia);
 
-    if (error) throw error;
+    if (result.error) throw result.error;
     
     // Process doctors field for each procedure
-    if (data) {
-      for (const proc of data) {
+    if (result.data) {
+      for (const proc of result.data) {
         proc.doctors = proc.doctors as any[] || [];
       }
     }
     
-    return data as ProceduresResponse;
+    return result.data as ProceduresResponse;
   } catch (error) {
     console.error('Error fetching procedures by guia:', error);
     return null;
@@ -107,15 +108,15 @@ export async function getProceduresByGuia(guia: string) {
 /**
  * Fetch unpaid procedures
  */
-export async function getUnpaidProcedures() {
+export async function getUnpaidProcedures(): Promise<ProceduresResponse> {
   try {
-    const { data, error } = await supabase
+    const result = await supabase
       .from('procedure_results')
       .select('*')
       .eq('pago', false);
 
-    if (error) throw error;
-    return data as ProceduresResponse;
+    if (result.error) throw result.error;
+    return result.data as ProceduresResponse;
   } catch (error) {
     console.error('Error fetching unpaid procedures:', error);
     return null;

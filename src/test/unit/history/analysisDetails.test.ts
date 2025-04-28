@@ -57,24 +57,22 @@ describe('fetchAnalysisDetails', () => {
 
     vi.spyOn(supabase.auth, 'getUser').mockResolvedValue({ data: { user: mockUser }, error: null });
     
-    // Create a more sophisticated mock implementation for the supabase.from
-    const mockFromImplementation = (tableName: string) => {
+    // Create a more sophisticated mock implementation
+    const mockFromFn = vi.fn((tableName: string) => {
       if (tableName === 'analysis_results') {
         const mockSingle = vi.fn().mockResolvedValue({ data: mockAnalysis, error: null });
-        const mockEqInner = vi.fn().mockReturnValue({ single: mockSingle });
-        const mockEq = vi.fn().mockReturnValue({ eq: mockEqInner });
+        const mockEq = vi.fn().mockReturnValue({ single: mockSingle });
         const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
         return { select: mockSelect };
       } else {
-        const mockEqInner = vi.fn().mockResolvedValue({ data: mockProcedures, error: null });
-        const mockEq = vi.fn().mockReturnValue({ eq: mockEqInner });
+        // Changed from procedures to procedure_results
+        const mockEq = vi.fn().mockResolvedValue({ data: mockProcedures, error: null });
         const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
         return { select: mockSelect };
       }
-    };
+    });
 
-    // Use vi.mocked to properly type the mock
-    vi.mocked(supabase.from).mockImplementation(mockFromImplementation);
+    (supabase.from as any).mockImplementation(mockFromFn);
 
     const result = await fetchAnalysisDetails('test-id');
     expect(result).toBeTruthy();
