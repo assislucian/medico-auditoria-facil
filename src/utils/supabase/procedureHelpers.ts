@@ -1,13 +1,27 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Procedure, ProcedureType } from '@/types';
+import { Procedure } from '@/types/medical';
 
 /**
  * Utilities for dealing with medical procedures
  */
 
+// Define procedure types
+export type ProcedureType = 'all' | 'surgical' | 'clinical' | 'diagnostic';
+
 // Avoid circular type dependencies by properly defining the interface without recursion
-export interface ProcedureWithChildren extends Procedure {
+export interface ProcedureWithChildren {
+  id: string;
+  codigo: string;
+  procedimento: string;
+  papel?: string;
+  valorCBHPM: number;
+  valorPago: number;
+  diferenca: number;
+  pago: boolean;
+  guia?: string;
+  beneficiario?: string;
+  doctors: any[];
   children?: ProcedureWithChildren[] | null;
 }
 
@@ -15,20 +29,20 @@ export interface ProcedureWithChildren extends Procedure {
  * Fetch all procedures from the database
  */
 export async function fetchProcedures(type: ProcedureType = 'all'): Promise<ProcedureWithChildren[]> {
-  let query = supabase.from('procedures').select('*');
+  let query = supabase.from('procedure_results').select('*');
   
   if (type !== 'all') {
     query = query.eq('type', type);
   }
   
-  const { data, error } = await query.order('code');
+  const { data, error } = await query.order('codigo');
   
   if (error) {
     console.error('Error fetching procedures:', error);
     return [];
   }
   
-  return buildProcedureTree(data || []);
+  return buildProcedureTree(data as Procedure[] || []);
 }
 
 /**
@@ -51,17 +65,10 @@ function buildProcedureTree(procedures: Procedure[]): ProcedureWithChildren[] {
     
     if (!procedure) return;
     
-    if (proc.parent_id) {
-      const parent = procedureMap.get(proc.parent_id);
-      
-      if (parent && parent.children) {
-        parent.children.push(procedure);
-      } else {
-        rootProcedures.push(procedure);
-      }
-    } else {
-      rootProcedures.push(procedure);
-    }
+    // Check if this procedure has a hierarchical relationship
+    // Note: We're removing parent_id checks since it doesn't exist in the Procedure type
+    // Instead, we're treating all procedures as root procedures for now
+    rootProcedures.push(procedure);
   });
   
   return rootProcedures;
@@ -74,9 +81,9 @@ export async function searchProcedures(query: string, type?: ProcedureType): Pro
   const searchQuery = query.toLowerCase();
   
   let dbQuery = supabase
-    .from('procedures')
+    .from('procedure_results')
     .select('*')
-    .or(`name.ilike.%${searchQuery}%,code.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+    .or(`procedimento.ilike.%${searchQuery}%,codigo.ilike.%${searchQuery}%`);
     
   if (type) {
     dbQuery = dbQuery.eq('type', type);
@@ -89,7 +96,7 @@ export async function searchProcedures(query: string, type?: ProcedureType): Pro
     return [];
   }
   
-  return data || [];
+  return data as unknown as Procedure[];
 }
 
 /**
@@ -97,7 +104,7 @@ export async function searchProcedures(query: string, type?: ProcedureType): Pro
  */
 export async function getProcedureById(id: string): Promise<Procedure | null> {
   const { data, error } = await supabase
-    .from('procedures')
+    .from('procedure_results')
     .select('*')
     .eq('id', id)
     .single();
@@ -107,5 +114,22 @@ export async function getProcedureById(id: string): Promise<Procedure | null> {
     return null;
   }
   
-  return data;
+  return data as unknown as Procedure;
+}
+
+/**
+ * Fetch procedures by analysis ID
+ */
+export async function fetchProceduresByAnalysisId(analysisId: string): Promise<Procedure[]> {
+  const { data, error } = await supabase
+    .from('procedure_results')
+    .select('*')
+    .eq('analysis_id', analysisId);
+    
+  if (error) {
+    console.error('Error fetching procedures by analysis ID:', error);
+    return [];
+  }
+  
+  return data as unknown as Procedure[];
 }
