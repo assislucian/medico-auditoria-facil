@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   UploadCloud,
@@ -47,16 +48,16 @@ export function MainNavigation({ items }: MainNavigationProps) {
 interface NavItemProps {
   href: string
   title: string
-  icon: any
+  icon: React.ComponentType<any>
 }
 
-function NavItem({ href, title, icon }: NavItemProps) {
+function NavItem({ href, title, icon: Icon }: NavItemProps) {
   return (
     <a
       href={href}
       className="flex items-center space-x-2 rounded-md p-2 text-sm font-medium hover:bg-secondary hover:text-foreground"
     >
-      {icon && <icon className="h-4 w-4" />}
+      {Icon && <Icon className="h-4 w-4" />}
       <span>{title}</span>
     </a>
   )

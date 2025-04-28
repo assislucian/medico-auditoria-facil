@@ -1,4 +1,3 @@
-
 import { Database } from '@/integrations/supabase/types';
 import { Json } from '@/integrations/supabase/types';
 
@@ -52,3 +51,9 @@ export type {
   GuideData,
   DemonstrativeData
 } from './medical';
+
+export interface MainNavItem {
+  name: string;
+  href: string;
+  icon?: React.ComponentType<any>;
+}

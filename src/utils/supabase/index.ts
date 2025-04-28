@@ -2,7 +2,9 @@
 // ---------------------------------------------------------------------
 // Re-export all helper modules (no name conflicts)
 // ---------------------------------------------------------------------
+// Export everything from profileHelpers
 export * from './profileHelpers';
+// Export everything from queryHelpers
 export * from './queryHelpers';
 // Explicitly re-export from procedureHelpers to avoid ambiguity
 import { fetchProceduresByAnalysisId as fetchProcedures } from './procedureHelpers';
@@ -18,7 +20,8 @@ import {
   fetchUserTickets,
   fetchTicketMessages,
   createSupportTicket,
-  sendTicketMessage
+  sendTicketMessage,
+  TicketData
 } from './supabaseHelpers';
 
 export {
@@ -26,10 +29,6 @@ export {
   fetchUserTickets,
   fetchTicketMessages,
   createSupportTicket,
-  sendTicketMessage
+  sendTicketMessage,
+  TicketData
 };
-
-// ---------------------------------------------------------------------
-// Re-export the TicketData type
-// ---------------------------------------------------------------------
-export type { TicketData } from './supabaseHelpers';

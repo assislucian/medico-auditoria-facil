@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -5,23 +6,23 @@ import {
   Navigate
 } from "react-router-dom";
 import { useAuth } from "@/contexts/auth/AuthContext";
-import { Index } from "@/pages/Index";
-import { Login } from "@/pages/Login";
-import { Register } from "@/pages/Register";
-import { About } from "@/pages/About";
-import { ForgotPassword } from "@/pages/ForgotPassword";
-import { ResetPassword } from "@/pages/ResetPassword";
-import { Dashboard } from "@/pages/Dashboard";
-import { Uploads } from "@/pages/Uploads";
-import { History } from "@/pages/History";
-import { CompareContracheque } from "@/pages/CompareContracheque";
-import { Help } from "@/pages/Help";
-import { UnpaidProcedures } from "@/pages/UnpaidProcedures";
-import { Profile } from "@/pages/Profile";
-import { Settings } from "@/pages/Settings";
-import { Support } from "@/pages/Support";
-import { NotFound } from "@/pages/NotFound";
-import { AuthCallback } from "@/pages/AuthCallback";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import About from "@/pages/About";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
+import Dashboard from "@/pages/Dashboard";
+import Uploads from "@/pages/Uploads";
+import History from "@/pages/History";
+import CompareContracheque from "@/pages/CompareContracheque";
+import Help from "@/pages/Help";
+import UnpaidProcedures from "@/pages/UnpaidProcedures";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
+import Support from "@/pages/Support";
+import NotFound from "@/pages/NotFound";
+import AuthCallback from "@/pages/AuthCallback";
 
 // Import the new GuideAnalysisPage
 import GuideAnalysisPage from './pages/GuideAnalysis';
@@ -48,18 +49,16 @@ function AppRoutes() {
       <Route path="/auth/callback" element={<AuthCallback />} />
       
       {/* Protected routes */}
-      <Route element={<PrivateRoute />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/uploads" element={<Uploads />} />
-        <Route path="/analysis/:id" element={<GuideAnalysisPage />} />
-        <Route path="/history" element={<History />} />
-        <Route path="/compare" element={<CompareContracheque />} />
-        <Route path="/help" element={<Help />} />
-        <Route path="/divergences" element={<UnpaidProcedures />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/support" element={<Support />} />
-      </Route>
+      <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/uploads" element={<PrivateRoute><Uploads /></PrivateRoute>} />
+      <Route path="/analysis/:id" element={<PrivateRoute><GuideAnalysisPage /></PrivateRoute>} />
+      <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
+      <Route path="/compare" element={<PrivateRoute><CompareContracheque /></PrivateRoute>} />
+      <Route path="/help" element={<PrivateRoute><Help /></PrivateRoute>} />
+      <Route path="/divergences" element={<PrivateRoute><UnpaidProcedures /></PrivateRoute>} />
+      <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+      <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+      <Route path="/support" element={<PrivateRoute><Support /></PrivateRoute>} />
       
       {/* 404 page */}
       <Route path="*" element={<NotFound />} />
