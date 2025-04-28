@@ -54,13 +54,14 @@ export type ProcedureQueryResult = {
  */
 export async function fetchProcedures(type: ProcedureType = 'all'): Promise<ProcedureWithChildren[]> {
   try {
-    let query = supabase.from<ProcedureResultRow>('procedure_results').select('*');
+    // Use string type to avoid type instantiation errors
+    let query = supabase.from('procedure_results');
     
     if (type !== 'all') {
       query = query.eq('type', type);
     }
     
-    const { data, error } = await query.order('codigo');
+    const { data, error } = await query.select('*').order('codigo');
     
     if (error) {
       console.error('Error fetching procedures:', error);
@@ -82,8 +83,9 @@ export async function searchProcedures(query: string, type?: ProcedureType): Pro
   try {
     const searchQuery = query.toLowerCase();
     
+    // Use string type to avoid type instantiation errors
     let dbQuery = supabase
-      .from<ProcedureResultRow>('procedure_results')
+      .from('procedure_results')
       .select('*')
       .or(`procedimento.ilike.%${searchQuery}%,codigo.ilike.%${searchQuery}%`);
       
@@ -111,7 +113,7 @@ export async function searchProcedures(query: string, type?: ProcedureType): Pro
 export async function getProcedureById(id: string): Promise<ProcedureFlat | null> {
   try {
     const { data, error } = await supabase
-      .from<ProcedureResultRow>('procedure_results')
+      .from('procedure_results')
       .select('*')
       .eq('id', id)
       .single();
@@ -134,7 +136,7 @@ export async function getProcedureById(id: string): Promise<ProcedureFlat | null
 export async function fetchProceduresByAnalysisId(analysisId: string): Promise<ProcedureFlat[]> {
   try {
     const { data, error } = await supabase
-      .from<ProcedureResultRow>('procedure_results')
+      .from('procedure_results')
       .select('*')
       .eq('analysis_id', analysisId);
       
@@ -156,7 +158,7 @@ export async function fetchProceduresByAnalysisId(analysisId: string): Promise<P
 export async function getProceduresByGuide(guideId: string): Promise<ProcedureQueryResult> {
   try {
     const { data, error } = await supabase
-      .from<ProcedureResultRow>('procedure_results')
+      .from('procedure_results')
       .select('*')
       .eq('guia', guideId);
       
