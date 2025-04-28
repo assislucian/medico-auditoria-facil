@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
 import { ProcedureResult } from '@/types/database';
@@ -11,14 +10,14 @@ type ProceduresResponse = ProcedureResult[] | null;
  */
 export async function getProceduresByType(type: string): Promise<ProceduresResponse> {
   try {
-    // Use explicit result typing
-    const result = await supabase
+    // Use explicit type assertions to avoid deep instantiation
+    const { data, error } = await supabase
       .from('procedure_results')
       .select('*')
       .eq('type', type);
 
-    if (result.error) throw result.error;
-    return result.data as ProceduresResponse;
+    if (error) throw error;
+    return data as ProceduresResponse;
   } catch (error) {
     console.error('Error fetching procedures by type:', error);
     return null;
@@ -30,22 +29,16 @@ export async function getProceduresByType(type: string): Promise<ProceduresRespo
  */
 export async function getProcedureById(id: string): Promise<ProcedureResult | null> {
   try {
-    const result = await supabase
+    const { data, error } = await supabase
       .from('procedure_results')
       .select('*')
       .eq('id', id)
       .single();
 
-    if (result.error) throw result.error;
+    if (error) throw error;
     
-    const data = result.data as ProcedureResult;
-    
-    // Cast the doctors field if present
-    if (data && data.doctors) {
-      data.doctors = data.doctors as any[];
-    }
-    
-    return data;
+    // Use explicit casting for returned data
+    return data as ProcedureResult;
   } catch (error) {
     console.error('Error fetching procedure by ID:', error);
     return null;
@@ -57,20 +50,18 @@ export async function getProcedureById(id: string): Promise<ProcedureResult | nu
  */
 export async function getProceduresByAnalysisId(analysisId: string): Promise<ProceduresResponse> {
   try {
-    const result = await supabase
+    const { data, error } = await supabase
       .from('procedure_results')
       .select('*')
       .eq('analysis_id', analysisId);
 
-    if (result.error) throw result.error;
+    if (error) throw error;
     
-    // Process doctors field for each procedure
-    const processedData = result.data?.map(proc => {
-      return {
-        ...proc,
-        doctors: proc.doctors as any[] || []
-      };
-    }) || null;
+    // Process doctors field for each procedure with explicit typing
+    const processedData = data?.map(proc => ({
+      ...proc,
+      doctors: (proc.doctors as any[]) || []
+    }));
     
     return processedData as ProceduresResponse;
   } catch (error) {
