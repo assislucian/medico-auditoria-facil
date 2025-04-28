@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { PostgrestFilterBuilder, PostgrestSingleResponse } from '@supabase/supabase-js';
+import type { PostgrestResponse } from '@supabase/supabase-js';
 
 /**
  * Common utility functions shared across multiple helpers
@@ -29,10 +29,11 @@ export async function safeDbOperation<T>(operation: Promise<{data: T | null, err
 
 /**
  * Error handling wrapper for database operations with query builder
+ * Works with any Supabase query that returns a PostgrestResponse
  */
-export async function safeDbQuery<T>(query: PostgrestFilterBuilder<any>): Promise<T[] | null> {
+export async function safeDbQuery<T>(queryPromise: Promise<PostgrestResponse<any>>): Promise<T[] | null> {
   try {
-    const { data, error } = await query;
+    const { data, error } = await queryPromise;
     if (error) throw error;
     return data as T[];
   } catch (error) {

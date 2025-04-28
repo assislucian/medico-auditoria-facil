@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ProcedureType, ProcedureFlat, ProcedureWithChildren } from '../types/procedures';
+import type { ProcedureType, ProcedureFlat, ProcedureWithChildren } from '../types/procedures';
 import { mapProcedureData } from '../mappers/procedureMappers';
 import { safeDbQuery } from '../sharedHelpers';
 
@@ -109,14 +109,18 @@ export async function fetchProceduresByAnalysisId(analysisId: string): Promise<P
  * Build a hierarchical tree of procedures based on parent-child relationships
  */
 function buildProcedureTree(procedures: ProcedureFlat[]): ProcedureWithChildren[] {
+  // Create a map of all procedures by their ID
   const procedureMap = new Map<string, ProcedureWithChildren>();
   
+  // First pass: Initialize the map with all procedures
   procedures.forEach(proc => {
     procedureMap.set(proc.id, { ...proc, children: [] });
   });
   
+  // Second pass: Build the tree structure
   const rootProcedures: ProcedureWithChildren[] = [];
   
+  // Add all procedures as root level since we're not handling parent-child relationships yet
   procedures.forEach(proc => {
     const procedure = procedureMap.get(proc.id);
     if (!procedure) return;
