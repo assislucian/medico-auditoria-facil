@@ -9,7 +9,7 @@ import { Procedure } from '@/types/medical';
 // Define procedure types
 export type ProcedureType = 'all' | 'surgical' | 'clinical' | 'diagnostic';
 
-// Avoid circular type dependencies by properly defining the interface without recursion
+// Define a separate interface for procedures with children to avoid circular dependency
 export interface ProcedureWithChildren {
   id: string;
   codigo: string;
@@ -42,13 +42,28 @@ export async function fetchProcedures(type: ProcedureType = 'all'): Promise<Proc
     return [];
   }
   
-  return buildProcedureTree(data as Procedure[] || []);
+  // Map database fields to our Procedure type before building the tree
+  const proceduresData = data ? data.map(item => ({
+    id: item.id,
+    codigo: item.codigo,
+    procedimento: item.procedimento,
+    papel: item.papel,
+    valorCBHPM: item.valor_cbhpm,
+    valorPago: item.valor_pago,
+    diferenca: item.diferenca,
+    pago: item.pago,
+    guia: item.guia,
+    beneficiario: item.beneficiario,
+    doctors: item.doctors || []
+  })) : [];
+  
+  return buildProcedureTree(proceduresData);
 }
 
 /**
  * Build a hierarchical tree of procedures based on parent-child relationships
  */
-function buildProcedureTree(procedures: Procedure[]): ProcedureWithChildren[] {
+function buildProcedureTree(procedures: ProcedureWithChildren[]): ProcedureWithChildren[] {
   // Create a map for fast lookups
   const procedureMap = new Map<string, ProcedureWithChildren>();
   
@@ -65,9 +80,7 @@ function buildProcedureTree(procedures: Procedure[]): ProcedureWithChildren[] {
     
     if (!procedure) return;
     
-    // Check if this procedure has a hierarchical relationship
-    // Note: We're removing parent_id checks since it doesn't exist in the Procedure type
-    // Instead, we're treating all procedures as root procedures for now
+    // In this implementation we're treating all procedures as root procedures
     rootProcedures.push(procedure);
   });
   
@@ -96,7 +109,20 @@ export async function searchProcedures(query: string, type?: ProcedureType): Pro
     return [];
   }
   
-  return data as unknown as Procedure[];
+  // Map database fields to our Procedure type
+  return data ? data.map(item => ({
+    id: item.id,
+    codigo: item.codigo,
+    procedimento: item.procedimento,
+    papel: item.papel || '',
+    valorCBHPM: item.valor_cbhpm || 0,
+    valorPago: item.valor_pago || 0,
+    diferenca: item.diferenca || 0,
+    pago: !!item.pago,
+    guia: item.guia || '',
+    beneficiario: item.beneficiario || '',
+    doctors: item.doctors || []
+  })) : [];
 }
 
 /**
@@ -114,7 +140,20 @@ export async function getProcedureById(id: string): Promise<Procedure | null> {
     return null;
   }
   
-  return data as unknown as Procedure;
+  // Map database fields to our Procedure type
+  return {
+    id: data.id,
+    codigo: data.codigo,
+    procedimento: data.procedimento,
+    papel: data.papel || '',
+    valorCBHPM: data.valor_cbhpm || 0,
+    valorPago: data.valor_pago || 0,
+    diferenca: data.diferenca || 0,
+    pago: !!data.pago,
+    guia: data.guia || '',
+    beneficiario: data.beneficiario || '',
+    doctors: data.doctors || []
+  };
 }
 
 /**
@@ -131,5 +170,18 @@ export async function fetchProceduresByAnalysisId(analysisId: string): Promise<P
     return [];
   }
   
-  return data as unknown as Procedure[];
+  // Map database fields to our Procedure type
+  return data ? data.map(item => ({
+    id: item.id,
+    codigo: item.codigo,
+    procedimento: item.procedimento,
+    papel: item.papel || '',
+    valorCBHPM: item.valor_cbhpm || 0,
+    valorPago: item.valor_pago || 0,
+    diferenca: item.diferenca || 0,
+    pago: !!item.pago,
+    guia: item.guia || '',
+    beneficiario: item.beneficiario || '',
+    doctors: item.doctors || []
+  })) : [];
 }
