@@ -57,7 +57,7 @@ describe('profileHelpers', () => {
   });
 
   describe('updateProfile', () => {
-    it('should return data when update is successful', async () => {
+    it('should return true when update is successful', async () => {
       const mockUpdatedData = { id: 'test-id', name: 'Updated Name' };
       const mockSingle = vi.fn().mockResolvedValue({ data: mockUpdatedData, error: null });
       
@@ -69,17 +69,18 @@ describe('profileHelpers', () => {
       expect(mockSupabase.from).toHaveBeenCalledWith('profiles');
       expect(mockSupabase.update).toHaveBeenCalledWith({ name: 'Updated Name' });
       expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'test-id');
-      expect(result).toBe(mockUpdatedData);
+      expect(result).toBe(true);
     });
 
-    it('should throw error when update fails', async () => {
+    it('should return false when update fails', async () => {
       const testError = new Error('Test error');
       const mockSingle = vi.fn().mockResolvedValue({ data: null, error: testError });
       
       const mockSupabase = require('@/integrations/supabase/client').supabase;
       mockSupabase.from().update().eq().select().single = mockSingle;
 
-      await expect(updateProfile({ name: 'Updated Name' })).rejects.toThrow(testError);
+      const result = await updateProfile({ name: 'Updated Name' });
+      expect(result).toBe(false);
     });
   });
 });

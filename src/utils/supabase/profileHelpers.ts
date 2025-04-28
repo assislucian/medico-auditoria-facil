@@ -46,9 +46,9 @@ export async function updateProfile(updates: Record<string, any>) {
       .single();
     
     if (error) throw error;
-    return data;
+    return true;
   } catch (error) {
     console.error('Error updating profile:', error);
-    throw error;
+    return false;
   }
 }

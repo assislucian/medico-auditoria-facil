@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +39,7 @@ export const NotificationSettings = () => {
       
       setLoading(true);
       try {
-        const profileData = await getProfile(supabase, user.id);
+        const profileData = await getProfile();
         
         // Parse and set notification preferences using helper function
         if (profileData?.notification_preferences) {
@@ -78,7 +77,7 @@ export const NotificationSettings = () => {
       // Convert notification preferences to JSON format
       const preferencesJson = notificationPreferencesToJson(notifications);
       
-      const success = await updateProfile(supabase, user.id, {
+      const success = await updateProfile({
         notification_preferences: toJson(preferencesJson),
         updated_at: new Date().toISOString()
       });

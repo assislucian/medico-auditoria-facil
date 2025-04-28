@@ -1,3 +1,4 @@
+
 /**
  * use-profile-avatar.ts
  * 
@@ -9,7 +10,6 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
 import { toast } from "sonner";
-import { getProfile, updateProfile } from "@/utils/supabase";
 
 /**
  * Hook que fornece funcionalidades para gerenciar o avatar do perfil do usuário

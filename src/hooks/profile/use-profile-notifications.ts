@@ -10,7 +10,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
 import { toast } from "sonner";
-import { getProfile, updateProfile } from "@/utils/supabase";
+import { getProfile, updateProfile, toJson } from "@/utils/supabase";
 
 /**
  * Interface que define a estrutura das preferências de notificação
@@ -44,14 +44,8 @@ export const useProfileNotifications = () => {
   const updateNotificationPreferences = async (preferences: NotificationPreferences): Promise<boolean> => {
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('Não autenticado');
-      }
-      
       // Obtém dados atuais do perfil
-      const profileData = await getProfile(supabase, session.user.id);
+      const profileData = await getProfile();
       
       // Merge notification preferences properly
       const currentNotificationPrefs = profileData && 
@@ -75,8 +69,9 @@ export const useProfileNotifications = () => {
       prefJson.sms = preferences.sms;
       
       // Atualiza o perfil com as novas preferências
-      const success = await updateProfile(supabase, session.user.id, {
-        notification_preferences: prefJson as Json
+      const success = await updateProfile({
+        notification_preferences: toJson(prefJson),
+        updated_at: new Date().toISOString()
       });
       
       if (!success) {

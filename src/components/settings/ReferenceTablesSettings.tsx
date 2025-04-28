@@ -47,7 +47,7 @@ export const ReferenceTablesSettings = () => {
       
       setLoading(true);
       try {
-        const profileData = await getProfile(supabase, user.id);
+        const profileData = await getProfile();
         
         // Parse and set reference tables preferences using helper function
         if (profileData?.reference_tables_preferences) {
@@ -105,7 +105,7 @@ export const ReferenceTablesSettings = () => {
       };
       
       // Convert preferences to JSON before passing to updateProfile
-      const success = await updateProfile(supabase, user.id, {
+      const success = await updateProfile({
         reference_tables_preferences: toJson(preferences),
         updated_at: new Date().toISOString()
       });
