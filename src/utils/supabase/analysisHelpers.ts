@@ -23,6 +23,8 @@ export async function fetchAnalysisById(analysisId: string) {
 
 /**
  * Fetch procedures by analysis ID
+ * This is a separate implementation from the one in procedureHelpers.ts
+ * to avoid circular dependencies
  */
 export async function fetchProceduresByAnalysisId(analysisId: string) {
   try {
