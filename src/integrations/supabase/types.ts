@@ -114,39 +114,9 @@ export type Database = {
         }
         Relationships: []
       }
-      cbhpm2015: {
-        Row: {
-          codigo: string
-          porte: string | null
-          procedimento: string
-          valor_anestesista: number | null
-          valor_aux1: number | null
-          valor_aux2: number | null
-          valor_porte: number | null
-        }
-        Insert: {
-          codigo: string
-          porte?: string | null
-          procedimento: string
-          valor_anestesista?: number | null
-          valor_aux1?: number | null
-          valor_aux2?: number | null
-          valor_porte?: number | null
-        }
-        Update: {
-          codigo?: string
-          porte?: string | null
-          procedimento?: string
-          valor_anestesista?: number | null
-          valor_aux1?: number | null
-          valor_aux2?: number | null
-          valor_porte?: number | null
-        }
-        Relationships: []
-      }
       CBHPM2015: {
         Row: {
-          codigo: number
+          codigo: number | null
           cust_oper: string | null
           n_aux: string | null
           porte_anest: string | null
@@ -154,10 +124,9 @@ export type Database = {
           procedimento: string | null
           valor_anestesista: string | null
           valor_cirurgiao: string | null
-          valor_primeiro_auxiliar: string | null
         }
         Insert: {
-          codigo: number
+          codigo?: number | null
           cust_oper?: string | null
           n_aux?: string | null
           porte_anest?: string | null
@@ -165,10 +134,9 @@ export type Database = {
           procedimento?: string | null
           valor_anestesista?: string | null
           valor_cirurgiao?: string | null
-          valor_primeiro_auxiliar?: string | null
         }
         Update: {
-          codigo?: number
+          codigo?: number | null
           cust_oper?: string | null
           n_aux?: string | null
           porte_anest?: string | null
@@ -176,112 +144,39 @@ export type Database = {
           procedimento?: string | null
           valor_anestesista?: string | null
           valor_cirurgiao?: string | null
-          valor_primeiro_auxiliar?: string | null
         }
         Relationships: []
       }
-      contestations: {
+      demo_requests: {
         Row: {
+          company: string | null
           created_at: string | null
+          email: string
           id: string
-          participation_id: string
-          reason_type: string
-          response_text: string
-          status: string | null
+          name: string
+          phone: string
+          status: string
+          updated_at: string | null
         }
         Insert: {
+          company?: string | null
           created_at?: string | null
+          email: string
           id?: string
-          participation_id: string
-          reason_type: string
-          response_text: string
-          status?: string | null
+          name: string
+          phone: string
+          status?: string
+          updated_at?: string | null
         }
         Update: {
+          company?: string | null
           created_at?: string | null
+          email?: string
           id?: string
-          participation_id?: string
-          reason_type?: string
-          response_text?: string
-          status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "contestations_participation_id_fkey"
-            columns: ["participation_id"]
-            isOneToOne: false
-            referencedRelation: "procedure_participations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contestations_participation_id_fkey"
-            columns: ["participation_id"]
-            isOneToOne: false
-            referencedRelation: "v_payment_audit"
-            referencedColumns: ["participation_id"]
-          },
-        ]
-      }
-      demonstrativos: {
-        Row: {
-          codigo: string
-          created_at: string | null
-          doctor_crm: string
-          guide_number: string
-          id: string
-          papel: string
-          qtd: number | null
-          valor_pago: number | null
-        }
-        Insert: {
-          codigo: string
-          created_at?: string | null
-          doctor_crm: string
-          guide_number: string
-          id?: string
-          papel: string
-          qtd?: number | null
-          valor_pago?: number | null
-        }
-        Update: {
-          codigo?: string
-          created_at?: string | null
-          doctor_crm?: string
-          guide_number?: string
-          id?: string
-          papel?: string
-          qtd?: number | null
-          valor_pago?: number | null
-        }
-        Relationships: []
-      }
-      guides: {
-        Row: {
-          created_at: string | null
-          execution_date: string
-          file_path: string
-          guide_number: string
-          hospital: string | null
-          id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          execution_date: string
-          file_path: string
-          guide_number: string
-          hospital?: string | null
-          id?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          execution_date?: string
-          file_path?: string
-          guide_number?: string
-          hospital?: string | null
-          id?: string
-          user_id?: string
+          name?: string
+          phone?: string
+          status?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -318,97 +213,185 @@ export type Database = {
         }
         Relationships: []
       }
-      medical_roles: {
+      payment_providers: {
         Row: {
-          description: string
-          fee_percent: number | null
-          id: number
-          role_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          provider_key: string
+          updated_at: string
         }
         Insert: {
-          description: string
-          fee_percent?: number | null
-          id?: number
-          role_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          provider_key: string
+          updated_at?: string
         }
         Update: {
-          description?: string
-          fee_percent?: number | null
-          id?: number
-          role_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          provider_key?: string
+          updated_at?: string
         }
         Relationships: []
       }
-      procedure_participations: {
+      payment_transactions: {
         Row: {
-          doctor_id: string
-          expected_value: number | null
+          amount: number
+          created_at: string
+          currency: string
           id: string
-          procedure_id: string
-          role_name: string
+          payment_method: string
+          provider: string
+          provider_transaction_id: string | null
+          status: string
+          subscription_id: string
+          user_id: string
         }
         Insert: {
-          doctor_id: string
-          expected_value?: number | null
+          amount: number
+          created_at?: string
+          currency?: string
           id?: string
-          procedure_id: string
-          role_name: string
+          payment_method: string
+          provider: string
+          provider_transaction_id?: string | null
+          status: string
+          subscription_id: string
+          user_id: string
         }
         Update: {
-          doctor_id?: string
-          expected_value?: number | null
+          amount?: number
+          created_at?: string
+          currency?: string
           id?: string
-          procedure_id?: string
-          role_name?: string
+          payment_method?: string
+          provider?: string
+          provider_transaction_id?: string | null
+          status?: string
+          subscription_id?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "procedure_participations_procedure_id_fkey"
-            columns: ["procedure_id"]
+            foreignKeyName: "payment_transactions_subscription_id_fkey"
+            columns: ["subscription_id"]
             isOneToOne: false
-            referencedRelation: "procedures"
+            referencedRelation: "user_subscriptions"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      procedure_results: {
+        Row: {
+          analysis_id: string
+          beneficiario: string | null
+          codigo: string
+          diferenca: number | null
+          doctors: Json | null
+          guia: string | null
+          id: string
+          pago: boolean | null
+          papel: string | null
+          procedimento: string
+          valor_cbhpm: number | null
+          valor_pago: number | null
+        }
+        Insert: {
+          analysis_id: string
+          beneficiario?: string | null
+          codigo: string
+          diferenca?: number | null
+          doctors?: Json | null
+          guia?: string | null
+          id?: string
+          pago?: boolean | null
+          papel?: string | null
+          procedimento: string
+          valor_cbhpm?: number | null
+          valor_pago?: number | null
+        }
+        Update: {
+          analysis_id?: string
+          beneficiario?: string | null
+          codigo?: string
+          diferenca?: number | null
+          doctors?: Json | null
+          guia?: string | null
+          id?: string
+          pago?: boolean | null
+          papel?: string | null
+          procedimento?: string
+          valor_cbhpm?: number | null
+          valor_pago?: number | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "procedure_participations_role_name_fkey"
-            columns: ["role_name"]
+            foreignKeyName: "procedure_results_analysis_id_fkey"
+            columns: ["analysis_id"]
             isOneToOne: false
-            referencedRelation: "medical_roles"
-            referencedColumns: ["role_name"]
+            referencedRelation: "analysis_results"
+            referencedColumns: ["id"]
           },
         ]
       }
       procedures: {
         Row: {
+          analysis_id: string
+          beneficiario: string | null
           codigo: string
-          created_at: string | null
-          descricao: string | null
-          guide_id: string
+          diferenca: number | null
+          doctors: Json | null
+          guia: string | null
           id: string
-          quantidade: number | null
+          pago: boolean | null
+          papel: string | null
+          procedimento: string
+          user_id: string
+          valor_cbhpm: number | null
+          valor_pago: number | null
         }
         Insert: {
+          analysis_id: string
+          beneficiario?: string | null
           codigo: string
-          created_at?: string | null
-          descricao?: string | null
-          guide_id: string
+          diferenca?: number | null
+          doctors?: Json | null
+          guia?: string | null
           id?: string
-          quantidade?: number | null
+          pago?: boolean | null
+          papel?: string | null
+          procedimento: string
+          user_id: string
+          valor_cbhpm?: number | null
+          valor_pago?: number | null
         }
         Update: {
+          analysis_id?: string
+          beneficiario?: string | null
           codigo?: string
-          created_at?: string | null
-          descricao?: string | null
-          guide_id?: string
+          diferenca?: number | null
+          doctors?: Json | null
+          guia?: string | null
           id?: string
-          quantidade?: number | null
+          pago?: boolean | null
+          papel?: string | null
+          procedimento?: string
+          user_id?: string
+          valor_cbhpm?: number | null
+          valor_pago?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "procedures_guide_id_fkey"
-            columns: ["guide_id"]
+            foreignKeyName: "procedures_analysis_id_fkey"
+            columns: ["analysis_id"]
             isOneToOne: false
-            referencedRelation: "guides"
+            referencedRelation: "analysis_history"
             referencedColumns: ["id"]
           },
         ]
@@ -463,22 +446,135 @@ export type Database = {
       }
       standard_responses: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
           reason_type: string
           response_text: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           reason_type: string
           response_text: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           reason_type?: string
           response_text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          max_users: number
+          name: string
+          price_monthly: number
+          price_yearly: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_users?: number
+          name: string
+          price_monthly: number
+          price_yearly: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_users?: number
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          sent_by_user: boolean
+          ticket_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          sent_by_user?: boolean
+          ticket_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          sent_by_user?: boolean
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          priority: string
+          resolved_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -518,30 +614,65 @@ export type Database = {
         }
         Relationships: []
       }
-    }
-    Views: {
-      v_payment_audit: {
+      user_subscriptions: {
         Row: {
-          codigo: string | null
-          difference: number | null
-          doctor_email: string | null
-          expected_value: number | null
-          guide_number: string | null
-          participation_id: string | null
-          procedimento: string | null
-          role_name: string | null
-          valor_pago: number | null
+          canceled_at: string | null
+          created_at: string
+          current_period_ends_at: string | null
+          current_period_starts_at: string | null
+          id: string
+          payment_provider: string | null
+          payment_reference: string | null
+          plan_id: string
+          status: string
+          trial_ends_at: string
+          trial_starts_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          canceled_at?: string | null
+          created_at?: string
+          current_period_ends_at?: string | null
+          current_period_starts_at?: string | null
+          id?: string
+          payment_provider?: string | null
+          payment_reference?: string | null
+          plan_id: string
+          status?: string
+          trial_ends_at?: string
+          trial_starts_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          canceled_at?: string | null
+          created_at?: string
+          current_period_ends_at?: string | null
+          current_period_starts_at?: string | null
+          id?: string
+          payment_provider?: string | null
+          payment_reference?: string | null
+          plan_id?: string
+          status?: string
+          trial_ends_at?: string
+          trial_starts_at?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "procedure_participations_role_name_fkey"
-            columns: ["role_name"]
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "medical_roles"
-            referencedColumns: ["role_name"]
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
           },
         ]
       }
+    }
+    Views: {
+      [_ in never]: never
     }
     Functions: {
       activate_trial: {
