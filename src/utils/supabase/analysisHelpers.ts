@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { safeDbOperation } from './sharedHelpers';
+import { safeDbOperation, safeDbQuery } from './sharedHelpers';
 
 /**
  * Fetch analysis by ID

@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { PostgrestFilterBuilder } from "@supabase/supabase-js";
 
 /**
  * Common utility functions shared across multiple helpers
@@ -13,7 +14,7 @@ export function toJson<T>(data: T): T {
 }
 
 /**
- * Error handling wrapper for database operations
+ * Error handling wrapper for database operations with direct response
  */
 export async function safeDbOperation<T>(operation: Promise<{data: T | null, error: any}>): Promise<T | null> {
   try {
@@ -22,6 +23,20 @@ export async function safeDbOperation<T>(operation: Promise<{data: T | null, err
     return data;
   } catch (error) {
     console.error('Database operation error:', error);
+    return null;
+  }
+}
+
+/**
+ * Error handling wrapper for database operations with PostgrestFilterBuilder
+ */
+export async function safeDbQuery<T>(query: PostgrestFilterBuilder<any>): Promise<T[] | null> {
+  try {
+    const { data, error } = await query;
+    if (error) throw error;
+    return data as T[];
+  } catch (error) {
+    console.error('Database query error:', error);
     return null;
   }
 }

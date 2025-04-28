@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
+import { Database } from '@/integrations/supabase/types';
 
 /**
  * Utilities for dealing with medical procedures
@@ -18,8 +19,8 @@ export interface DoctorParticipation {
   value?: number;
 }
 
-// Define a separate interface for procedures with children to avoid circular dependency
-export interface ProcedureWithChildren {
+// Define simplified interfaces to avoid circular references
+export interface ProcedureFlat {
   id: string;
   codigo: string;
   procedimento: string;
@@ -31,7 +32,11 @@ export interface ProcedureWithChildren {
   guia?: string;
   beneficiario?: string;
   doctors: DoctorParticipation[];
-  children?: ProcedureWithChildren[] | null;
+}
+
+// Define a separate interface for procedures with children
+export interface ProcedureWithChildren extends ProcedureFlat {
+  children?: ProcedureFlat[] | null;
 }
 
 /**
@@ -75,14 +80,19 @@ export async function fetchProcedures(type: ProcedureType = 'all'): Promise<Proc
 function mapDoctorsData(doctorsData: Json | null): DoctorParticipation[] {
   if (!doctorsData) return [];
   
-  if (Array.isArray(doctorsData)) {
-    return doctorsData.map(doctor => ({
-      id: typeof doctor.id === 'string' ? doctor.id : '',
-      name: typeof doctor.name === 'string' ? doctor.name : undefined,
-      role: typeof doctor.role === 'string' ? doctor.role : undefined,
-      crm: typeof doctor.crm === 'string' ? doctor.crm : undefined,
-      value: typeof doctor.value === 'number' ? doctor.value : undefined
-    }));
+  try {
+    // Convert the JSON data to a proper array of doctor objects
+    if (Array.isArray(doctorsData)) {
+      return doctorsData.map(doctor => ({
+        id: typeof doctor.id === 'string' ? doctor.id : '',
+        name: typeof doctor.name === 'string' ? doctor.name : undefined,
+        role: typeof doctor.role === 'string' ? doctor.role : undefined,
+        crm: typeof doctor.crm === 'string' ? doctor.crm : undefined,
+        value: typeof doctor.value === 'number' ? doctor.value : undefined
+      }));
+    }
+  } catch (e) {
+    console.error('Error parsing doctors data:', e);
   }
   
   return [];
@@ -91,7 +101,7 @@ function mapDoctorsData(doctorsData: Json | null): DoctorParticipation[] {
 /**
  * Build a hierarchical tree of procedures based on parent-child relationships
  */
-function buildProcedureTree(procedures: ProcedureWithChildren[]): ProcedureWithChildren[] {
+function buildProcedureTree(procedures: ProcedureFlat[]): ProcedureWithChildren[] {
   // Create a map for fast lookups
   const procedureMap = new Map<string, ProcedureWithChildren>();
   
@@ -118,7 +128,7 @@ function buildProcedureTree(procedures: ProcedureWithChildren[]): ProcedureWithC
 /**
  * Search for procedures by name, code or description
  */
-export async function searchProcedures(query: string, type?: ProcedureType): Promise<ProcedureWithChildren[]> {
+export async function searchProcedures(query: string, type?: ProcedureType): Promise<ProcedureFlat[]> {
   const searchQuery = query.toLowerCase();
   
   let dbQuery = supabase
@@ -156,7 +166,7 @@ export async function searchProcedures(query: string, type?: ProcedureType): Pro
 /**
  * Get a procedure by ID
  */
-export async function getProcedureById(id: string): Promise<ProcedureWithChildren | null> {
+export async function getProcedureById(id: string): Promise<ProcedureFlat | null> {
   const { data, error } = await supabase
     .from('procedure_results')
     .select('*')
@@ -187,7 +197,7 @@ export async function getProcedureById(id: string): Promise<ProcedureWithChildre
 /**
  * Fetch procedures by analysis ID
  */
-export async function fetchProceduresByAnalysisId(analysisId: string): Promise<ProcedureWithChildren[]> {
+export async function fetchProceduresByAnalysisId(analysisId: string): Promise<ProcedureFlat[]> {
   const { data, error } = await supabase
     .from('procedure_results')
     .select('*')

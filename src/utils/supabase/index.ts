@@ -17,6 +17,7 @@ export {
   fetchProceduresByAnalysisId,
   type ProcedureType,
   type ProcedureWithChildren,
+  type ProcedureFlat,
   type DoctorParticipation
 } from './procedureHelpers';
 
