@@ -1,54 +1,55 @@
 
+import { Profile } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Helper to convert data to JSON
- */
-export const toJson = <T>(data: T): T => {
-  return JSON.parse(JSON.stringify(data));
-};
-
-/**
- * Get user profile data
- */
-export async function getProfile() {
+export async function getProfileData(userId: string): Promise<Profile | null> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return null;
-
+    console.log('Fetching profile data for user:', userId);
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', session.user.id)
-      .single();
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching profile:", error);
+      return null;
+    }
     
-    if (error) throw error;
-    return data;
+    if (!data) {
+      console.log('No profile found for user:', userId);
+      return null;
+    }
+    
+    console.log('Profile data retrieved successfully');
+    return data as Profile;
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    console.error("Exception in getProfileData:", error);
     return null;
   }
 }
 
-/**
- * Update user profile data
- */
-export async function updateProfile(updates: Record<string, any>) {
+export async function updateProfile(supabaseClient: any, userId: string, data: ProfileUpdatePayload) {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No authenticated session');
-
-    const { data, error } = await supabase
+    const { error } = await supabaseClient
       .from('profiles')
-      .update(updates)
-      .eq('id', session.user.id)
-      .select()
-      .single();
-    
+      .update(data)
+      .eq('id', userId);
+
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Error updating profile:', error);
+    console.error("Error updating profile:", error);
     return false;
   }
 }
+
+export type ProfileUpdatePayload = {
+  name?: string;
+  email?: string;
+  crm?: string;
+  specialty?: string;
+  notification_preferences?: any;
+  reference_tables_preferences?: any;
+  updated_at?: string;
+};

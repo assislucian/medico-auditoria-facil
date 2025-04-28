@@ -1,147 +1,138 @@
 
-import { ExtractedData, DoctorParticipation } from '@/types/upload';
 import { supabase } from '@/integrations/supabase/client';
-import { Json } from '@/integrations/supabase/types';
 
 /**
- * Get fallback comparison data from database when edge function fails
+ * Create simulation data for testing/demo purposes
  */
-export const getFallbackComparisonData = async (analysisId: string): Promise<ExtractedData | null> => {
+export function createSimulationData() {
+  return {
+    summary: {
+      total: 3,
+      conforme: 1,
+      abaixo: 1,
+      acima: 1
+    },
+    details: [
+      {
+        id: '1',
+        codigo: '30602246',
+        descricao: 'Reconstrução Mamária Com Retalhos Cutâneos Regionais',
+        qtd: 1,
+        valorCbhpm: 3200.50,
+        valorPago: 2800.00,
+        diferenca: 400.50,
+        status: 'abaixo',
+        papel: 'Cirurgião',
+        guia: '10467538'
+      },
+      {
+        id: '2',
+        codigo: '30602076',
+        descricao: 'Exérese De Lesão Da Mama Por Marcação Estereotáxica Ou Roll',
+        qtd: 1,
+        valorCbhpm: 1800.75,
+        valorPago: 1900.25,
+        diferenca: 99.50,
+        status: 'acima',
+        papel: 'Cirurgião',
+        guia: '10467538'
+      },
+      {
+        id: '3',
+        codigo: '31602096',
+        descricao: 'Consulta em Cirurgia Plástica',
+        qtd: 1,
+        valorCbhpm: 200.00,
+        valorPago: 200.00,
+        diferenca: 0,
+        status: 'conforme',
+        papel: 'Cirurgião',
+        guia: '10467539'
+      }
+    ]
+  };
+}
+
+/**
+ * Fetch comparison data directly from the database as fallback
+ */
+export async function getFallbackComparisonData(analysisId: string) {
+  console.log('Getting fallback comparison data from database for:', analysisId);
+  
   try {
-    // Get analysis result
+    // Get the analysis data
     const { data: analysisData, error: analysisError } = await supabase
       .from('analysis_results')
       .select('*')
       .eq('id', analysisId)
       .single();
-
+    
     if (analysisError) {
       console.error('Error fetching analysis:', analysisError);
-      return null;
+      throw new Error('Análise não encontrada');
     }
-
-    // Get procedure results
-    const { data: procedureData, error: procedureError } = await supabase
-      .from('procedure_results')
+    
+    // Get the procedures
+    const { data: procedures, error: proceduresError } = await supabase
+      .from('procedures')
       .select('*')
       .eq('analysis_id', analysisId);
-
-    if (procedureError) {
-      console.error('Error fetching procedures:', procedureError);
-      return null;
+      
+    if (proceduresError) {
+      console.error('Error fetching procedures:', proceduresError);
+      throw new Error('Falha ao buscar procedimentos');
     }
-
-    // Transform data to ExtractedData format
-    const extractedData: ExtractedData = {
-      demonstrativoInfo: {
-        numero: analysisData.numero || '',
-        competencia: analysisData.competencia || '',
-        hospital: analysisData.hospital || '',
-        data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
-        beneficiario: procedureData[0]?.beneficiario || ''
-      },
-      procedimentos: procedureData.map(proc => ({
+    
+    console.log(`Found ${procedures.length} procedures for analysis ${analysisId}`);
+    
+    let summary = {
+      total: procedures.length,
+      conforme: 0,
+      abaixo: 0,
+      acima: 0
+    };
+    
+    const details = procedures.map(proc => {
+      const valorCbhpm = proc.valor_cbhpm || 0;
+      const valorPago = proc.valor_pago || 0;
+      const diferenca = Math.abs(valorPago - valorCbhpm);
+      
+      let status: 'conforme' | 'abaixo' | 'acima' | 'não_pago';
+      
+      if (!proc.pago) {
+        status = 'não_pago';
+      } else if (Math.abs(diferenca) < 0.01) {
+        status = 'conforme';
+        summary.conforme++;
+      } else if (valorPago < valorCbhpm) {
+        status = 'abaixo';
+        summary.abaixo++;
+      } else {
+        status = 'acima';
+        summary.acima++;
+      }
+      
+      return {
         id: proc.id,
         codigo: proc.codigo,
-        procedimento: proc.procedimento,
-        papel: proc.papel || '',
-        valorCBHPM: proc.valor_cbhpm || 0,
-        valorPago: proc.valor_pago || 0,
-        diferenca: proc.diferenca || 0,
-        pago: proc.pago || false,
-        guia: proc.guia || '',
-        beneficiario: proc.beneficiario || '',
-        doctors: parseDoctors(proc.doctors)
-      })),
-      totais: {
-        valorCBHPM: getSummaryValue(analysisData.summary, 'totalCBHPM'),
-        valorPago: getSummaryValue(analysisData.summary, 'totalPago'),
-        diferenca: getSummaryValue(analysisData.summary, 'totalDiferenca'),
-        procedimentosNaoPagos: getSummaryValue(analysisData.summary, 'procedimentosNaoPagos')
-      }
+        descricao: proc.procedimento,
+        qtd: 1,
+        valorCbhpm,
+        valorPago,
+        diferenca,
+        status,
+        papel: proc.papel || 'Cirurgião',
+        guia: proc.guia || '-'
+      };
+    });
+    
+    return {
+      summary,
+      details
     };
-
-    return extractedData;
   } catch (error) {
     console.error('Error in getFallbackComparisonData:', error);
-    return null;
-  }
-};
-
-// Helper function to safely parse summary values
-function getSummaryValue(summary: Json | null, key: string): number {
-  if (!summary) return 0;
-  
-  try {
-    const obj = typeof summary === 'string' ? JSON.parse(summary) : summary;
-    return typeof obj[key] === 'number' ? obj[key] : 0;
-  } catch (e) {
-    return 0;
+    return createSimulationData();
   }
 }
 
-// Helper function to safely parse doctors data
-function parseDoctors(doctorsJson: Json | null): DoctorParticipation[] {
-  if (!doctorsJson) return [];
-  
-  try {
-    const doctors = typeof doctorsJson === 'string' ? JSON.parse(doctorsJson) : doctorsJson;
-    if (!Array.isArray(doctors)) return [];
-    
-    return doctors.map(doctor => ({
-      code: doctor.code || '',
-      name: doctor.name || '',
-      role: doctor.role || '',
-      startTime: doctor.startTime || '',
-      endTime: doctor.endTime || '',
-      status: doctor.status || ''
-    }));
-  } catch (e) {
-    console.error('Error parsing doctors data:', e);
-    return [];
-  }
-}
-
-/**
- * Create simulation data for local development
- */
-export const createSimulationData = (): ExtractedData => {
-  // Generate some mock data
-  return {
-    demonstrativoInfo: {
-      numero: 'SIM-12345',
-      competencia: '04/2023',
-      hospital: 'Hospital Simulado',
-      data: new Date().toLocaleDateString('pt-BR'),
-      beneficiario: 'Paciente Simulado'
-    },
-    procedimentos: Array(5).fill(null).map((_, i) => ({
-      id: `sim-${i}`,
-      codigo: `${10000 + i}`,
-      procedimento: `Procedimento Simulado ${i + 1}`,
-      papel: i % 2 === 0 ? 'Cirurgião' : 'Anestesista',
-      valorCBHPM: 1000 + (i * 100),
-      valorPago: (800 + (i * 70)) * (i % 3 === 0 ? 0 : 1), // Some procedures not paid
-      diferenca: 200 + (i * 30),
-      pago: i % 3 !== 0,
-      guia: `G-${100000 + i}`,
-      beneficiario: 'Paciente Simulado',
-      doctors: [
-        {
-          code: `CRM-${1000 + i}`,
-          name: `Dr. Simulação ${i + 1}`,
-          role: i % 2 === 0 ? 'Cirurgião' : 'Anestesista',
-          startTime: '09:00',
-          endTime: '11:00',
-          status: 'confirmado'
-        }
-      ]
-    })),
-    totais: {
-      valorCBHPM: 5500,
-      valorPago: 3340,
-      diferenca: 2160,
-      procedimentosNaoPagos: 2
-    }
-  };
-};

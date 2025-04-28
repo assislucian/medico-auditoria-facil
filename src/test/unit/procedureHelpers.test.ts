@@ -25,18 +25,7 @@ describe('procedureHelpers', () => {
     vi.mocked(supabase.from).mockImplementation(mockFrom);
 
     const result = await fetchProceduresByAnalysisId('test-analysis-id');
-    expect(result).toEqual([
-      expect.objectContaining({
-        id: '1',
-        codigo: 'TEST1',
-        procedimento: 'Test Procedure 1'
-      }),
-      expect.objectContaining({
-        id: '2',
-        codigo: 'TEST2',
-        procedimento: 'Test Procedure 2'
-      })
-    ]);
+    expect(result).toEqual(mockProcedures);
   });
 
   it('returns empty array on error', async () => {

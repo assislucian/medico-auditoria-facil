@@ -24,16 +24,12 @@ MedCheck é uma aplicação web desenvolvida para médicos e profissionais de sa
 - **Autenticação**: Sistema nativo do Supabase
 - **Armazenamento**: Supabase Storage para arquivos
 - **Edge Functions**: Para processamento de dados e lógica de negócio
-  - uploadGuide: Processa uploads de guias médicas
-  - uploadDemonstrative: Processa uploads de demonstrativos de pagamento
-  - generate-contestation: Gera documentos de contestação para divergências
 - **Row-Level Security (RLS)**: Políticas para controle de acesso aos dados
 - **Procedimentos Armazenados**: Funções PostgreSQL para lógica no banco de dados
 
 ### Integração Frontend-Backend
 - Cliente Supabase para JavaScript
 - Tipagem forte com TypeScript para todas as interações com o banco
-- React Query para gerenciar estado dos dados e cache
 
 ## Estrutura de Arquivos
 
@@ -42,7 +38,6 @@ src/
   ├── components/       # Componentes reutilizáveis 
   │   ├── ui/           # Componentes de UI base (shadcn)
   │   ├── dashboard/    # Componentes do dashboard
-  │   ├── audit/        # Componentes de auditoria
   │   ├── about/        # Componentes da página sobre
   │   ├── history/      # Componentes da página de histórico
   │   ├── profile/      # Componentes da página de perfil
@@ -60,11 +55,8 @@ src/
   ├── lib/              # Funções utilitárias
   ├── pages/            # Páginas da aplicação
   ├── services/         # Serviços para lógica de negócio
-  │   ├── analysis/     # Serviços para análise de dados
-  │   └── upload/       # Serviços para upload de arquivos
   ├── types/            # Definições de tipos TypeScript
   └── utils/            # Utilitários diversos
-      └── supabase/     # Helpers para Supabase
 ```
 
 ## Backend (Supabase)
@@ -88,22 +80,24 @@ O banco de dados é estruturado para suportar as seguintes funcionalidades chave
    - Valores CBHPM, valores pagos, diferenças
    - Metadados como guia, beneficiário, papel do médico
 
-4. **guides**: Guias médicas cadastradas
-   - Dados da guia como número, hospital, data de execução
-   - Vínculo com o usuário que cadastrou a guia
+4. **analysis_history**: Histórico de análises
+   - Registro simplificado de todas as análises realizadas
+   - Facilita listagem e filtros na interface de histórico
 
-5. **demonstrativos**: Dados de pagamentos recebidos
-   - Valores pagos para cada procedimento
-   - Vínculo com a guia e o usuário
+5. **CBHPM2015**: Tabela de referência CBHPM
+   - Valores de referência para comparação
+   - Códigos de procedimentos e valores
 
-6. **contestations**: Contestações geradas para divergências
-   - Textos de contestação para procedimentos subpagos
-   - Status de acompanhamento da contestação
+#### Tabelas de Suporte
+1. **support_tickets**: Tickets de suporte
+2. **support_messages**: Mensagens em tickets de suporte
+3. **help_articles**: Artigos de ajuda para usuários
+4. **activity_logs**: Registro de atividades dos usuários
 
-#### Views
-1. **v_payment_audit**: Visão que combina dados de guias, demonstrativos e CBHPM
-   - Facilita a análise comparativa entre valores esperados e recebidos
-   - Cálculo automático de diferenças e status de pagamento
+#### Tabelas de Pagamento
+1. **subscription_plans**: Planos disponíveis
+2. **user_subscriptions**: Assinaturas dos usuários
+3. **payment_transactions**: Transações de pagamento
 
 ### Row-Level Security (RLS)
 Políticas de segurança implementadas para garantir que:
@@ -112,13 +106,11 @@ Políticas de segurança implementadas para garantir que:
 - Dados sensíveis são acessíveis apenas aos donos
 
 ### Edge Functions
-1. **uploadGuide**: Processamento de uploads de guias médicas
-2. **uploadDemonstrative**: Processamento de uploads de demonstrativos
-3. **generate-contestation**: Geração de documentos de contestação
-4. **process-analysis**: Análise e extração de dados dos documentos
-5. **get-analysis**: Recuperação de análises armazenadas
-6. **generate-report**: Geração de relatórios personalizados
-7. **generate-compare**: Geração de comparativos detalhados
+1. **upload-files**: Processamento de uploads de arquivos
+2. **process-analysis**: Análise e extração de dados dos documentos
+3. **get-analysis**: Recuperação de análises armazenadas
+4. **generate-report**: Geração de relatórios personalizados
+5. **generate-compare**: Geração de comparativos detalhados
 
 ### Funções do Banco
 1. **update_onboarding_status**: Atualiza o status de onboarding do usuário
@@ -142,13 +134,6 @@ Políticas de segurança implementadas para garantir que:
 4. Resultados são exibidos com comparação CBHPM
 5. Análise é salva no histórico
 
-### Auditoria de Pagamentos
-1. Usuário acessa página de análise de guia
-2. Visualiza comparativo entre valores esperados (CBHPM) e recebidos
-3. Identifica procedimentos pagos abaixo do valor esperado
-4. Seleciona procedimentos para contestação
-5. Gera documento de contestação automático
-
 ### Comparativo de Pagamentos
 1. Usuário seleciona análise no histórico
 2. Acessa página de comparativo detalhado
@@ -156,12 +141,11 @@ Políticas de segurança implementadas para garantir que:
 4. Identifica divergências entre valor pago e CBHPM
 5. Pode exportar dados para contestação
 
-### Gerenciamento de Contestações
-1. Usuário identifica procedimentos subpagos
-2. Seleciona procedimentos para contestação
-3. Sistema gera documento formal de contestação
-4. Usuário acompanha status das contestações
-5. Recebe notificações sobre atualizações de status
+### Gerenciamento de Perfil
+1. Usuário acessa página de perfil
+2. Atualiza dados pessoais, preferências
+3. Configura notificações e tabelas de referência
+4. Gerencia assinatura e informações de pagamento
 
 ## Integração Frontend-Backend
 
@@ -173,7 +157,7 @@ Configurado em `src/integrations/supabase/client.ts` com:
 - Headers globais
 
 ### Helpers de Supabase
-Implementados em `src/utils/supabase/`:
+Implementados em `src/utils/supabaseHelpers.ts`:
 - Funções tipadas para operações comuns
 - Extração segura de dados
 - Gerenciamento de perfis
@@ -225,7 +209,7 @@ Implementados em `src/utils/supabase/`:
 4. Desenvolver aplicativo móvel complementar
 5. Implementar recursos de colaboração entre médicos
 
-## Ambiente e Deployment
+## Enviromento e Deployment
 
 ### Requisitos
 - Node.js 18+ e npm 8+

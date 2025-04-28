@@ -9,6 +9,6 @@
 export {
   fetchHistoryData,
   searchHistory,
-  getAuditDetails as fetchAnalysisDetails,
+  fetchAnalysisDetails,
   updateAnalysisStatus
 } from './history';

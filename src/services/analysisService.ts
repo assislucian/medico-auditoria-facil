@@ -1,3 +1,4 @@
+
 /**
  * analysisService.ts
  * 
@@ -181,7 +182,7 @@ const getSafeNumericValue = (summary: any, key: string): number => {
  * @param analysisId ID opcional da análise para buscar dados específicos
  * @returns Os dados extraídos
  */
-export const getExtractedData = async (analysisId?: string | null): Promise<ExtractedData | null> => {
+export const getExtractedData = async (analysisId?: string | null): Promise<ExtractedData> => {
   console.log('Getting extracted data with analysisId:', analysisId);
   
   try {
@@ -214,7 +215,7 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
       console.log('Fetched analysis:', analysisData);
       
       // Depois consulta os procedure_results relacionados
-      const { data: procedures, error: proceduresError } = await supabase
+      const { data: proceduresData, error: proceduresError } = await supabase
         .from('procedure_results')
         .select('*')
         .eq('analysis_id', analysisId);
@@ -224,43 +225,73 @@ export const getExtractedData = async (analysisId?: string | null): Promise<Extr
         throw new Error('Failed to fetch procedure data');
       }
       
-      console.log(`Fetched ${procedures.length} procedures`);
+      console.log(`Fetched ${proceduresData.length} procedures`);
       
-      if (analysisData && procedures && procedures.length > 0) {
+      if (analysisData && proceduresData && proceduresData.length > 0) {
         // Transforma os dados do banco no formato ExtractedData
-        return {
+        const extractedData: ExtractedData = {
           demonstrativoInfo: {
             numero: analysisData.numero || '',
             competencia: analysisData.competencia || '',
             hospital: analysisData.hospital || '',
             data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
-            beneficiario: procedures[0]?.beneficiario || ''
+            beneficiario: proceduresData[0]?.beneficiario || 'Paciente'
           },
-          procedimentos: procedures.map(proc => ({
-            id: proc.id,
-            codigo: proc.codigo,
-            procedimento: proc.procedimento,
-            papel: proc.papel || '',
-            valorCBHPM: proc.valor_cbhpm || 0,
-            valorPago: proc.valor_pago || 0,
-            diferenca: proc.diferenca || 0,
-            pago: !!proc.pago,
-            guia: proc.guia || '',
-            beneficiario: proc.beneficiario || '',
-            doctors: proc.doctors as any || []
-          })),
-          totais: analysisData.summary ? {
+          procedimentos: proceduresData.map(proc => {
+            // Processa médicos com segurança de tipos
+            let doctors: DoctorParticipation[] = [];
+            
+            if (proc.doctors) {
+              if (isDoctorParticipationArray(proc.doctors)) {
+                doctors = proc.doctors;
+              } else if (Array.isArray(proc.doctors)) {
+                // Converte cada item para o formato esperado com cast explícito de tipo
+                doctors = (proc.doctors as any[])
+                  .filter(d => 
+                    typeof d === 'object' && 
+                    d !== null &&
+                    'code' in d && 
+                    'name' in d && 
+                    'role' in d &&
+                    'startTime' in d &&
+                    'endTime' in d &&
+                    'status' in d
+                  )
+                  .map(d => ({
+                    code: String(d.code || ''),
+                    name: String(d.name || ''),
+                    role: String(d.role || ''),
+                    startTime: String(d.startTime || ''),
+                    endTime: String(d.endTime || ''),
+                    status: String(d.status || '')
+                  }));
+              }
+            }
+              
+            return {
+              id: proc.id,
+              codigo: proc.codigo,
+              procedimento: proc.procedimento,
+              papel: proc.papel || '',
+              valorCBHPM: proc.valor_cbhpm || 0,
+              valorPago: proc.valor_pago || 0,
+              diferenca: proc.diferenca || 0,
+              pago: !!proc.pago,
+              guia: proc.guia || '',
+              beneficiario: proc.beneficiario || '',
+              doctors
+            };
+          }),
+          totais: {
             valorCBHPM: getSafeNumericValue(analysisData.summary, 'totalCBHPM'),
             valorPago: getSafeNumericValue(analysisData.summary, 'totalPago'),
             diferenca: getSafeNumericValue(analysisData.summary, 'totalDiferenca'),
             procedimentosNaoPagos: getSafeNumericValue(analysisData.summary, 'procedimentosNaoPagos')
-          } : {
-            valorCBHPM: 0,
-            valorPago: 0,
-            diferenca: 0,
-            procedimentosNaoPagos: 0
           }
         };
+        
+        console.log('Successfully transformed data:', extractedData);
+        return extractedData;
       }
     }
     

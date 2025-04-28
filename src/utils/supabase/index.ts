@@ -1,32 +1,44 @@
 
 // ---------------------------------------------------------------------
-// Central export file for all Supabase utilities
+// Re-exporta MÓDULOS ESPECÍFICOS (sem conflitos de nomes)
 // ---------------------------------------------------------------------
-
-// Export common shared helpers
-export * from './sharedHelpers';
-
-// Export profile helpers
-export { getProfile, updateProfile } from './profileHelpers';
-
-// Export procedure helpers
-export { 
-  fetchProcedures, 
-  searchProcedures,
-  getProcedureById,
-  fetchProceduresByAnalysisId,
-  type ProcedureType,
-  type ProcedureWithChildren,
-  type ProcedureFlat,
-  type DoctorParticipation
-} from './procedureHelpers';
-
-// Export help helpers
+export * from './profileHelpers';
+export * from './queryHelpers';
+export * from './procedureHelpers';
+export * from './analysisHelpers';
 export * from './helpHelpers';
 
-// Export analysis helpers (avoiding name conflicts)
-export { 
+// ---------------------------------------------------------------------
+// Re-exporta, um-a-um, as funções que vivem em supabaseHelpers
+// ---------------------------------------------------------------------
+import {
+  getProfile,
+  updateProfile,
+  toJson,
+  fetchProceduresByAnalysisId,
+  fetchHelpArticles,
+  fetchUserTickets,
+  fetchTicketMessages,
+  createSupportTicket,
+  sendTicketMessage,
   fetchAnalysisById,
-  // Use a different name to avoid conflicts
-  fetchProceduresByAnalysisId as fetchProceduresByAnalysisIdFromAnalysis
-} from './analysisHelpers';
+} from './supabaseHelpers';
+
+export {
+  getProfile,
+  updateProfile,
+  toJson,
+  fetchProceduresByAnalysisId,
+  fetchHelpArticles,
+  fetchUserTickets,
+  fetchTicketMessages,
+  createSupportTicket,
+  sendTicketMessage,
+  fetchAnalysisById,
+};
+
+// ---------------------------------------------------------------------
+// Re-exporta o **tipo** TicketData — precisa da palavra-chave `type`
+// para não disparar o erro TS1205 quando `isolatedModules` estiver ativo.
+// ---------------------------------------------------------------------
+export type { TicketData } from './supabaseHelpers';

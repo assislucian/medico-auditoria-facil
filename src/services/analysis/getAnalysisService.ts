@@ -1,44 +1,65 @@
 
-/**
- * Service para buscar detalhes de uma análise específica
- */
-
 import { supabase } from '@/integrations/supabase/client';
+import { fetchAnalysisById, fetchProceduresByAnalysisId } from '@/utils/supabase';
 
-export const getAnalysisById = async (analysisId: string) => {
-  if (!analysisId) return null;
-  
+interface AnalysisSummary {
+  totalCBHPM?: number;
+  totalPago?: number;
+  totalDiferenca?: number;
+  procedimentosNaoPagos?: number;
+  procedimentosTotal?: number;
+  [key: string]: any;
+}
+
+/**
+ * Retrieves analysis by ID with all related data
+ */
+export async function getAnalysisById(analysisId: string) {
   try {
-    // Fetch analysis results
-    const { data: analysis, error: analysisError } = await supabase
-      .from('analysis_results')
-      .select('*')
-      .eq('id', analysisId)
-      .single();
+    console.log('Buscando análise por ID:', analysisId);
     
-    if (analysisError) {
-      console.error('Error fetching analysis:', analysisError);
+    const analysisData = await fetchAnalysisById(analysisId);
+    if (!analysisData) {
+      console.log('Análise não encontrada');
       return null;
     }
     
-    // Fetch procedures for this analysis
-    const { data: procedures, error: proceduresError } = await supabase
-      .from('procedure_results')
-      .select('*')
-      .eq('analysis_id', analysisId);
+    const proceduresData = await fetchProceduresByAnalysisId(analysisId);
+    console.log(`Encontrados ${proceduresData.length} procedimentos para a análise`);
     
-    if (proceduresError) {
-      console.error('Error fetching procedures:', proceduresError);
-      return { ...analysis, procedures: [] };
-    }
+    // Type assertion for the summary field
+    const summary = analysisData.summary as AnalysisSummary;
     
-    // Return combined data
     return {
-      ...analysis,
-      procedures
+      demonstrativoInfo: {
+        numero: analysisData.numero || `DM${Math.floor(Math.random() * 1000000)}`,
+        competencia: analysisData.competencia || new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+        hospital: analysisData.hospital || 'Hospital não especificado',
+        data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
+        beneficiario: proceduresData[0]?.beneficiario || 'Não especificado'
+      },
+      procedimentos: proceduresData.map(proc => ({
+        id: proc.id,
+        codigo: proc.codigo,
+        procedimento: proc.procedimento,
+        papel: proc.papel,
+        valorCBHPM: proc.valor_cbhpm,
+        valorPago: proc.valor_pago,
+        diferenca: proc.diferenca,
+        pago: proc.pago,
+        guia: proc.guia,
+        beneficiario: proc.beneficiario,
+        doctors: proc.doctors || []
+      })),
+      totais: {
+        valorCBHPM: summary?.totalCBHPM || 0,
+        valorPago: summary?.totalPago || 0,
+        diferenca: summary?.totalDiferenca || 0,
+        procedimentosNaoPagos: summary?.procedimentosNaoPagos || 0
+      }
     };
   } catch (error) {
-    console.error('Exception in getAnalysisById:', error);
+    console.error('Erro ao recuperar análise:', error);
     return null;
   }
-};
+}

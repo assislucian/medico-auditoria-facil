@@ -1,87 +1,112 @@
 
-import { ExtractedData } from '@/types/upload';
+import { FileWithStatus, ProcessMode } from '@/types/upload';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { Json } from '@/integrations/supabase/types';
 
 /**
- * Save analysis data to Supabase
- * @param data Extracted data from the analysis
- * @param filesUsed Array of file IDs and types used in the analysis
- * @returns Analysis ID if saved successfully
+ * Saves analysis results to database
  */
-export const saveAnalysis = async (
-  data: ExtractedData,
-  filesUsed: { id: string; type: string }[]
-): Promise<string | null> => {
+export async function saveAnalysisToDatabase(
+  files: FileWithStatus[],
+  processMode: ProcessMode, 
+  extractedData: any
+): Promise<{success: boolean, analysisId: string | null}> {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session) {
-      toast.error('Você precisa estar logado para salvar análises');
-      return null;
+    console.log('Iniciando salvamento dos resultados no banco de dados', {
+      processMode,
+      fileCount: files.length,
+      hospitalName: extractedData.demonstrativoInfo?.hospital
+    });
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('Usuário não está autenticado');
+      return {success: false, analysisId: null};
     }
-
-    // Insert analysis results
-    const { data: analysis, error } = await supabase
+    
+    // Preparar o resumo em formato seguro para armazenamento
+    const summary = {
+      totalCBHPM: extractedData.totais?.valorCBHPM || 0,
+      totalPago: extractedData.totais?.valorPago || 0,
+      totalDiferenca: extractedData.totais?.diferenca || 0,
+      procedimentosTotal: extractedData.procedimentos?.length || 0,
+      procedimentosNaoPagos: extractedData.totais?.procedimentosNaoPagos || 0
+    };
+    
+    const { data: analysisData, error: analysisError } = await supabase
       .from('analysis_results')
       .insert({
-        user_id: session.session.user.id,
-        file_type: filesUsed.map(f => f.type).join(','),
-        file_name: filesUsed[0]?.id || 'local-analysis',
-        numero: data.demonstrativoInfo?.numero || '',
-        competencia: data.demonstrativoInfo?.competencia || '',
-        hospital: data.demonstrativoInfo?.hospital || '',
-        summary: {
-          totalCBHPM: data.totais.valorCBHPM,
-          totalPago: data.totais.valorPago,
-          totalDiferenca: data.totais.diferenca,
-          procedimentosNaoPagos: data.totais.procedimentosNaoPagos,
-          procedimentosTotal: data.procedimentos.length
-        }
+        user_id: user.id,
+        file_name: files.map(f => f.name).join(', '),
+        file_type: processMode,
+        hospital: extractedData.demonstrativoInfo?.hospital || null,
+        competencia: extractedData.demonstrativoInfo?.competencia || null,
+        numero: extractedData.demonstrativoInfo?.numero || null,
+        summary: summary,
+        status: 'processed'
       })
       .select('id')
       .single();
-
-    if (error) {
-      console.error('Error saving analysis:', error);
-      throw error;
+    
+    if (analysisError) {
+      console.error('Erro ao inserir análise:', analysisError);
+      return {success: false, analysisId: null};
     }
-
-    // Insert procedure results - properly casting to Json where needed
-    const proceduresData = data.procedimentos.map(proc => ({
-      analysis_id: analysis.id,
-      codigo: proc.codigo,
-      procedimento: proc.procedimento,
-      papel: proc.papel,
-      valor_cbhpm: proc.valorCBHPM,
-      valor_pago: proc.valorPago,
-      diferenca: proc.diferenca,
-      pago: proc.pago,
-      guia: proc.guia,
-      beneficiario: proc.beneficiario,
-      doctors: proc.doctors as unknown as Json
-    }));
-
-    if (proceduresData.length > 0) {
-      const { error: procError } = await supabase
-        .from('procedure_results')
-        .insert(proceduresData);
-
-      if (procError) {
-        console.error('Error saving procedure results:', procError);
-        // Don't throw here, we still want to return the analysis ID
-      }
-    }
-
-    return analysis.id;
+    
+    const analysisId = analysisData.id;
+    
+    await saveProcedures(analysisId, user.id, extractedData.procedimentos);
+    await saveAnalysisHistory(user.id, extractedData, processMode);
+    
+    return {success: true, analysisId: analysisData.id};
   } catch (error) {
-    console.error('Error in saveAnalysis:', error);
-    toast.error('Erro ao salvar análise', {
-      description: 'Tente novamente mais tarde.',
-    });
-    return null;
+    console.error('Erro ao salvar no banco de dados:', error);
+    return {success: false, analysisId: null};
   }
-};
+}
 
-// Export additional function that may be needed elsewhere
-export const saveAnalysisToDatabase = saveAnalysis;
+async function saveProcedures(analysisId: string, userId: string, procedures: any[]) {
+  if (!procedures?.length) return;
+  
+  const proceduresForInsert = procedures.map(proc => ({
+    analysis_id: analysisId,
+    user_id: userId,
+    codigo: proc.codigo,
+    procedimento: proc.procedimento,
+    papel: proc.papel,
+    valor_cbhpm: proc.valorCBHPM,
+    valor_pago: proc.valorPago,
+    diferenca: proc.diferenca,
+    pago: proc.pago,
+    guia: proc.guia,
+    beneficiario: proc.beneficiario,
+    doctors: proc.doctors
+  }));
+  
+  const { error: proceduresError } = await supabase
+    .from('procedures')
+    .insert(proceduresForInsert);
+    
+  if (proceduresError) {
+    console.error('Erro ao inserir procedimentos:', proceduresError);
+  }
+}
+
+async function saveAnalysisHistory(userId: string, extractedData: any, processMode: ProcessMode) {
+  const { error: historyError } = await supabase
+    .from('analysis_history')
+    .insert({
+      user_id: userId,
+      type: processMode === 'complete' ? 'Guia + Demonstrativo' : 
+            processMode === 'guia-only' ? 'Guia' : 'Demonstrativo',
+      hospital: extractedData.demonstrativoInfo?.hospital || null,
+      description: `${extractedData.demonstrativoInfo?.hospital || 'Hospital'} - ${extractedData.demonstrativoInfo?.competencia || 'Competência não informada'}`,
+      procedimentos: extractedData.procedimentos?.length || 0,
+      glosados: extractedData.totais?.procedimentosNaoPagos || 0,
+      status: 'Analisado'
+    });
+    
+  if (historyError) {
+    console.error('Erro ao inserir no histórico:', historyError);
+  }
+}

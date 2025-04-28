@@ -52,9 +52,3 @@ export type {
   GuideData,
   DemonstrativeData
 } from './medical';
-
-export interface MainNavItem {
-  name: string;
-  href: string;
-  icon?: React.ComponentType<any>;
-}

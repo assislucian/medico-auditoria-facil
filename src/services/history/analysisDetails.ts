@@ -1,51 +1,65 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-/**
- * Retrieves audit details for a specific analysis
- * @param analysisId The ID of the analysis
- * @returns Analysis details with procedures
- */
-export const getAuditDetails = async (analysisId: string) => {
-  if (!analysisId) {
-    return { procedimentos: [], hospital: null, summary: null };
-  }
-
+export async function fetchAnalysisDetails(analysisId: string) {
   try {
-    // Get analysis data
-    const { data: analysis, error: analysisError } = await supabase
+    console.log('Buscando detalhes da análise:', analysisId);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('Usuário não está autenticado');
+      toast.error('Você precisa estar autenticado para acessar detalhes da análise');
+      return null;
+    }
+    
+    const { data: analysisData, error: analysisError } = await supabase
       .from('analysis_results')
       .select('*')
       .eq('id', analysisId)
+      .eq('user_id', user.id)
       .single();
-
+    
     if (analysisError) {
-      console.error('Error fetching analysis:', analysisError);
-      return { procedimentos: [], hospital: null, summary: null };
+      console.error('Erro ao buscar detalhes da análise:', analysisError);
+      toast.error('Erro ao carregar detalhes da análise');
+      return null;
     }
-
-    // Get procedures data
-    const { data: procedures, error: proceduresError } = await supabase
-      .from('procedure_results')
+    
+    const { data: proceduresData, error: proceduresError } = await supabase
+      .from('procedures')
       .select('*')
-      .eq('analysis_id', analysisId);
-
+      .eq('analysis_id', analysisId)
+      .eq('user_id', user.id);
+    
     if (proceduresError) {
-      console.error('Error fetching procedures:', proceduresError);
-      return { 
-        procedimentos: [], 
-        hospital: analysis?.hospital || null, 
-        summary: analysis?.summary || null 
-      };
+      console.error('Erro ao buscar procedimentos:', proceduresError);
+      toast.error('Erro ao carregar procedimentos da análise');
+      return null;
     }
-
+    
+    console.log(`Análise encontrada com ${proceduresData.length} procedimentos`);
+    
     return {
-      procedimentos: procedures || [],
-      hospital: analysis?.hospital || null,
-      summary: analysis?.summary || null
+      ...analysisData,
+      procedimentos: proceduresData.map((proc: any) => ({
+        id: proc.id,
+        codigo: proc.codigo,
+        procedimento: proc.procedimento,
+        papel: proc.papel,
+        valorCBHPM: proc.valor_cbhpm,
+        valorPago: proc.valor_pago,
+        diferenca: proc.diferenca,
+        pago: proc.pago,
+        guia: proc.guia,
+        beneficiario: proc.beneficiario,
+        doctors: proc.doctors || []
+      }))
     };
   } catch (error) {
-    console.error('Error in getAuditDetails:', error);
-    return { procedimentos: [], hospital: null, summary: null };
+    console.error('Erro ao processar detalhes da análise:', error);
+    toast.error('Erro ao processar detalhes da análise');
+    return null;
   }
-};
+}

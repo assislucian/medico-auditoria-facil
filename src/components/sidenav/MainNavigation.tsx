@@ -1,92 +1,94 @@
 
-import {
-  LayoutDashboard,
-  UploadCloud,
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { 
+  LineChart, 
+  FileText, 
+  FileBarChart, 
+  FileQuestion, 
   History,
-  BarChart3,
-  Settings,
   HelpCircle,
-  AlertTriangle
-} from "lucide-react"
+  Bell,
+  User
+} from "lucide-react";
+import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-import { MainNavItem } from "@/types"
+export function MainNavigation() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  const navItems = [
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: LineChart,
+    },
+    {
+      name: "Guias",
+      href: "/guides",
+      icon: FileText,
+    },
+    {
+      name: "Demonstrativos",
+      href: "/demonstratives",
+      icon: FileBarChart,
+    },
+    {
+      name: "Não Pagos",
+      href: "/unpaid-procedures",
+      icon: FileQuestion,
+    },
+    {
+      name: "Histórico",
+      href: "/history",
+      icon: History,
+    },
+    {
+      name: "Suporte",
+      href: "/support",
+      icon: HelpCircle,
+    },
+    {
+      name: "Notificações",
+      href: "/notifications",
+      icon: Bell,
+    },
+    {
+      name: "Perfil",
+      href: "/profile",
+      icon: User,
+    }
+  ];
 
-interface MainNavigationProps {
-  items?: MainNavItem[]
-}
+  const handleNavigate = (href: string) => {
+    navigate(href);
+  };
 
-export function MainNavigation({ items }: MainNavigationProps) {
   return (
-    <div className="flex flex-col space-y-1">
-      {MainNavigationItems.map(item => (
-        <NavItem
-          key={item.href}
-          href={item.href}
-          title={item.name}
-          icon={item.icon}
-        />
-      ))}
-      {items?.length ? (
-        <>
-          <div className="border-b border-border/10" />
-          {items?.map((item) => (
-            item.href ? (
-              <NavItem
-                key={item.href}
-                href={item.href}
-                title={item.name}
-                icon={item.icon}
-              />
-            ) : null
+    <div className="px-3 py-2">
+      <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
+        Menu Principal
+      </h2>
+      <div className="space-y-1">
+        <TooltipProvider>
+          {navItems.map((item) => (
+            <Tooltip key={item.href}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={location.pathname === item.href ? "secondary" : "ghost"}
+                  size="sm"
+                  className="w-full justify-start"
+                  onClick={() => handleNavigate(item.href)}
+                >
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.name}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">{item.name}</TooltipContent>
+            </Tooltip>
           ))}
-        </>
-      ) : null}
+        </TooltipProvider>
+      </div>
     </div>
-  )
+  );
 }
-
-interface NavItemProps {
-  href: string
-  title: string
-  icon: React.ComponentType<any>
-}
-
-function NavItem({ href, title, icon: Icon }: NavItemProps) {
-  return (
-    <a
-      href={href}
-      className="flex items-center space-x-2 rounded-md p-2 text-sm font-medium hover:bg-secondary hover:text-foreground"
-    >
-      {Icon && <Icon className="h-4 w-4" />}
-      <span>{title}</span>
-    </a>
-  )
-}
-
-const MainNavigationItems: MainNavItem[] = [
-  { 
-    name: "Dashboard", 
-    href: "/dashboard", 
-    icon: LayoutDashboard 
-  },
-  { 
-    name: "Uploads", 
-    href: "/uploads", 
-    icon: UploadCloud 
-  },
-  { 
-    name: "Histórico", 
-    href: "/history", 
-    icon: History 
-  },
-  {
-    name: "Divergências",
-    href: "/divergences",
-    icon: AlertTriangle
-  },
-  { 
-    name: "Relatórios", 
-    href: "/reports", 
-    icon: BarChart3
-  }
-];

@@ -1,24 +1,27 @@
 
-export interface ExtractedData {
-  demonstrativoInfo: DemonstrativoInfo;
-  procedimentos: Procedure[];
-  totais: {
-    valorCBHPM: number;
-    valorPago: number;
-    diferenca: number;
-    procedimentosNaoPagos: number;
-  };
+export type FileType = 'guia' | 'demonstrativo';
+export type ProcessingStage = 'idle' | 'extracting' | 'analyzing' | 'comparing' | 'complete' | 'uploading' | 'error';
+export type FileStatus = 'valid' | 'invalid' | 'processing';
+export type ProcessMode = 'complete' | 'guia-only' | 'demonstrativo-only';
+
+export interface FileWithStatus {
+  id?: string;
+  name: string;
+  type: FileType;
+  file: File;
+  status?: FileStatus;
 }
 
-export interface DemonstrativoInfo {
-  numero: string;
-  competencia: string;
-  hospital: string;
-  data: string;
-  beneficiario: string;
+export interface DoctorParticipation {
+  code: string;
+  name: string;
+  role: string;
+  startTime: string;
+  endTime: string;
+  status: string;
 }
 
-export interface Procedure {
+export interface ProcedureExtracted {
   id: string;
   codigo: string;
   procedimento: string;
@@ -32,27 +35,23 @@ export interface Procedure {
   doctors: DoctorParticipation[];
 }
 
-export interface DoctorParticipation {
-  code: string;
-  name: string;
-  role: string;
-  startTime: string;
-  endTime: string;
-  status: string;
+export interface DemonstrativoInfo {
+  numero: string;
+  competencia: string;
+  hospital: string;
+  data: string;
+  beneficiario: string;
 }
 
-export type FileType = 'guia' | 'demonstrativo';
-
-export type FileStatus = 'processing' | 'valid' | 'invalid';
-
-export interface FileWithStatus {
-  id?: string;
-  name: string;
-  file: File;
-  type: FileType;
-  status: FileStatus;
+export interface ProcessingTotals {
+  valorCBHPM: number;
+  valorPago: number;
+  diferenca: number;
+  procedimentosNaoPagos: number;
 }
 
-export type ProcessingStage = 'idle' | 'extracting' | 'uploading' | 'analyzing' | 'comparing' | 'complete' | 'error';
-
-export type ProcessMode = 'complete' | 'guia-only' | 'demonstrativo-only';
+export interface ExtractedData {
+  demonstrativoInfo: DemonstrativoInfo;
+  procedimentos: ProcedureExtracted[];
+  totais: ProcessingTotals;
+}

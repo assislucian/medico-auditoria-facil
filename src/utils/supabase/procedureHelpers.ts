@@ -1,15 +1,18 @@
 
-// Re-export types from their source files to avoid ambiguity
-export type { ProcedureType, ProcedureWithChildren } from './types/procedures';
+import { supabase } from '@/integrations/supabase/client';
 
-// Export from procedureService directly to avoid duplicated exports
-export {
-  fetchProcedures,
-  searchProcedures,
-  getProcedureById,
-  fetchProceduresByAnalysisId,
-  getProceduresByGuide,
-  type DoctorParticipation,
-  type ProcedureFlat,
-  type ProcedureQueryResult
-} from './services/procedureService';
+export async function fetchProceduresByAnalysisId(analysisId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('procedures')
+      .select('*')
+      .eq('analysis_id', analysisId);
+      
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching procedures:', error);
+    return [];
+  }
+}

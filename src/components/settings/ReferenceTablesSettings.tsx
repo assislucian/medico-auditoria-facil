@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -16,7 +15,7 @@ import {
   ensureCheckedProperty,
   ReferenceTable as ReferenceTableType
 } from './reference-tables/types';
-import { getProfile, updateProfile, toJson } from "@/utils/supabase/profileHelpers";
+import { getProfile, updateProfile, toJson } from "@/utils/supabase";
 import { Json } from '@/integrations/supabase/types';
 
 /**
@@ -48,7 +47,7 @@ export const ReferenceTablesSettings = () => {
       
       setLoading(true);
       try {
-        const profileData = await getProfile();
+        const profileData = await getProfile(supabase, user.id);
         
         // Parse and set reference tables preferences using helper function
         if (profileData?.reference_tables_preferences) {
@@ -106,7 +105,7 @@ export const ReferenceTablesSettings = () => {
       };
       
       // Convert preferences to JSON before passing to updateProfile
-      const success = await updateProfile({
+      const success = await updateProfile(supabase, user.id, {
         reference_tables_preferences: toJson(preferences),
         updated_at: new Date().toISOString()
       });

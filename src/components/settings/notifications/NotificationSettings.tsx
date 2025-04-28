@@ -16,7 +16,7 @@ import {
   notificationPreferencesToJson
 } from "./types";
 import { Profile, ProfileWithUUID } from '@/types';
-import { getProfile, updateProfile, toJson } from "@/utils/supabase/profileHelpers";
+import { getProfile, updateProfile, toJson } from "@/utils/supabase";
 import { useAlert } from '@/utils/alertUtils';
 
 /**
@@ -40,7 +40,7 @@ export const NotificationSettings = () => {
       
       setLoading(true);
       try {
-        const profileData = await getProfile();
+        const profileData = await getProfile(supabase, user.id);
         
         // Parse and set notification preferences using helper function
         if (profileData?.notification_preferences) {
@@ -78,7 +78,7 @@ export const NotificationSettings = () => {
       // Convert notification preferences to JSON format
       const preferencesJson = notificationPreferencesToJson(notifications);
       
-      const success = await updateProfile({
+      const success = await updateProfile(supabase, user.id, {
         notification_preferences: toJson(preferencesJson),
         updated_at: new Date().toISOString()
       });

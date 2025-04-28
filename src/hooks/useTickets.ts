@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Ticket, Message, TicketCategory, TicketPriority, TicketStatus } from '@/components/support/types';
 import { 
@@ -35,7 +36,16 @@ export const useTickets = (userId: string | undefined) => {
     setLoading(true);
     try {
       const userTickets = await fetchUserTickets(userId);
-      setTickets(userTickets);
+      
+      // Map DB ticket data to match Ticket interface type with proper type casting
+      const mappedTickets: Ticket[] = userTickets.map((ticket: any) => ({
+        ...ticket,
+        status: ticket.status as TicketStatus,
+        priority: ticket.priority as TicketPriority,
+        category: ticket.category as TicketCategory
+      }));
+      
+      setTickets(mappedTickets);
     } catch (error) {
       console.error('Error in fetchTickets:', error);
       toast.error('Não foi possível carregar seus tickets de suporte');
@@ -50,7 +60,7 @@ export const useTickets = (userId: string | undefined) => {
   const fetchMessages = useCallback(async (ticketId: string) => {
     try {
       const ticketMessages = await fetchTicketMessages(ticketId);
-      setMessages(ticketMessages);
+      setMessages(ticketMessages as Message[]);
     } catch (error) {
       console.error('Error in fetchMessages:', error);
       toast.error('Não foi possível carregar as mensagens');
@@ -75,10 +85,18 @@ export const useTickets = (userId: string | undefined) => {
       
       toast.success('Ticket criado com sucesso');
       
-      setTickets(prev => [newTicket, ...prev]);
+      // Convert the returned ticket to match Ticket interface
+      const typedTicket: Ticket = {
+        ...newTicket,
+        status: newTicket.status as TicketStatus,
+        priority: newTicket.priority as TicketPriority,
+        category: newTicket.category as TicketCategory
+      };
+      
+      setTickets(prev => [typedTicket, ...prev]);
       setActiveTab('my-tickets');
       
-      return newTicket;
+      return typedTicket;
     } catch (error) {
       console.error('Error in createTicket:', error);
       toast.error('Não foi possível criar o ticket');
@@ -98,14 +116,22 @@ export const useTickets = (userId: string | undefined) => {
       const result = await sendTicketMessage(selectedTicket.id, userId, content);
       
       if (result.message) {
-        setMessages(prev => [...prev, result.message]);
+        setMessages(prev => [...prev, result.message as Message]);
       }
       
       // Update ticket status if needed
       if (result.updatedTicket) {
-        setSelectedTicket(result.updatedTicket);
+        // Convert to proper Ticket type
+        const updatedTypedTicket: Ticket = {
+          ...result.updatedTicket,
+          status: result.updatedTicket.status as TicketStatus,
+          priority: result.updatedTicket.priority as TicketPriority,
+          category: result.updatedTicket.category as TicketCategory
+        };
+        
+        setSelectedTicket(updatedTypedTicket);
         setTickets(prev => 
-          prev.map(t => t.id === selectedTicket.id ? result.updatedTicket! : t)
+          prev.map(t => t.id === selectedTicket.id ? updatedTypedTicket : t)
         );
       }
     } catch (error) {
