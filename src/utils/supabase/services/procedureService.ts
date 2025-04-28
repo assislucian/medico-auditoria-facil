@@ -86,8 +86,10 @@ export async function searchProcedures(query: string, type?: ProcedureType): Pro
     // Use string type to avoid type instantiation errors
     let dbQuery = supabase
       .from('procedure_results')
-      .select('*')
-      .or(`procedimento.ilike.%${searchQuery}%,codigo.ilike.%${searchQuery}%`);
+      .select();
+      
+    // Use proper OR condition syntax
+    dbQuery = dbQuery.or(`procedimento.ilike.%${searchQuery}%,codigo.ilike.%${searchQuery}%`);
       
     if (type) {
       dbQuery = dbQuery.eq('type', type);
@@ -114,7 +116,7 @@ export async function getProcedureById(id: string): Promise<ProcedureFlat | null
   try {
     const { data, error } = await supabase
       .from('procedure_results')
-      .select('*')
+      .select()
       .eq('id', id)
       .single();
       
@@ -137,7 +139,7 @@ export async function fetchProceduresByAnalysisId(analysisId: string): Promise<P
   try {
     const { data, error } = await supabase
       .from('procedure_results')
-      .select('*')
+      .select()
       .eq('analysis_id', analysisId);
       
     if (error) {
@@ -159,7 +161,7 @@ export async function getProceduresByGuide(guideId: string): Promise<ProcedureQu
   try {
     const { data, error } = await supabase
       .from('procedure_results')
-      .select('*')
+      .select()
       .eq('guia', guideId);
       
     if (error) {
