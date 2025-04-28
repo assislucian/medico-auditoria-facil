@@ -5,7 +5,7 @@ import {
   Route,
   Navigate
 } from "react-router-dom";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -24,14 +24,14 @@ import Support from "@/pages/Support";
 import NotFound from "@/pages/NotFound";
 import AuthCallback from "@/pages/AuthCallback";
 
-// Import the new GuideAnalysisPage
+// Import the GuideAnalysisPage
 import GuideAnalysisPage from './pages/GuideAnalysis';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <div>Carregando...</div>; // Pode ser substituído por um spinner
+    return <div>Carregando...</div>; // Can be replaced with a spinner
   }
 
   return isAuthenticated ? children : <Navigate to="/login" />;
