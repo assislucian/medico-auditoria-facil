@@ -11,17 +11,14 @@ type ProceduresResponse = ProcedureResult[] | null;
  */
 export async function getProceduresByType(type: string): Promise<ProceduresResponse> {
   try {
-    // Define a simple response interface to avoid deep type instantiation
-    interface QueryResponse {
+    // Use any to avoid deep instantiation
+    const response: {
       data: ProcedureResult[] | null;
       error: PostgrestError | null;
-    }
-    
-    // Execute the query with minimal type annotations
-    const response = await supabase
+    } = await supabase
       .from('procedure_results')
       .select('*')
-      .eq('type', type) as unknown as QueryResponse;
+      .eq('type', type) as any;
 
     if (response.error) throw response.error;
     return response.data;
@@ -36,16 +33,14 @@ export async function getProceduresByType(type: string): Promise<ProceduresRespo
  */
 export async function getProcedureById(id: string): Promise<ProcedureResult | null> {
   try {
-    interface SingleQueryResponse {
+    const response: {
       data: ProcedureResult | null;
       error: PostgrestError | null;
-    }
-    
-    const response = await supabase
+    } = await supabase
       .from('procedure_results')
       .select('*')
       .eq('id', id)
-      .single() as unknown as SingleQueryResponse;
+      .single() as any;
 
     if (response.error) throw response.error;
     return response.data;
@@ -60,15 +55,13 @@ export async function getProcedureById(id: string): Promise<ProcedureResult | nu
  */
 export async function getProceduresByAnalysisId(analysisId: string): Promise<ProceduresResponse> {
   try {
-    interface QueryResponse {
+    const response: {
       data: ProcedureResult[] | null;
       error: PostgrestError | null;
-    }
-    
-    const response = await supabase
+    } = await supabase
       .from('procedure_results')
       .select('*')
-      .eq('analysis_id', analysisId) as unknown as QueryResponse;
+      .eq('analysis_id', analysisId) as any;
 
     if (response.error) throw response.error;
     
@@ -90,15 +83,13 @@ export async function getProceduresByAnalysisId(analysisId: string): Promise<Pro
  */
 export async function getProceduresByGuia(guia: string): Promise<ProceduresResponse> {
   try {
-    interface QueryResponse {
+    const response: {
       data: ProcedureResult[] | null;
       error: PostgrestError | null;
-    }
-    
-    const response = await supabase
+    } = await supabase
       .from('procedure_results')
       .select('*')
-      .eq('guia', guia) as unknown as QueryResponse;
+      .eq('guia', guia) as any;
 
     if (response.error) throw response.error;
     
@@ -121,15 +112,13 @@ export async function getProceduresByGuia(guia: string): Promise<ProceduresRespo
  */
 export async function getUnpaidProcedures(): Promise<ProceduresResponse> {
   try {
-    interface QueryResponse {
+    const response: {
       data: ProcedureResult[] | null;
       error: PostgrestError | null;
-    }
-    
-    const response = await supabase
+    } = await supabase
       .from('procedure_results')
       .select('*')
-      .eq('pago', false) as unknown as QueryResponse;
+      .eq('pago', false) as any;
 
     if (response.error) throw response.error;
     return response.data;
@@ -147,15 +136,13 @@ export async function updateProcedurePaymentStatus(
   paid: boolean
 ): Promise<{ success: boolean; error: PostgrestError | null }> {
   try {
-    interface UpdateResponse {
+    const response: {
       data: any;
       error: PostgrestError | null;
-    }
-    
-    const response = await supabase
+    } = await supabase
       .from('procedure_results')
       .update({ pago: paid })
-      .eq('id', id) as unknown as UpdateResponse;
+      .eq('id', id) as any;
 
     return {
       success: !response.error,
