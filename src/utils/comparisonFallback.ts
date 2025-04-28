@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ProcedureResult } from '@/types/database';
 
 /**
  * Create simulation data for testing/demo purposes
@@ -74,8 +73,8 @@ export async function getFallbackComparisonData(analysisId: string) {
     }
     
     // Get the procedures
-    const { data: proceduresData, error: proceduresError } = await supabase
-      .from('procedure_results')  // Use procedure_results instead of procedures
+    const { data: procedures, error: proceduresError } = await supabase
+      .from('procedures')
       .select('*')
       .eq('analysis_id', analysisId);
       
@@ -83,9 +82,6 @@ export async function getFallbackComparisonData(analysisId: string) {
       console.error('Error fetching procedures:', proceduresError);
       throw new Error('Falha ao buscar procedimentos');
     }
-    
-    // Cast the data to the expected type
-    const procedures = proceduresData as unknown as ProcedureResult[];
     
     console.log(`Found ${procedures.length} procedures for analysis ${analysisId}`);
     
@@ -139,3 +135,4 @@ export async function getFallbackComparisonData(analysisId: string) {
     return createSimulationData();
   }
 }
+

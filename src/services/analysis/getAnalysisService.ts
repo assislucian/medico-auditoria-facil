@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ProcedureResult, Procedure } from '@/types/database';
+import { fetchAnalysisById, fetchProceduresByAnalysisId } from '@/utils/supabase';
 
 interface AnalysisSummary {
   totalCBHPM?: number;
@@ -18,35 +18,17 @@ export async function getAnalysisById(analysisId: string) {
   try {
     console.log('Buscando análise por ID:', analysisId);
     
-    const { data: analysisData, error: analysisError } = await supabase
-      .from('analysis_results')
-      .select('*')
-      .eq('id', analysisId)
-      .single();
-
-    if (analysisError || !analysisData) {
+    const analysisData = await fetchAnalysisById(analysisId);
+    if (!analysisData) {
       console.log('Análise não encontrada');
       return null;
     }
     
-    // Use explicit typing for procedures data
-    const { data: proceduresData, error: proceduresError } = await supabase
-      .from('procedure_results') // Use procedure_results instead of procedures
-      .select('*')
-      .eq('analysis_id', analysisId);
-      
-    if (proceduresError) {
-      console.error('Error fetching procedures:', proceduresError);
-      return null;
-    }
-    
-    console.log(`Encontrados ${proceduresData?.length || 0} procedimentos para a análise`);
+    const proceduresData = await fetchProceduresByAnalysisId(analysisId);
+    console.log(`Encontrados ${proceduresData.length} procedimentos para a análise`);
     
     // Type assertion for the summary field
     const summary = analysisData.summary as AnalysisSummary;
-    
-    // Cast the procedures data to the expected type
-    const typedProcedures = proceduresData as unknown as ProcedureResult[];
     
     return {
       demonstrativoInfo: {
@@ -54,9 +36,9 @@ export async function getAnalysisById(analysisId: string) {
         competencia: analysisData.competencia || new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
         hospital: analysisData.hospital || 'Hospital não especificado',
         data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
-        beneficiario: typedProcedures[0]?.beneficiario || 'Não especificado'
+        beneficiario: proceduresData[0]?.beneficiario || 'Não especificado'
       },
-      procedimentos: typedProcedures.map(proc => ({
+      procedimentos: proceduresData.map(proc => ({
         id: proc.id,
         codigo: proc.codigo,
         procedimento: proc.procedimento,

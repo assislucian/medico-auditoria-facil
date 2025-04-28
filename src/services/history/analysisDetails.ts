@@ -1,59 +1,49 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { logger } from '../../utils/logger';
+import { toast } from 'sonner';
 
-// Define explicit types to avoid deep instantiation issues
-interface ProcedureResult {
-  id: string;
-  codigo: string;
-  procedimento: string;
-  papel?: string;
-  valor_cbhpm: number;
-  valor_pago: number;
-  diferenca: number;
-  pago: boolean;
-  guia?: string;
-  beneficiario?: string;
-  doctors?: any[];
-}
-
-/**
- * Fetch analysis details by ID
- * @param analysisId Analysis ID
- * @returns Analysis details
- */
 export async function fetchAnalysisDetails(analysisId: string) {
   try {
-    logger.info('Fetching analysis details', { analysisId });
+    console.log('Buscando detalhes da análise:', analysisId);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('Usuário não está autenticado');
+      toast.error('Você precisa estar autenticado para acessar detalhes da análise');
+      return null;
+    }
     
     const { data: analysisData, error: analysisError } = await supabase
       .from('analysis_results')
       .select('*')
       .eq('id', analysisId)
+      .eq('user_id', user.id)
       .single();
     
     if (analysisError) {
-      logger.error('Error fetching analysis details', { analysisId, error: analysisError });
+      console.error('Erro ao buscar detalhes da análise:', analysisError);
+      toast.error('Erro ao carregar detalhes da análise');
       return null;
     }
     
-    // Use a simpler query to avoid excessive type instantiation
     const { data: proceduresData, error: proceduresError } = await supabase
-      .from('procedure_results')
+      .from('procedures')
       .select('*')
-      .eq('analysis_id', analysisId);
+      .eq('analysis_id', analysisId)
+      .eq('user_id', user.id);
     
     if (proceduresError) {
-      logger.error('Error fetching procedures for analysis', { analysisId, error: proceduresError });
+      console.error('Erro ao buscar procedimentos:', proceduresError);
+      toast.error('Erro ao carregar procedimentos da análise');
       return null;
     }
     
-    // Cast data to the correct type to avoid type errors
-    const typedProcedures = proceduresData as unknown as ProcedureResult[];
+    console.log(`Análise encontrada com ${proceduresData.length} procedimentos`);
     
-    const result = {
+    return {
       ...analysisData,
-      procedimentos: typedProcedures.map((proc: ProcedureResult) => ({
+      procedimentos: proceduresData.map((proc: any) => ({
         id: proc.id,
         codigo: proc.codigo,
         procedimento: proc.procedimento,
@@ -67,15 +57,9 @@ export async function fetchAnalysisDetails(analysisId: string) {
         doctors: proc.doctors || []
       }))
     };
-    
-    logger.debug('Analysis details fetched', { 
-      analysisId, 
-      procedurasCount: result.procedimentos.length 
-    });
-    
-    return result;
   } catch (error) {
-    logger.error('Exception in fetchAnalysisDetails', { analysisId, error });
+    console.error('Erro ao processar detalhes da análise:', error);
+    toast.error('Erro ao processar detalhes da análise');
     return null;
   }
 }

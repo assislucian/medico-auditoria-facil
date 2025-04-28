@@ -1,21 +1,16 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ProcedureResult, Procedure } from '@/types/database';
 
-export async function fetchProceduresByAnalysisId(analysisId: string): Promise<Procedure[]> {
+export async function fetchProceduresByAnalysisId(analysisId: string) {
   try {
-    // Use explicit any typing to avoid deep type instantiation
-    const response: { 
-      data: Procedure[] | null; 
-      error: any 
-    } = await supabase
+    const { data, error } = await supabase
       .from('procedures')
       .select('*')
-      .eq('analysis_id', analysisId) as any;
+      .eq('analysis_id', analysisId);
       
-    if (response.error) throw response.error;
+    if (error) throw error;
     
-    return response.data || [];
+    return data || [];
   } catch (error) {
     console.error('Error fetching procedures:', error);
     return [];
