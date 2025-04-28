@@ -1,8 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { ProcedureType, ProcedureFlat, ProcedureWithChildren } from '../types/procedures';
+import type { ProcedureType, ProcedureFlat, ProcedureWithChildren, DoctorParticipation } from '../types/procedures';
 import { mapProcedureData } from '../mappers/procedureMappers';
 import { safeDbQuery } from '../sharedHelpers';
+
+// Define the return type for procedure queries
+export type ProcedureQueryResult = {
+  data: ProcedureFlat[];
+  error: Error | null;
+};
 
 /**
  * Fetch all procedures from the database
@@ -106,26 +112,49 @@ export async function fetchProceduresByAnalysisId(analysisId: string): Promise<P
 }
 
 /**
+ * Fetch procedures by guide ID
+ */
+export async function getProceduresByGuide(guideId: string): Promise<ProcedureQueryResult> {
+  try {
+    const { data, error } = await supabase
+      .from('procedure_results')
+      .select('*')
+      .eq('guia', guideId);
+      
+    if (error) {
+      console.error('Error fetching procedures by guide ID:', error);
+      return { data: [], error: new Error(error.message) };
+    }
+    
+    // Map the data and handle doctors array with proper casting
+    const mappedData = data ? data.map(row => {
+      const mapped = mapProcedureData(row);
+      // Ensure doctors is properly cast to DoctorParticipation[]
+      if (row.doctors) {
+        mapped.doctors = row.doctors as unknown as DoctorParticipation[];
+      }
+      return mapped;
+    }) : [];
+    
+    return { data: mappedData, error: null };
+  } catch (error) {
+    console.error('Error in getProceduresByGuide:', error);
+    return { 
+      data: [], 
+      error: error instanceof Error ? error : new Error('Unknown error') 
+    };
+  }
+}
+
+/**
  * Build a hierarchical tree of procedures based on parent-child relationships
  */
 function buildProcedureTree(procedures: ProcedureFlat[]): ProcedureWithChildren[] {
-  // Create a map of all procedures by their ID
-  const procedureMap = new Map<string, ProcedureWithChildren>();
+  // Simple implementation to avoid recursion issues
+  const result: ProcedureWithChildren[] = procedures.map(proc => ({
+    ...proc,
+    children: []
+  }));
   
-  // First pass: Initialize the map with all procedures
-  procedures.forEach(proc => {
-    procedureMap.set(proc.id, { ...proc, children: [] });
-  });
-  
-  // Second pass: Build the tree structure
-  const rootProcedures: ProcedureWithChildren[] = [];
-  
-  // Add all procedures as root level since we're not handling parent-child relationships yet
-  procedures.forEach(proc => {
-    const procedure = procedureMap.get(proc.id);
-    if (!procedure) return;
-    rootProcedures.push(procedure);
-  });
-  
-  return rootProcedures;
+  return result;
 }
