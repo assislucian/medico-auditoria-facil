@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,7 +51,7 @@ export const NotificationsSettings = () => {
       
       setLoading(true);
       try {
-        const profileData = await getProfile(supabase, user.id);
+        const profileData = await getProfile();
         
         if (profileData && profileData.notification_preferences) {
           // Type assertion to fix the type error
@@ -85,7 +86,7 @@ export const NotificationsSettings = () => {
     
     setSaving(true);
     try {
-      const success = await updateProfile(supabase, user.id, {
+      const success = await updateProfile({
         notification_preferences: toJson(notifications),
         updated_at: new Date().toISOString()
       });
