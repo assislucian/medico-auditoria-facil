@@ -1,8 +1,47 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { ProcedureType, ProcedureFlat, ProcedureWithChildren, DoctorParticipation } from '../types/procedures';
+import type { ProcedureType, ProcedureWithChildren } from '../types/procedures';
 import { mapProcedureData } from '../mappers/procedureMappers';
-import { safeDbQuery } from '../sharedHelpers';
+import { Json } from '@/integrations/supabase/types';
+
+// Local type for database row to prevent excessive type instantiation
+type ProcedureResultRow = {
+  id: string;
+  codigo: string;
+  procedimento: string;
+  papel?: string;
+  valor_cbhpm: number | null;
+  valor_pago: number | null;
+  diferenca: number | null;
+  pago: boolean | null;
+  guia?: string;
+  beneficiario?: string;
+  doctors: Json | null;
+  analysis_id: string;
+}
+
+// Domain model types
+export interface DoctorParticipation {
+  id: string;
+  name?: string;
+  role?: string;
+  crm?: string;
+  value?: number;
+}
+
+export interface ProcedureFlat {
+  id: string;
+  codigo: string;
+  procedimento: string;
+  papel?: string;
+  valorCBHPM: number;
+  valorPago: number;
+  diferenca: number;
+  pago: boolean;
+  guia?: string;
+  beneficiario?: string;
+  doctors: DoctorParticipation[];
+}
 
 // Define the return type for procedure queries
 export type ProcedureQueryResult = {
@@ -15,7 +54,7 @@ export type ProcedureQueryResult = {
  */
 export async function fetchProcedures(type: ProcedureType = 'all'): Promise<ProcedureWithChildren[]> {
   try {
-    let query = supabase.from('procedure_results').select('*');
+    let query = supabase.from<ProcedureResultRow>('procedure_results').select('*');
     
     if (type !== 'all') {
       query = query.eq('type', type);
@@ -44,7 +83,7 @@ export async function searchProcedures(query: string, type?: ProcedureType): Pro
     const searchQuery = query.toLowerCase();
     
     let dbQuery = supabase
-      .from('procedure_results')
+      .from<ProcedureResultRow>('procedure_results')
       .select('*')
       .or(`procedimento.ilike.%${searchQuery}%,codigo.ilike.%${searchQuery}%`);
       
@@ -72,7 +111,7 @@ export async function searchProcedures(query: string, type?: ProcedureType): Pro
 export async function getProcedureById(id: string): Promise<ProcedureFlat | null> {
   try {
     const { data, error } = await supabase
-      .from('procedure_results')
+      .from<ProcedureResultRow>('procedure_results')
       .select('*')
       .eq('id', id)
       .single();
@@ -95,7 +134,7 @@ export async function getProcedureById(id: string): Promise<ProcedureFlat | null
 export async function fetchProceduresByAnalysisId(analysisId: string): Promise<ProcedureFlat[]> {
   try {
     const { data, error } = await supabase
-      .from('procedure_results')
+      .from<ProcedureResultRow>('procedure_results')
       .select('*')
       .eq('analysis_id', analysisId);
       
@@ -117,7 +156,7 @@ export async function fetchProceduresByAnalysisId(analysisId: string): Promise<P
 export async function getProceduresByGuide(guideId: string): Promise<ProcedureQueryResult> {
   try {
     const { data, error } = await supabase
-      .from('procedure_results')
+      .from<ProcedureResultRow>('procedure_results')
       .select('*')
       .eq('guia', guideId);
       
