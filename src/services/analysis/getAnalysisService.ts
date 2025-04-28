@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAnalysisById, fetchProceduresByAnalysisId } from '@/utils/supabase';
+import { ProcedureData } from '@/utils/supabase/procedureHelpers';
 
 interface AnalysisSummary {
   totalCBHPM?: number;
@@ -38,7 +39,7 @@ export async function getAnalysisById(analysisId: string) {
         data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
         beneficiario: proceduresData[0]?.beneficiario || 'Não especificado'
       },
-      procedimentos: proceduresData.map(proc => ({
+      procedimentos: proceduresData.map((proc: ProcedureData) => ({
         id: proc.id,
         codigo: proc.codigo,
         procedimento: proc.procedimento,

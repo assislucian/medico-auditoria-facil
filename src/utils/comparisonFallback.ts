@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { ProcedureData } from '@/utils/supabase/procedureHelpers';
 
 /**
  * Create simulation data for testing/demo purposes
@@ -92,7 +93,7 @@ export async function getFallbackComparisonData(analysisId: string) {
       acima: 0
     };
     
-    const details = procedures.map(proc => {
+    const details = procedures.map((proc: ProcedureData) => {
       const valorCbhpm = proc.valor_cbhpm || 0;
       const valorPago = proc.valor_pago || 0;
       const diferenca = Math.abs(valorPago - valorCbhpm);
@@ -135,4 +136,3 @@ export async function getFallbackComparisonData(analysisId: string) {
     return createSimulationData();
   }
 }
-

@@ -1,4 +1,3 @@
-
 /**
  * Procedure Service for Supabase
  * Contains service functions to work with procedures in Supabase

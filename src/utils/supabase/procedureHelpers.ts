@@ -4,8 +4,9 @@
  * Contains helper functions to work with procedures in Supabase
  */
 import { supabase } from '@/integrations/supabase/client';
+import { MockProcedure } from '@/integrations/mock/mockData';
 
-// Define simplified type for procedure data
+// Define simplified type for procedure data - same fields as our mock data
 export interface ProcedureData {
   id: string;
   analysis_id: string;
@@ -19,6 +20,8 @@ export interface ProcedureData {
   guia?: string;
   beneficiario?: string;
   doctors?: any[];
+  user_id?: string;
+  created_at?: string;
   [key: string]: any; // Allow for other properties
 }
 
@@ -35,11 +38,11 @@ interface ProcedureResponse {
  */
 export async function fetchProceduresByAnalysisId(analysisId: string): Promise<ProcedureData[]> {
   try {
-    // Use type assertion to handle the Supabase response
+    // For mocked data no type assertion needed
     const response = await supabase
       .from('procedures')
       .select('*')
-      .eq('analysis_id', analysisId) as unknown as ProcedureResponse;
+      .eq('analysis_id', analysisId);
       
     if (response.error) throw response.error;
     
