@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
 import { ProcedureResult } from '@/types/database';
@@ -10,14 +11,14 @@ type ProceduresResponse = ProcedureResult[] | null;
  */
 export async function getProceduresByType(type: string): Promise<ProceduresResponse> {
   try {
-    // Use explicit type assertions to avoid deep instantiation
-    const { data, error } = await supabase
+    // Use any to bypass the deep instantiation issue
+    const response: any = await supabase
       .from('procedure_results')
       .select('*')
       .eq('type', type);
 
-    if (error) throw error;
-    return data as ProceduresResponse;
+    if (response.error) throw response.error;
+    return response.data as ProceduresResponse;
   } catch (error) {
     console.error('Error fetching procedures by type:', error);
     return null;
@@ -29,16 +30,16 @@ export async function getProceduresByType(type: string): Promise<ProceduresRespo
  */
 export async function getProcedureById(id: string): Promise<ProcedureResult | null> {
   try {
-    const { data, error } = await supabase
+    const response: any = await supabase
       .from('procedure_results')
       .select('*')
       .eq('id', id)
       .single();
 
-    if (error) throw error;
+    if (response.error) throw response.error;
     
     // Use explicit casting for returned data
-    return data as ProcedureResult;
+    return response.data as ProcedureResult;
   } catch (error) {
     console.error('Error fetching procedure by ID:', error);
     return null;
@@ -50,15 +51,15 @@ export async function getProcedureById(id: string): Promise<ProcedureResult | nu
  */
 export async function getProceduresByAnalysisId(analysisId: string): Promise<ProceduresResponse> {
   try {
-    const { data, error } = await supabase
+    const response: any = await supabase
       .from('procedure_results')
       .select('*')
       .eq('analysis_id', analysisId);
 
-    if (error) throw error;
+    if (response.error) throw response.error;
     
     // Process doctors field for each procedure with explicit typing
-    const processedData = data?.map(proc => ({
+    const processedData = response.data?.map((proc: any) => ({
       ...proc,
       doctors: (proc.doctors as any[]) || []
     }));
@@ -75,21 +76,21 @@ export async function getProceduresByAnalysisId(analysisId: string): Promise<Pro
  */
 export async function getProceduresByGuia(guia: string): Promise<ProceduresResponse> {
   try {
-    const result = await supabase
+    const response: any = await supabase
       .from('procedure_results')
       .select('*')
       .eq('guia', guia);
 
-    if (result.error) throw result.error;
+    if (response.error) throw response.error;
     
     // Process doctors field for each procedure
-    if (result.data) {
-      for (const proc of result.data) {
+    if (response.data) {
+      for (const proc of response.data) {
         proc.doctors = proc.doctors as any[] || [];
       }
     }
     
-    return result.data as ProceduresResponse;
+    return response.data as ProceduresResponse;
   } catch (error) {
     console.error('Error fetching procedures by guia:', error);
     return null;
@@ -101,13 +102,13 @@ export async function getProceduresByGuia(guia: string): Promise<ProceduresRespo
  */
 export async function getUnpaidProcedures(): Promise<ProceduresResponse> {
   try {
-    const result = await supabase
+    const response: any = await supabase
       .from('procedure_results')
       .select('*')
       .eq('pago', false);
 
-    if (result.error) throw result.error;
-    return result.data as ProceduresResponse;
+    if (response.error) throw response.error;
+    return response.data as ProceduresResponse;
   } catch (error) {
     console.error('Error fetching unpaid procedures:', error);
     return null;
@@ -122,14 +123,14 @@ export async function updateProcedurePaymentStatus(
   paid: boolean
 ): Promise<{ success: boolean; error: PostgrestError | null }> {
   try {
-    const { error } = await supabase
+    const response: any = await supabase
       .from('procedure_results')
       .update({ pago: paid })
       .eq('id', id);
 
     return {
-      success: !error,
-      error
+      success: !response.error,
+      error: response.error
     };
   } catch (error) {
     console.error('Error updating procedure payment status:', error);
