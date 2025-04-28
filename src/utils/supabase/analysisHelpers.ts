@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { safeDbOperation, safeDbQuery } from './sharedHelpers';
+import { safeDbOperation } from './sharedHelpers';
 
 /**
  * Fetch analysis by ID
@@ -28,10 +28,16 @@ export async function fetchAnalysisById(analysisId: string) {
  * to avoid circular dependencies
  */
 export async function fetchProceduresByAnalysisId(analysisId: string) {
-  return await safeDbOperation(
-    supabase
+  try {
+    const { data, error } = await supabase
       .from('procedure_results')
       .select('*')
-      .eq('analysis_id', analysisId)
-  ) || [];
+      .eq('analysis_id', analysisId);
+      
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching procedures by analysis ID:', error);
+    return [];
+  }
 }

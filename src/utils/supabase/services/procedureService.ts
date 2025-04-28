@@ -8,81 +8,101 @@ import { safeDbQuery } from '../sharedHelpers';
  * Fetch all procedures from the database
  */
 export async function fetchProcedures(type: ProcedureType = 'all'): Promise<ProcedureWithChildren[]> {
-  let query = supabase.from('procedure_results').select('*');
-  
-  if (type !== 'all') {
-    query = query.eq('type', type);
-  }
-  
-  const { data, error } = await query.order('codigo');
-  
-  if (error) {
-    console.error('Error fetching procedures:', error);
+  try {
+    let query = supabase.from('procedure_results').select('*');
+    
+    if (type !== 'all') {
+      query = query.eq('type', type);
+    }
+    
+    const { data, error } = await query.order('codigo');
+    
+    if (error) {
+      console.error('Error fetching procedures:', error);
+      return [];
+    }
+    
+    const proceduresData = data ? data.map(mapProcedureData) : [];
+    return buildProcedureTree(proceduresData);
+  } catch (error) {
+    console.error('Error in fetchProcedures:', error);
     return [];
   }
-  
-  const proceduresData = data ? data.map(mapProcedureData) : [];
-  return buildProcedureTree(proceduresData);
 }
 
 /**
  * Search for procedures by name, code or description
  */
 export async function searchProcedures(query: string, type?: ProcedureType): Promise<ProcedureFlat[]> {
-  const searchQuery = query.toLowerCase();
-  
-  let dbQuery = supabase
-    .from('procedure_results')
-    .select('*')
-    .or(`procedimento.ilike.%${searchQuery}%,codigo.ilike.%${searchQuery}%`);
+  try {
+    const searchQuery = query.toLowerCase();
     
-  if (type) {
-    dbQuery = dbQuery.eq('type', type);
-  }
-  
-  const { data, error } = await dbQuery.limit(20);
-  
-  if (error) {
-    console.error('Error searching procedures:', error);
+    let dbQuery = supabase
+      .from('procedure_results')
+      .select('*')
+      .or(`procedimento.ilike.%${searchQuery}%,codigo.ilike.%${searchQuery}%`);
+      
+    if (type) {
+      dbQuery = dbQuery.eq('type', type);
+    }
+    
+    const { data, error } = await dbQuery.limit(20);
+    
+    if (error) {
+      console.error('Error searching procedures:', error);
+      return [];
+    }
+    
+    return data ? data.map(mapProcedureData) : [];
+  } catch (error) {
+    console.error('Error in searchProcedures:', error);
     return [];
   }
-  
-  return data ? data.map(mapProcedureData) : [];
 }
 
 /**
  * Get a procedure by ID
  */
 export async function getProcedureById(id: string): Promise<ProcedureFlat | null> {
-  const { data, error } = await supabase
-    .from('procedure_results')
-    .select('*')
-    .eq('id', id)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('procedure_results')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (error) {
+      console.error('Error fetching procedure:', error);
+      return null;
+    }
     
-  if (error) {
-    console.error('Error fetching procedure:', error);
+    return mapProcedureData(data);
+  } catch (error) {
+    console.error('Error in getProcedureById:', error);
     return null;
   }
-  
-  return mapProcedureData(data);
 }
 
 /**
  * Fetch procedures by analysis ID
  */
 export async function fetchProceduresByAnalysisId(analysisId: string): Promise<ProcedureFlat[]> {
-  const { data, error } = await supabase
-    .from('procedure_results')
-    .select('*')
-    .eq('analysis_id', analysisId);
+  try {
+    const { data, error } = await supabase
+      .from('procedure_results')
+      .select('*')
+      .eq('analysis_id', analysisId);
+      
+    if (error) {
+      console.error('Error fetching procedures by analysis ID:', error);
+      return [];
+    }
     
-  if (error) {
-    console.error('Error fetching procedures by analysis ID:', error);
+    return data ? data.map(mapProcedureData) : [];
+  } catch (error) {
+    console.error('Error in fetchProceduresByAnalysisId:', error);
     return [];
   }
-  
-  return data ? data.map(mapProcedureData) : [];
 }
 
 /**
