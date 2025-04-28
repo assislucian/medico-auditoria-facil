@@ -10,7 +10,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types";
 import { toast } from "sonner";
-import { getProfile, updateProfile as updateProfileHelper, toJson } from "@/utils/supabase";
+import { getProfile, updateProfile as updateProfileHelper, toJson } from "@/utils/supabase/profileHelpers";
 import { useProfileAvatar } from "./use-profile-avatar";
 import { Json } from '@/integrations/supabase/types';
 

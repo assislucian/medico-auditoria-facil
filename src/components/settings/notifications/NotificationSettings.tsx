@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +16,7 @@ import {
   notificationPreferencesToJson
 } from "./types";
 import { Profile, ProfileWithUUID } from '@/types';
-import { getProfile, updateProfile, toJson } from "@/utils/supabase";
+import { getProfile, updateProfile, toJson } from "@/utils/supabase/profileHelpers";
 import { useAlert } from '@/utils/alertUtils';
 
 /**

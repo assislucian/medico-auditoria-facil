@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Json } from '@/integrations/supabase/types';
 import { Profile, ProfileWithUUID } from '@/types';
-import { getProfile, updateProfile, toJson } from "@/utils/supabase";
+import { getProfile, updateProfile, toJson } from "@/utils/supabase/profileHelpers";
 
 interface NotificationPreferences {
   email: {
