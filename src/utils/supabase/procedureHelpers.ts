@@ -83,13 +83,16 @@ function mapDoctorsData(doctorsData: Json | null): DoctorParticipation[] {
   try {
     // Convert the JSON data to a proper array of doctor objects
     if (Array.isArray(doctorsData)) {
-      return doctorsData.map(doctor => ({
-        id: typeof doctor.id === 'string' ? doctor.id : '',
-        name: typeof doctor.name === 'string' ? doctor.name : undefined,
-        role: typeof doctor.role === 'string' ? doctor.role : undefined,
-        crm: typeof doctor.crm === 'string' ? doctor.crm : undefined,
-        value: typeof doctor.value === 'number' ? doctor.value : undefined
-      }));
+      return doctorsData.map(doctor => {
+        const docObj = doctor as any;
+        return {
+          id: typeof docObj.id === 'string' ? docObj.id : '',
+          name: typeof docObj.name === 'string' ? docObj.name : undefined,
+          role: typeof docObj.role === 'string' ? docObj.role : undefined,
+          crm: typeof docObj.crm === 'string' ? docObj.crm : undefined,
+          value: typeof docObj.value === 'number' ? docObj.value : undefined
+        };
+      });
     }
   } catch (e) {
     console.error('Error parsing doctors data:', e);
