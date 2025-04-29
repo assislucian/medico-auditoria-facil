@@ -62,6 +62,70 @@ export const typography = {
     wider: '0.05em',
     widest: '0.1em',
   },
+  
+  // Text styles (combinations of the above)
+  textStyles: {
+    h1: {
+      fontSize: '2.25rem',
+      fontWeight: 700,
+      lineHeight: 1.2,
+      letterSpacing: '-0.025em',
+    },
+    h2: {
+      fontSize: '1.875rem',
+      fontWeight: 700,
+      lineHeight: 1.2,
+      letterSpacing: '-0.025em',
+    },
+    h3: {
+      fontSize: '1.5rem',
+      fontWeight: 600,
+      lineHeight: 1.2,
+      letterSpacing: '-0.015em',
+    },
+    h4: {
+      fontSize: '1.25rem',
+      fontWeight: 600,
+      lineHeight: 1.2,
+      letterSpacing: '-0.015em',
+    },
+    h5: {
+      fontSize: '1.125rem',
+      fontWeight: 600,
+      lineHeight: 1.2,
+      letterSpacing: '-0.01em',
+    },
+    h6: {
+      fontSize: '1rem',
+      fontWeight: 600,
+      lineHeight: 1.2,
+      letterSpacing: '-0.01em',
+    },
+    lead: {
+      fontSize: '1.125rem',
+      fontWeight: 400,
+      lineHeight: 1.6,
+      letterSpacing: 'normal',
+    },
+    body: {
+      fontSize: '1rem',
+      fontWeight: 400,
+      lineHeight: 1.5,
+      letterSpacing: 'normal',
+    },
+    small: {
+      fontSize: '0.875rem',
+      fontWeight: 400,
+      lineHeight: 1.5,
+      letterSpacing: 'normal',
+    },
+    tiny: {
+      fontSize: '0.75rem',
+      fontWeight: 400,
+      lineHeight: 1.5,
+      letterSpacing: 'normal',
+    },
+  }
 };
 
 export type TypographyToken = keyof typeof typography;
