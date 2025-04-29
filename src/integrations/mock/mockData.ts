@@ -1,72 +1,4 @@
 
-/**
- * Mock Data
- * 
- * This file contains mock data for development without requiring an actual database connection.
- */
-
-export const mockData = {
-  analysisResults: [
-    {
-      id: 'analysis-1',
-      created_at: new Date().toISOString(),
-      file_name: 'demo_analysis.pdf',
-      file_type: 'complete',
-      hospital: 'Hospital São Lucas',
-      competencia: 'Janeiro 2025',
-      numero: 'DM123456',
-      status: 'processed',
-      summary: {
-        totalCBHPM: 5000,
-        totalPago: 4500,
-        totalDiferenca: 500,
-        procedimentosTotal: 10,
-        procedimentosNaoPagos: 2
-      },
-      user_id: 'mock-user-id'
-    }
-  ],
-  procedures: [
-    {
-      id: 'proc-1',
-      analysis_id: 'analysis-1',
-      codigo: '30602246',
-      procedimento: 'Reconstrução Mamária Com Retalhos Cutâneos Regionais',
-      papel: 'Cirurgião',
-      valor_cbhpm: 3200.50,
-      valor_pago: 2800.00,
-      diferenca: 400.50,
-      pago: false,
-      guia: '10467538',
-      beneficiario: 'Maria da Silva',
-      doctors: [
-        { name: 'Dr. João Silva', crm: '12345', role: 'Cirurgião' }
-      ],
-      user_id: 'mock-user-id',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'proc-2',
-      analysis_id: 'analysis-1',
-      codigo: '30602076',
-      procedimento: 'Exérese De Lesão Da Mama Por Marcação Estereotáxica Ou Roll',
-      papel: 'Cirurgião',
-      valor_cbhpm: 1800.75,
-      valor_pago: 1900.25,
-      diferenca: 99.50,
-      pago: true,
-      guia: '10467538',
-      beneficiario: 'Maria da Silva',
-      doctors: [
-        { name: 'Dr. João Silva', crm: '12345', role: 'Cirurgião' }
-      ],
-      user_id: 'mock-user-id',
-      created_at: new Date().toISOString()
-    }
-  ]
-};
-
-// Type definition for the mock procedure data
 export interface MockProcedure {
   id: string;
   analysis_id: string;
@@ -79,13 +11,12 @@ export interface MockProcedure {
   pago: boolean;
   guia: string;
   beneficiario: string;
-  doctors: any[];
-  user_id: string;
+  doctors?: { id: string; name: string }[];
+  user_id?: string;
   created_at: string;
 }
 
-// Type definition for the mock analysis result data
-export interface MockAnalysisResult {
+export interface MockAnalysis {
   id: string;
   created_at: string;
   file_name: string;
@@ -103,3 +34,170 @@ export interface MockAnalysisResult {
   };
   user_id: string;
 }
+
+export interface MockProfile {
+  id: string;
+  name: string;
+  email: string;
+  crm: string;
+  specialty: string;
+  trial_status: string;
+  created_at: string;
+  notification_preferences?: {
+    email: {
+      newReports: boolean;
+      systemUpdates: boolean;
+      tips: boolean;
+      newsletter: boolean;
+    };
+    sms: {
+      criticalAlerts: boolean;
+      paymentRecovery: boolean;
+      invoiceReminders: boolean;
+    };
+    avatar_url?: string;
+  };
+}
+
+// Generate mock procedures
+export const mockProcedures: MockProcedure[] = [
+  {
+    id: '1',
+    analysis_id: '1',
+    codigo: '31309054',
+    procedimento: 'Laparotomia exploradora',
+    papel: 'Cirurgião',
+    valor_cbhpm: 562.30,
+    valor_pago: 468.60,
+    diferenca: -93.70,
+    pago: true,
+    guia: 'G123456',
+    beneficiario: 'João da Silva',
+    doctors: [{ id: '1', name: 'Dr. Carlos Mendes' }],
+    user_id: '1',
+    created_at: '2025-01-15T08:30:00Z'
+  },
+  {
+    id: '2',
+    analysis_id: '1',
+    codigo: '30715016',
+    procedimento: 'Angioplastia transluminal',
+    papel: 'Auxiliar',
+    valor_cbhpm: 320.40,
+    valor_pago: 280.00,
+    diferenca: -40.40,
+    pago: true,
+    guia: 'G123457',
+    beneficiario: 'Maria Oliveira',
+    doctors: [{ id: '1', name: 'Dr. Carlos Mendes' }],
+    user_id: '1',
+    created_at: '2025-01-15T09:45:00Z'
+  },
+  {
+    id: '3',
+    analysis_id: '1',
+    codigo: '32301065',
+    procedimento: 'Cirurgia de catarata',
+    papel: 'Cirurgião',
+    valor_cbhpm: 480.00,
+    valor_pago: 0,
+    diferenca: -480.00,
+    pago: false,
+    guia: 'G123458',
+    beneficiario: 'Antonio Pereira',
+    doctors: [{ id: '1', name: 'Dr. Carlos Mendes' }],
+    user_id: '1',
+    created_at: '2025-01-16T10:15:00Z'
+  },
+  {
+    id: '4',
+    analysis_id: '2',
+    codigo: '40302920',
+    procedimento: 'Ecocardiograma transtorácico',
+    papel: 'Executante',
+    valor_cbhpm: 210.50,
+    valor_pago: 210.50,
+    diferenca: 0,
+    pago: true,
+    guia: 'G234561',
+    beneficiario: 'Roberto Almeida',
+    doctors: [{ id: '1', name: 'Dr. Carlos Mendes' }],
+    user_id: '1',
+    created_at: '2025-02-03T14:20:00Z'
+  }
+];
+
+// Generate mock analyses
+export const mockAnalyses: MockAnalysis[] = [
+  {
+    id: '1',
+    created_at: '2025-01-15T08:00:00Z',
+    file_name: 'demonstrativo_janeiro_2025.pdf',
+    file_type: 'application/pdf',
+    hospital: 'Hospital São Lucas',
+    competencia: 'Janeiro 2025',
+    numero: 'DM123456',
+    status: 'completo',
+    summary: {
+      totalCBHPM: 1362.70,
+      totalPago: 748.60,
+      totalDiferenca: -614.10,
+      procedimentosTotal: 3,
+      procedimentosNaoPagos: 1
+    },
+    user_id: '1'
+  },
+  {
+    id: '2',
+    created_at: '2025-02-03T14:00:00Z',
+    file_name: 'demonstrativo_fevereiro_2025.pdf',
+    file_type: 'application/pdf',
+    hospital: 'Hospital Santa Maria',
+    competencia: 'Fevereiro 2025',
+    numero: 'DM234567',
+    status: 'completo',
+    summary: {
+      totalCBHPM: 210.50,
+      totalPago: 210.50,
+      totalDiferenca: 0,
+      procedimentosTotal: 1,
+      procedimentosNaoPagos: 0
+    },
+    user_id: '1'
+  }
+];
+
+// Generate mock profiles
+export const mockProfiles: MockProfile[] = [
+  {
+    id: '1',
+    name: 'Dr. Carlos Mendes',
+    email: 'carlos.mendes@exemplo.com',
+    crm: '12345/SP',
+    specialty: 'Cardiologia',
+    trial_status: 'active',
+    created_at: '2024-12-01T10:00:00Z',
+    notification_preferences: {
+      email: {
+        newReports: true,
+        systemUpdates: true,
+        tips: false,
+        newsletter: false
+      },
+      sms: {
+        criticalAlerts: true,
+        paymentRecovery: false,
+        invoiceReminders: true
+      },
+      avatar_url: 'https://randomuser.me/api/portraits/men/42.jpg'
+    }
+  }
+];
+
+export const getMockData = () => {
+  return {
+    procedures: mockProcedures,
+    analyses: mockAnalyses,
+    profiles: mockProfiles
+  };
+};

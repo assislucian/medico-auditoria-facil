@@ -1,149 +1,379 @@
 
-/**
- * Mock Supabase Client
- * 
- * This file provides a mock implementation of the Supabase client for development
- * without requiring an actual Supabase backend connection.
- */
+// Mock Supabase client for frontend development without a backend
 
-import { mockData } from '../mock/mockData';
-import { createClient } from '@supabase/supabase-js';
+interface MockUser {
+  id: string;
+  email: string;
+}
 
-// Mock implementation of the Supabase client
-export const supabase = {
+interface MockSession {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  user: MockUser;
+}
+
+// Placeholder mock data for frontend development
+const mockSupabase = {
   from: (table: string) => {
     return {
-      select: (columns: string = '*') => {
+      select: (columns?: string) => {
         return {
           eq: (column: string, value: any) => {
+            // Return mock data depending on the table
             if (table === 'procedures') {
-              const filteredData = mockData.procedures.filter(item => item[column] === value);
               return {
-                data: filteredData,
-                error: null
-              };
-            } else if (table === 'analysis_results') {
-              if (value) {
-                const result = mockData.analysisResults.find(item => item[column] === value);
-                return {
-                  data: result,
-                  error: null,
-                  single: () => ({ data: result, error: null })
-                };
-              }
-              return {
-                data: mockData.analysisResults,
+                data: [
+                  {
+                    id: '1',
+                    analysis_id: '1',
+                    codigo: '123456',
+                    procedimento: 'Consulta',
+                    papel: 'Cirurgião',
+                    valor_cbhpm: 100,
+                    valor_pago: 80,
+                    diferenca: 20,
+                    pago: true,
+                    guia: 'G123',
+                    beneficiario: 'João Silva',
+                    doctors: [{ id: '1', name: 'Dr. Smith' }],
+                    user_id: '1',
+                    created_at: '2025-01-01T12:00:00Z'
+                  }
+                ],
                 error: null,
-                single: () => ({ 
-                  data: mockData.analysisResults[0], 
-                  error: null 
+                single: () => ({
+                  data: {
+                    id: '1',
+                    analysis_id: '1',
+                    codigo: '123456',
+                    procedimento: 'Consulta',
+                    papel: 'Cirurgião',
+                    valor_cbhpm: 100,
+                    valor_pago: 80,
+                    diferenca: 20,
+                    pago: true,
+                    guia: 'G123',
+                    beneficiario: 'João Silva',
+                    doctors: [{ id: '1', name: 'Dr. Smith' }],
+                    user_id: '1',
+                    created_at: '2025-01-01T12:00:00Z'
+                  },
+                  error: null
+                }),
+                maybeSingle: () => ({
+                  data: {
+                    id: '1',
+                    analysis_id: '1',
+                    codigo: '123456',
+                    procedimento: 'Consulta',
+                    papel: 'Cirurgião',
+                    valor_cbhpm: 100,
+                    valor_pago: 80,
+                    diferenca: 20,
+                    pago: true,
+                    guia: 'G123',
+                    beneficiario: 'João Silva',
+                    doctors: [{ id: '1', name: 'Dr. Smith' }],
+                    user_id: '1',
+                    created_at: '2025-01-01T12:00:00Z'
+                  },
+                  error: null
                 })
               };
             }
-            return { data: [], error: null };
-          },
-          maybeSingle: () => {
             if (table === 'analysis_results') {
-              return { 
-                data: mockData.analysisResults[0], 
-                error: null 
+              return {
+                data: [
+                  {
+                    id: '1',
+                    created_at: '2025-01-01T12:00:00Z',
+                    file_name: 'fatura_janeiro.pdf',
+                    file_type: 'application/pdf',
+                    hospital: 'Hospital São Lucas',
+                    competencia: 'Janeiro 2025',
+                    numero: 'F12345',
+                    status: 'completo',
+                    summary: {
+                      totalCBHPM: 1000,
+                      totalPago: 800,
+                      totalDiferenca: 200,
+                      procedimentosTotal: 10,
+                      procedimentosNaoPagos: 2
+                    },
+                    user_id: '1'
+                  }
+                ],
+                error: null,
+                single: () => ({
+                  data: {
+                    id: '1',
+                    created_at: '2025-01-01T12:00:00Z',
+                    file_name: 'fatura_janeiro.pdf',
+                    file_type: 'application/pdf',
+                    hospital: 'Hospital São Lucas',
+                    competencia: 'Janeiro 2025',
+                    numero: 'F12345',
+                    status: 'completo',
+                    summary: {
+                      totalCBHPM: 1000,
+                      totalPago: 800,
+                      totalDiferenca: 200,
+                      procedimentosTotal: 10,
+                      procedimentosNaoPagos: 2
+                    },
+                    user_id: '1'
+                  },
+                  error: null
+                }),
+                maybeSingle: () => ({
+                  data: {
+                    id: '1',
+                    created_at: '2025-01-01T12:00:00Z',
+                    file_name: 'fatura_janeiro.pdf',
+                    file_type: 'application/pdf',
+                    hospital: 'Hospital São Lucas',
+                    competencia: 'Janeiro 2025',
+                    numero: 'F12345',
+                    status: 'completo',
+                    summary: {
+                      totalCBHPM: 1000,
+                      totalPago: 800,
+                      totalDiferenca: 200,
+                      procedimentosTotal: 10,
+                      procedimentosNaoPagos: 2
+                    },
+                    user_id: '1'
+                  },
+                  error: null
+                })
               };
             }
-            return { data: null, error: null };
-          },
-          single: () => {
-            if (table === 'analysis_results') {
-              return { 
-                data: mockData.analysisResults[0], 
-                error: null 
+            if (table === 'profiles') {
+              return {
+                data: [
+                  {
+                    id: '1',
+                    name: 'Dr. John Doe',
+                    email: 'john@example.com',
+                    crm: '12345/SP',
+                    specialty: 'Cardiologia',
+                    trial_status: 'active',
+                    created_at: '2025-01-01T12:00:00Z'
+                  }
+                ],
+                error: null,
+                single: () => ({
+                  data: {
+                    id: '1',
+                    name: 'Dr. John Doe',
+                    email: 'john@example.com',
+                    crm: '12345/SP',
+                    specialty: 'Cardiologia',
+                    trial_status: 'active', 
+                    created_at: '2025-01-01T12:00:00Z'
+                  },
+                  error: null
+                }),
+                maybeSingle: () => ({
+                  data: {
+                    id: '1',
+                    name: 'Dr. John Doe',
+                    email: 'john@example.com',
+                    crm: '12345/SP',
+                    specialty: 'Cardiologia',
+                    trial_status: 'active',
+                    created_at: '2025-01-01T12:00:00Z'
+                  },
+                  error: null
+                })
               };
             }
-            return { data: null, error: null };
-          },
-          order: () => {
             return {
-              data: mockData[table] || [],
+              data: [],
               error: null
             };
           },
-          data: mockData[table] || [],
-          error: null
+          order: () => ({
+            data: [],
+            error: null
+          }),
+          range: () => ({
+            data: [],
+            error: null
+          }),
+          limit: () => ({
+            data: [],
+            error: null
+          })
         };
       },
       insert: (data: any) => {
-        console.log(`Mock inserting into ${table}:`, data);
         return {
           select: () => ({
-            single: () => ({
-              data: { ...data, id: `mock-${Math.random().toString(36).substring(2, 9)}` },
-              error: null
-            })
+            data: [
+              {
+                ...data,
+                id: 'new-id-' + Math.random().toString(36).substring(7),
+                created_at: new Date().toISOString()
+              }
+            ],
+            error: null
           })
         };
       },
       update: (data: any) => {
-        console.log(`Mock updating ${table}:`, data);
         return {
           eq: () => ({
-            select: () => ({
-              single: () => ({
-                data: { ...data, id: 'mock-id' },
-                error: null
-              })
-            })
+            data: [
+              {
+                ...data,
+                updated_at: new Date().toISOString()
+              }
+            ],
+            error: null
           })
         };
       },
       delete: () => {
-        console.log(`Mock deleting from ${table}`);
         return {
           eq: () => ({
+            data: [],
             error: null
           })
         };
       }
     };
   },
+  rpc: (func: string, params?: any) => {
+    return {
+      data: { result: true },
+      error: null
+    };
+  },
+  storage: {
+    from: (bucket: string) => ({
+      upload: (path: string, file: File) => ({
+        data: { path },
+        error: null
+      }),
+      getPublicUrl: (path: string) => ({
+        data: { publicUrl: `https://mock-storage.com/${bucket}/${path}` },
+        error: null
+      }),
+      remove: (paths: string[]) => ({
+        data: { deleted: paths },
+        error: null
+      }),
+      download: (path: string) => ({
+        data: new Blob(['mock file content']),
+        error: null
+      })
+    })
+  },
   auth: {
-    getUser: async () => {
+    getUser: () => Promise.resolve({
+      data: {
+        user: {
+          id: '1',
+          email: 'user@example.com'
+        }
+      },
+      error: null
+    }),
+    getSession: () => Promise.resolve({
+      data: {
+        session: {
+          access_token: 'mock-access-token',
+          refresh_token: 'mock-refresh-token',
+          expires_in: 3600,
+          token_type: 'bearer',
+          user: {
+            id: '1',
+            email: 'user@example.com'
+          }
+        }
+      },
+      error: null
+    }),
+    onAuthStateChange: (callback: Function) => {
+      callback('SIGNED_IN', {
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        expires_in: 3600,
+        token_type: 'bearer',
+        user: {
+          id: '1',
+          email: 'user@example.com'
+        }
+      });
       return {
+        subscription: {
+          unsubscribe: () => {}
+        }
+      };
+    },
+    signUp: ({ email, password }: { email: string, password: string }) => {
+      return Promise.resolve({
         data: {
           user: {
-            id: 'mock-user-id',
-            email: 'mock@example.com',
-          }
-        },
-        error: null
-      };
-    },
-    getSession: async () => {
-      return {
-        data: {
+            id: '1',
+            email
+          },
           session: {
-            access_token: 'mock-token'
+            access_token: 'mock-access-token',
+            refresh_token: 'mock-refresh-token',
+            expires_in: 3600,
+            token_type: 'bearer',
+            user: {
+              id: '1', 
+              email
+            }
           }
         },
         error: null
-      };
+      });
     },
-    onAuthStateChange: (callback: Function) => {
-      // Do nothing in the mock
-      return {
-        data: { subscription: { unsubscribe: () => {} } },
+    signInWithPassword: ({ email, password }: { email: string, password: string }) => {
+      return Promise.resolve({
+        data: {
+          user: {
+            id: '1',
+            email
+          },
+          session: {
+            access_token: 'mock-access-token',
+            refresh_token: 'mock-refresh-token',
+            expires_in: 3600,
+            token_type: 'bearer',
+            user: {
+              id: '1',
+              email
+            }
+          }
+        },
         error: null
-      };
-    }
-  },
-  functions: {
-    setAuth: (token: string) => {
-      console.log('Mock setting auth token', token);
-    }
+      });
+    },
+    signInWithOAuth: ({ provider }: { provider: string }) => {
+      return Promise.resolve({
+        data: {
+          provider,
+          url: `https://example.com/oauth/${provider}`
+        },
+        error: null
+      });
+    },
+    signOut: () => Promise.resolve({ error: null }),
+    resetPasswordForEmail: (email: string) => Promise.resolve({ error: null }),
+    updateUser: (data: any) => Promise.resolve({
+      data: { user: { ...data, id: '1' } },
+      error: null
+    }),
+    exchangeCodeForSession: (code: string) => Promise.resolve({ error: null })
   }
 };
 
-// Real Supabase client implementation (not used but exported for type compatibility)
-const SUPABASE_URL = "https://example.com";
-const SUPABASE_PUBLISHABLE_KEY = "dummy-key";
-
-// This is only used for type compatibility
-export const realSupabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = mockSupabase;
+export type SupabaseClient = typeof mockSupabase;

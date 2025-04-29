@@ -25,7 +25,7 @@ export interface ProcedureData {
   [key: string]: any; // Allow for other properties
 }
 
-// Interface for Supabase response
+// Interface for response
 interface ProcedureResponse {
   data: ProcedureData[] | null;
   error: Error | null;
@@ -38,7 +38,6 @@ interface ProcedureResponse {
  */
 export async function fetchProceduresByAnalysisId(analysisId: string): Promise<ProcedureData[]> {
   try {
-    // For mocked data no type assertion needed
     const response = await supabase
       .from('procedures')
       .select('*')

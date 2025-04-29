@@ -1,51 +1,63 @@
 
 import { useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useAuthState = () => {
-  const [user, setUser] = useState<User | null>(null);
+// Define types for auth state
+interface User {
+  id: string;
+  email: string;
+}
+
+export interface Session {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  user: User;
+}
+
+export function useAuthState() {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const isAuthenticated = !!session;
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [initialized, setInitialized] = useState<boolean>(false);
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
+    // Set up auth state listener
+    const { subscription } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (newSession) {
+        setSession(newSession as Session);
+        setUser(newSession.user as User);
+      } else {
+        setSession(null);
+        setUser(null);
+      }
+    });
+
+    // Check for existing session
+    const initializeAuth = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        setLoading(true);
+        const { data } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Error getting initial session:', error);
-          return;
+        if (data?.session) {
+          setSession(data.session as Session);
+          setUser(data.session.user as User);
         }
-        
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('Error initializing auth:', error);
       } finally {
         setLoading(false);
+        setInitialized(true);
       }
     };
 
-    getInitialSession();
+    initializeAuth();
 
-    // Set up auth state listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log('Auth state changed:', event);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    // Clean up subscription
     return () => {
-      authListener?.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
-  return { user, session, isAuthenticated, loading };
-};
+  return { session, user, loading, initialized };
+}

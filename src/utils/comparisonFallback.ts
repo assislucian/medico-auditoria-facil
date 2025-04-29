@@ -1,138 +1,154 @@
-
-import { supabase } from '@/integrations/supabase/client';
-import { ProcedureData } from '@/utils/supabase/procedureHelpers';
+import { ProcedureData } from './supabase/procedureHelpers';
 
 /**
- * Create simulation data for testing/demo purposes
+ * Types for the comparison fallback module
  */
-export function createSimulationData() {
-  return {
-    summary: {
-      total: 3,
-      conforme: 1,
-      abaixo: 1,
-      acima: 1
-    },
-    details: [
-      {
-        id: '1',
-        codigo: '30602246',
-        descricao: 'Reconstrução Mamária Com Retalhos Cutâneos Regionais',
-        qtd: 1,
-        valorCbhpm: 3200.50,
-        valorPago: 2800.00,
-        diferenca: 400.50,
-        status: 'abaixo',
-        papel: 'Cirurgião',
-        guia: '10467538'
-      },
-      {
-        id: '2',
-        codigo: '30602076',
-        descricao: 'Exérese De Lesão Da Mama Por Marcação Estereotáxica Ou Roll',
-        qtd: 1,
-        valorCbhpm: 1800.75,
-        valorPago: 1900.25,
-        diferenca: 99.50,
-        status: 'acima',
-        papel: 'Cirurgião',
-        guia: '10467538'
-      },
-      {
-        id: '3',
-        codigo: '31602096',
-        descricao: 'Consulta em Cirurgia Plástica',
-        qtd: 1,
-        valorCbhpm: 200.00,
-        valorPago: 200.00,
-        diferenca: 0,
-        status: 'conforme',
-        papel: 'Cirurgião',
-        guia: '10467539'
-      }
-    ]
-  };
+interface ProcedureComparison {
+  id: string;
+  codigo: string;
+  procedimento: string;
+  papel: string;
+  valorCBHPM: number;
+  valorPago: number;
+  diferenca: number;
+  pago: boolean;
+  guia: string;
+  beneficiario: string;
+}
+
+interface SummaryResult {
+  total: number;
+  conforme: number;
+  abaixo: number;
+  acima: number;
+  valorCBHPM: number;
+  valorPago: number;
+  diferenca: number;
+  naoPagos: number;
+}
+
+// Define a mapping between our types
+interface ProcedureMappedData extends ProcedureData {
+  procedimento: string;
+  papel: string;
+  valor_cbhpm: number;
+  valor_pago: number;
+  diferenca: number;
+  pago: boolean;
+  guia: string;
+  beneficiario: string;
 }
 
 /**
- * Fetch comparison data directly from the database as fallback
+ * Get fallback data for CBHPM comparison
+ * @param proceduresData Optional procedures data to use
+ * @returns Mapped procedures data for comparison
  */
-export async function getFallbackComparisonData(analysisId: string) {
-  console.log('Getting fallback comparison data from database for:', analysisId);
-  
-  try {
-    // Get the analysis data
-    const { data: analysisData, error: analysisError } = await supabase
-      .from('analysis_results')
-      .select('*')
-      .eq('id', analysisId)
-      .single();
-    
-    if (analysisError) {
-      console.error('Error fetching analysis:', analysisError);
-      throw new Error('Análise não encontrada');
-    }
-    
-    // Get the procedures
-    const { data: procedures, error: proceduresError } = await supabase
-      .from('procedures')
-      .select('*')
-      .eq('analysis_id', analysisId);
-      
-    if (proceduresError) {
-      console.error('Error fetching procedures:', proceduresError);
-      throw new Error('Falha ao buscar procedimentos');
-    }
-    
-    console.log(`Found ${procedures.length} procedures for analysis ${analysisId}`);
-    
-    let summary = {
-      total: procedures.length,
-      conforme: 0,
-      abaixo: 0,
-      acima: 0
-    };
-    
-    const details = procedures.map((proc: ProcedureData) => {
-      const valorCbhpm = proc.valor_cbhpm || 0;
-      const valorPago = proc.valor_pago || 0;
-      const diferenca = Math.abs(valorPago - valorCbhpm);
-      
-      let status: 'conforme' | 'abaixo' | 'acima' | 'não_pago';
-      
-      if (!proc.pago) {
-        status = 'não_pago';
-      } else if (Math.abs(diferenca) < 0.01) {
-        status = 'conforme';
-        summary.conforme++;
-      } else if (valorPago < valorCbhpm) {
-        status = 'abaixo';
-        summary.abaixo++;
-      } else {
-        status = 'acima';
-        summary.acima++;
-      }
+export function getFallbackComparisonData(proceduresData?: any[]): ProcedureComparison[] {
+  // If we have procedures data, use it
+  if (proceduresData && proceduresData.length > 0) {
+    // Map the data to ensure it matches the expected format
+    return proceduresData.map(proc => {
+      // Type assertion to ensure we have the expected fields
+      const mappedProc = proc as ProcedureMappedData;
       
       return {
-        id: proc.id,
-        codigo: proc.codigo,
-        descricao: proc.procedimento,
-        qtd: 1,
-        valorCbhpm,
-        valorPago,
-        diferenca,
-        status,
-        papel: proc.papel || 'Cirurgião',
-        guia: proc.guia || '-'
+        id: mappedProc.id,
+        codigo: mappedProc.codigo || '',
+        procedimento: mappedProc.procedimento || '',
+        papel: mappedProc.papel || '',
+        valorCBHPM: mappedProc.valor_cbhpm || 0,
+        valorPago: mappedProc.valor_pago || 0,
+        diferenca: mappedProc.diferenca || 0,
+        pago: mappedProc.pago || false,
+        guia: mappedProc.guia || '',
+        beneficiario: mappedProc.beneficiario || '',
       };
     });
-    
-    return {
-      summary,
-      details
-    };
-  } catch (error) {
-    console.error('Error in getFallbackComparisonData:', error);
-    return createSimulationData();
   }
+
+  // Otherwise, generate fallback data
+  return [
+    {
+      id: '1',
+      codigo: '31309054',
+      procedimento: 'Laparotomia exploradora',
+      papel: 'Cirurgião',
+      valorCBHPM: 562.30,
+      valorPago: 468.60,
+      diferenca: -93.70,
+      pago: true,
+      guia: 'G123456',
+      beneficiario: 'João da Silva'
+    },
+    {
+      id: '2',
+      codigo: '30715016',
+      procedimento: 'Angioplastia transluminal',
+      papel: 'Auxiliar',
+      valorCBHPM: 320.40,
+      valorPago: 280.00,
+      diferenca: -40.40,
+      pago: true,
+      guia: 'G123457',
+      beneficiario: 'Maria Oliveira'
+    },
+    {
+      id: '3',
+      codigo: '32301065',
+      procedimento: 'Cirurgia de catarata',
+      papel: 'Cirurgião',
+      valorCBHPM: 480.00,
+      valorPago: 0,
+      diferenca: -480.00,
+      pago: false,
+      guia: 'G123458',
+      beneficiario: 'Antonio Pereira'
+    }
+  ];
+}
+
+/**
+ * Calculates summary statistics for CBHPM comparisons
+ * @param procedimentos Array of procedure comparisons
+ * @returns Summary statistics
+ */
+export function calculateCBHPMSummary(procedimentos: ProcedureComparison[]): SummaryResult {
+  const total = procedimentos.length;
+  let conforme = 0;
+  let abaixo = 0;
+  let acima = 0;
+  let valorCBHPM = 0;
+  let valorPago = 0;
+  let naoPagos = 0;
+  
+  procedimentos.forEach(proc => {
+    valorCBHPM += proc.valorCBHPM;
+    valorPago += proc.valorPago;
+    
+    if (Math.abs(proc.diferenca) < 0.01) {
+      conforme++;
+    } else if (proc.diferenca < 0) {
+      abaixo++;
+    } else {
+      acima++;
+    }
+    
+    if (!proc.pago) {
+      naoPagos++;
+    }
+  });
+  
+  const diferenca = valorCBHPM - valorPago;
+  
+  return {
+    total,
+    conforme,
+    abaixo,
+    acima,
+    valorCBHPM,
+    valorPago,
+    diferenca,
+    naoPagos
+  };
 }

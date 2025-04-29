@@ -13,6 +13,30 @@ interface AnalysisSummary {
 }
 
 /**
+ * Maps procedure data to frontend format
+ * @param proc Procedure data from database
+ * @returns Mapped procedure data
+ */
+function mapProcedureData(proc: any) {
+  // Type assertion to ensure we have the expected fields
+  const procData = proc as Required<ProcedureData>;
+  
+  return {
+    id: procData.id,
+    codigo: procData.codigo || '',
+    procedimento: procData.procedimento || '',
+    papel: procData.papel || '',
+    valorCBHPM: procData.valor_cbhpm || 0,
+    valorPago: procData.valor_pago || 0,
+    diferenca: procData.diferenca || 0,
+    pago: procData.pago || false,
+    guia: procData.guia || '',
+    beneficiario: procData.beneficiario || '',
+    doctors: procData.doctors || []
+  };
+}
+
+/**
  * Retrieves analysis by ID with all related data
  */
 export async function getAnalysisById(analysisId: string) {
@@ -39,19 +63,7 @@ export async function getAnalysisById(analysisId: string) {
         data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
         beneficiario: proceduresData[0]?.beneficiario || 'Não especificado'
       },
-      procedimentos: proceduresData.map((proc: ProcedureData) => ({
-        id: proc.id,
-        codigo: proc.codigo,
-        procedimento: proc.procedimento,
-        papel: proc.papel,
-        valorCBHPM: proc.valor_cbhpm,
-        valorPago: proc.valor_pago,
-        diferenca: proc.diferenca,
-        pago: proc.pago,
-        guia: proc.guia,
-        beneficiario: proc.beneficiario,
-        doctors: proc.doctors || []
-      })),
+      procedimentos: proceduresData.map(mapProcedureData),
       totais: {
         valorCBHPM: summary?.totalCBHPM || 0,
         valorPago: summary?.totalPago || 0,
