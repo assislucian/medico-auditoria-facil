@@ -1,0 +1,5 @@
+export enum Role {
+  EXECUTOR = 'EXECUTOR',
+  REQUESTER = 'REQUESTER',
+  AUDITOR = 'AUDITOR'
+} 

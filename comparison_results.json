@@ -1,0 +1,111 @@
+{
+  "summary": {
+    "total_procedures": 2,
+    "valid_payments": 0,
+    "not_paid": 2,
+    "invalid_value": 0,
+    "not_in_cbhpm": 0,
+    "financial_summary": {
+      "total_expected": 0.0,
+      "total_actual": 0.0,
+      "total_difference": 0.0
+    }
+  },
+  "details": [
+    {
+      "procedure": {
+        "execution_number": "191937",
+        "beneficiary": {
+          "id": "00620030013400102",
+          "name": "NOIVANA CAVALCANTI DE QUEIROZ DANTAS Prestador: 11000010 - LIGA NORTERIOG CANCER POLICLINIC"
+        },
+        "guia": "10696456",
+        "date": "04/09/2024",
+        "code": "30602076",
+        "description": "Roll",
+        "quantity": 1,
+        "roles": []
+      },
+      "payment": null,
+      "cbhpm_values": null,
+      "status": "NOT_PAID",
+      "validation": {
+        "expected_total": 0.0,
+        "actual_total": 0.0,
+        "difference": 0.0
+      }
+    },
+    {
+      "procedure": {
+        "execution_number": "191937",
+        "beneficiary": {
+          "id": "00620030013400102",
+          "name": "NOIVANA CAVALCANTI DE QUEIROZ DANTAS Prestador: 11000010 - LIGA NORTERIOG CANCER POLICLINIC"
+        },
+        "guia": "10696456",
+        "date": "04/09/2024",
+        "code": "30602203",
+        "description": "Quadrantectomia - Ressecção Segmentar",
+        "quantity": 1,
+        "roles": [
+          {
+            "role": "Anestesista",
+            "id": "5576",
+            "name": "FRANCISCO DAS CHAGAS BASTOS NETO",
+            "start_time": "04/09/2024 17:50",
+            "end_time": "04/09/2024 17:50",
+            "status": "Fechada"
+          },
+          {
+            "role": "Cirurgiao",
+            "id": "6091",
+            "name": "MOISES DE OLIVEIRA SCHOTS",
+            "start_time": "04/09/2024 17:06",
+            "end_time": "04/09/2024 17:53",
+            "status": "Fechada"
+          },
+          {
+            "role": "Primeiro Auxiliar",
+            "id": "5775",
+            "name": "CARLOS RAFAEL SANT ANNA DA CRUZ",
+            "start_time": "04/09/2024 17:06",
+            "end_time": "04/09/2024 17:41",
+            "status": "Fechada"
+          },
+          {
+            "role": "Anestesista",
+            "id": "5576",
+            "name": "FRANCISCO DAS CHAGAS BASTOS NETO",
+            "start_time": "04/09/2024 17:50",
+            "end_time": "04/09/2024 17:50",
+            "status": "Fechada"
+          },
+          {
+            "role": "Cirurgiao",
+            "id": "6091",
+            "name": "MOISES DE OLIVEIRA SCHOTS",
+            "start_time": "04/09/2024 17:06",
+            "end_time": "04/09/2024 17:53",
+            "status": "Fechada"
+          },
+          {
+            "role": "Primeiro Auxiliar",
+            "id": "5775",
+            "name": "CARLOS RAFAEL SANT ANNA DA CRUZ",
+            "start_time": "04/09/2024 17:06",
+            "end_time": "04/09/2024 17:41",
+            "status": "Fechada"
+          }
+        ]
+      },
+      "payment": null,
+      "cbhpm_values": null,
+      "status": "NOT_PAID",
+      "validation": {
+        "expected_total": 0.0,
+        "actual_total": 0.0,
+        "difference": 0.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,277 @@
+openapi: 3.0.0
+info:
+  title: Medical Honorarium Validator API
+  version: 1.0.0
+  description: API for validating medical honorarium statements against CBHPM2015
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+paths:
+  /validate:
+    post:
+      summary: Validate honorarium statements
+      description: Upload and validate medical honorarium statements against CBHPM2015
+      operationId: validateStatements
+      tags:
+        - Validation
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: PDF, image, or spreadsheet files to validate
+                config:
+                  type: object
+                  properties:
+                    tolerancePercentage:
+                      type: number
+                      minimum: 0
+                      maximum: 100
+                      default: 1
+                    requireExactMatch:
+                      type: boolean
+                      default: false
+                    allowMissingCodes:
+                      type: boolean
+                      default: true
+      responses:
+        '202':
+          description: Validation jobs created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  jobIds:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /reports/{jobId}:
+    get:
+      summary: Get validation report
+      description: Retrieve the results of a validation job
+      operationId: getValidationReport
+      tags:
+        - Reports
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Validation report retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationReport'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /reference/{code}:
+    get:
+      summary: Get CBHPM reference data
+      description: Retrieve CBHPM values for a specific procedure code
+      operationId: getCBHPMReference
+      tags:
+        - Reference
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{8}$'
+      responses:
+        '200':
+          description: CBHPM reference data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CBHPMEntry'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  schemas:
+    CBHPMEntry:
+      type: object
+      properties:
+        code:
+          type: string
+          pattern: '^\d{8}$'
+        description:
+          type: string
+        surgeonValue:
+          type: number
+          format: float
+        anesthetistValue:
+          type: number
+          format: float
+        firstAssistantValue:
+          type: number
+          format: float
+      required:
+        - code
+        - description
+        - surgeonValue
+        - anesthetistValue
+        - firstAssistantValue
+
+    ValidationReport:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+        results:
+          type: object
+          properties:
+            records:
+              type: array
+              items:
+                $ref: '#/components/schemas/ValidationResult'
+            summary:
+              $ref: '#/components/schemas/ValidationSummary'
+        error:
+          type: string
+
+    ValidationResult:
+      type: object
+      properties:
+        record:
+          $ref: '#/components/schemas/DemonstrativoRecord'
+        cbhpmEntry:
+          $ref: '#/components/schemas/CBHPMEntry'
+        expectedValue:
+          type: number
+          format: float
+        difference:
+          type: number
+          format: float
+        isValid:
+          type: boolean
+        errors:
+          type: array
+          items:
+            type: string
+
+    DemonstrativoRecord:
+      type: object
+      properties:
+        guia:
+          type: string
+        date:
+          type: string
+          format: date
+        code:
+          type: string
+          pattern: '^\d{8}$'
+        description:
+          type: string
+        role:
+          type: string
+          enum: [SURGEON, ANESTHETIST, FIRST_ASSISTANT]
+        crm:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        presentedValue:
+          type: number
+          format: float
+        approvedValue:
+          type: number
+          format: float
+
+    ValidationSummary:
+      type: object
+      properties:
+        totalRecords:
+          type: integer
+        validRecords:
+          type: integer
+        totalDifference:
+          type: number
+          format: float
+        errorsByType:
+          type: object
+          additionalProperties:
+            type: integer
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  details:
+                    type: object
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: NOT_FOUND
+                  message:
+                    type: string
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: INTERNAL_SERVER_ERROR
+                  message:
+                    type: string
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key 

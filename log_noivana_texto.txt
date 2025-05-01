@@ -1,0 +1,56 @@
+
+=== Processando Demonstrativo ===
+[Tabela] Colunas detectadas na página 1: ['Lote', 'Conta', 'Guia', 'Data', 'Carteira', 'Nome', 'Acom.', 'Cód. Serv.', 'Desc. Serv.', 'Qtd.', 'Apresentado', 'Liberado', 'Pro rata', 'Glosa']
+[find_column] Coluna 'Cód. Serv.' casou com padrão 'cód.*serv'
+[find_column] Coluna 'Liberado' casou com padrão 'liberad'
+[find_column] Coluna 'Glosa' casou com padrão 'glosa'
+[find_column] Coluna 'Pro rata' casou com padrão 'pro\s*?rata'
+
+=== Processando Guias ===
+
+Processando guia: rodrigo bernardo.pdf
+[Tabela] Colunas detectadas na página 1: ['Prestador: Policlinica - Liga | Usuário: 11000010 | Responsável login: MACIEL DE OLIVEIRA MATIAS | Email: Não informado']
+[Tabela] Colunas detectadas na página 1: ['Página inicial']
+[Tabela] Colunas detectadas na página 1: ['Execução: 180967', 'Beneficiário: 00620030010759231 - RODRIGO BERNARDO CIRINO DE FRANCA', 'Prestador: 11000010 - LIGA NORTERIOG CANCER POLICLINIC']
+[Tabela] Colunas detectadas na página 1: ['', 'Guia', 'Dt execução', 'Código', 'Descrição', 'Qtd', 'Status']
+[find_column] Coluna 'Código' casou com padrão 'código(?:\s+serviço)?'
+[Tabela] Colunas detectadas na página 1: ['Participação', 'Médico', 'Dt início', 'Dt fim', 'Status']
+DEBUG: Nenhuma tabela válida encontrada — usando fallback por regex.
+[Regex] Encontradas 0 linhas via fallback.
+
+Processando guia: thayse borges.pdf
+[Tabela] Colunas detectadas na página 1: ['Prestador: Policlinica - Liga | Usuário: 11000010 | Responsável login: MACIEL DE OLIVEIRA MATIAS | Email: Não informado']
+[Tabela] Colunas detectadas na página 1: ['Página inicial']
+[Tabela] Colunas detectadas na página 1: ['Execução: 178584', 'Beneficiário: 00620040000604690 - THAYSE BORGES', 'Prestador: 11000010 - LIGA NORTERIOG CANCER POLICLINIC']
+[Tabela] Colunas detectadas na página 1: ['', 'Guia', 'Dt execução', 'Código', 'Descrição', 'Qtd', 'Status']
+[find_column] Coluna 'Código' casou com padrão 'código(?:\s+serviço)?'
+[Tabela] Colunas detectadas na página 1: ['Participação', 'Médico', 'Dt início', 'Dt fim', 'Status']
+[Tabela] Colunas detectadas na página 1: ['Participação', 'Médico', 'Dt início', 'Dt fim', 'Status']
+[Tabela] Colunas detectadas na página 1: ['Participação', 'Médico', 'Dt início', 'Dt fim', 'Status']
+DEBUG: Nenhuma tabela válida encontrada — usando fallback por regex.
+[Regex] Encontradas 0 linhas via fallback.
+
+Processando guia: nubia_katia.pdf
+[Tabela] Colunas detectadas na página 1: ['Prestador: Policlinica - Liga | Usuário: 11000010 | Responsável login: MACIEL DE OLIVEIRA MATIAS | Email: Não informado']
+[Tabela] Colunas detectadas na página 1: ['Página inicial']
+[Tabela] Colunas detectadas na página 1: ['']
+[Tabela] Colunas detectadas na página 1: ['Execução: 193026', 'Beneficiário: 00620030013924381 - NUBIA KATIA PEREIRA MARQUES', 'Prestador: 11000010 - LIGA NORTERIOG CANCER POLICLINIC']
+[Tabela] Colunas detectadas na página 1: ['', 'Guia', 'Dt execução', 'Código', 'Descrição', 'Qtd', 'Status']
+[find_column] Coluna 'Código' casou com padrão 'código(?:\s+serviço)?'
+[Tabela] Colunas detectadas na página 1: ['Participação', 'Médico', 'Dt início', 'Dt fim', 'Status']
+[Tabela] Colunas detectadas na página 1: ['Participação', 'Médico', 'Dt início', 'Dt fim', 'Status']
+[Tabela] Colunas detectadas na página 1: ['Participação', 'Médico', 'Dt início', 'Dt fim', 'Status']
+[Tabela] Colunas detectadas na página 1: ['Participação', 'Médico', 'Dt início', 'Dt fim', 'Status']
+DEBUG: Nenhuma tabela válida encontrada — usando fallback por regex.
+[Regex] Encontradas 0 linhas via fallback.
+
+Processando guia: noivana.pdf
+[Tabela] Colunas detectadas na página 1: ['Prestador: Policlinica - Liga | Usuário: 11000010 | Responsável login: MACIEL DE OLIVEIRA MATIAS | Email: Não informado']
+[Tabela] Colunas detectadas na página 1: ['Página inicial']
+[Tabela] Colunas detectadas na página 1: ['Execução: 191937', 'Beneficiário: 00620030013400102 - NOIVANA CAVALCANTI DE QUEIROZ DANTAS', 'Prestador: 11000010 - LIGA NORTERIOG CANCER POLICLINIC']
+[Tabela] Colunas detectadas na página 1: ['', 'Guia', 'Dt execução', 'Código', 'Descrição', 'Qtd', 'Status']
+[find_column] Coluna 'Código' casou com padrão 'código(?:\s+serviço)?'
+[Tabela] Colunas detectadas na página 1: ['Participação', 'Médico', 'Dt início', 'Dt fim', 'Status']
+[Tabela] Colunas detectadas na página 1: ['Participação', 'Médico', 'Dt início', 'Dt fim', 'Status']
+DEBUG: Nenhuma tabela válida encontrada — usando fallback por regex.
+[Regex] Encontradas 0 linhas via fallback.

@@ -1,0 +1,61 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// CBHPM reference data
+model CBHPMProcedure {
+  id                    Int      @id @default(autoincrement())
+  code                 String   @unique
+  description          String
+  surgeonValue         Float
+  anesthetistValue     Float
+  firstAssistantValue  Float
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("cbhpm_procedures")
+}
+
+// Validation job tracking
+model ValidationJob {
+  id          String   @id @default(uuid())
+  status      String   // PENDING, PROCESSING, COMPLETED, FAILED
+  fileName    String
+  fileType    String
+  records     Json?    // Parsed records
+  results     Json?    // Validation results
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("validation_jobs")
+}
+
+// Parsed demonstrativo records
+model DemonstrativoRecord {
+  id            Int      @id @default(autoincrement())
+  jobId         String
+  guia          String
+  date          DateTime
+  code          String
+  description   String
+  role          String   // SURGEON, ANESTHETIST, FIRST_ASSISTANT
+  crm           String
+  quantity      Int
+  presentedValue Float
+  approvedValue  Float
+  difference     Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("demonstrativo_records")
+  @@index([jobId])
+  @@index([code])
+} 
