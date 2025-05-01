@@ -139,7 +139,7 @@ def process_guides(guides_dir: Path, user_crm: str) -> pd.DataFrame:
     for guide_file in guides_dir.glob("*.pdf"):
         print(f"\nProcessando guia: {guide_file.name}")
         try:
-            df_guide = parse_demonstrativo(guide_file, user_crm)
+            df_guide = parse_guide_pdf(guide_file, user_crm)
             all_records.append(df_guide)
         except Exception as e:
             print(f"Erro ao processar guia {guide_file.name}: {e}")

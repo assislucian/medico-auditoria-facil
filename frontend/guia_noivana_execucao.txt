@@ -1,0 +1,124 @@
+Execução cirúrgica
+
+» Executar cirurgia
+
+» Execuções em andamento
+
+» Execuções finalizadas
+
+Comunicados
+
+Relatórios
+
+Portal web
+
+Links principais
+
+Alterar senha
+
+Privacidade e segurança
+
+Configurações
+
+Logoff
+
+Filtro
+
+CRM / profissional: 
+
+  Consultar
+
+Execução finalizada
+
+Execução: 191937
+
+Beneficiário: 00620030013400102 - NOIVANA CAVALCANTI DE QUEIROZ DANTAS
+
+Prestador: 11000010 - LIGA NORTERIOG CANCER POLICLINIC
+
+Guia
+
+Dt execução
+
+Código
+
+Descrição
+
+Qtd
+
+Status
+
+10696456
+
+04/09/2024
+
+30602076
+
+Exérese De Lesão Da Mama Por Marcação Estereotáxica Ou
+Roll
+
+1
+
+Gerado pela execução
+
+Participação
+
+Médico
+
+Dt início
+
+Dt fim
+
+Status
+
+Anestesista
+
+Cirurgiao
+
+5576 - FRANCISCO DAS CHAGAS BASTOS NETO
+
+04/09/2024 17:50
+
+04/09/2024 17:50
+
+Fechada
+
+6091 - MOISES DE OLIVEIRA SCHOTS
+
+04/09/2024 17:06
+
+04/09/2024 17:53
+
+Fechada
+--
+Gerado pela execução
+
+Participação
+
+Médico
+
+Dt início
+
+Dt fim
+
+Status
+
+Anestesista
+
+Cirurgiao
+
+5576 - FRANCISCO DAS CHAGAS BASTOS NETO
+
+04/09/2024 17:50
+
+04/09/2024 17:50
+
+Fechada
+
+6091 - MOISES DE OLIVEIRA SCHOTS
+
+04/09/2024 17:06
+
+04/09/2024 17:53
+
+Fechada

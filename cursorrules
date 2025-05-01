@@ -32,3 +32,10 @@ Identifique glosas como ausência de guia ou de pagamento correspondente.
 Nunca permita acesso cruzado entre CRMs.
 Use autenticação JWT. Armazene senhas com bcrypt.
 Use CORS e HTTPS obrigatoriamente.
+
+// Login
+O login é feito via POST /token com OAuth2PasswordRequestForm.
+O campo "username" representa o CRM.
+O campo "scope" representa a UF do médico.
+O token JWT deve conter { crm, uf, nome } no payload.
+Use get_current_user() para proteger rotas e extrair o CRM logado.

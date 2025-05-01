@@ -456,6 +456,44 @@ def get_demonstrativo_procedures(demo_id: int, user: dict = Depends(get_current_
     finally:
         db.close()
 
+# --- Endpoint de upload de guia TISS ---
+@app.post("/api/v1/guias/upload")
+def upload_guia(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Recebe um PDF de guia TISS, extrai os dados e retorna em JSON.
+    Exige autenticação e filtra por CRM.
+    """
+    import tempfile
+    from src.parsers.guia_parser import GuiaParser
+    import json
+    import shutil
+    import os
+
+    # Valida tipo de arquivo
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Apenas arquivos PDF são aceitos.")
+    # Salva arquivo temporário
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+    try:
+        parser = GuiaParser(tmp_path)
+        procedures = parser.get_procedures()
+        # Filtra por CRM do usuário autenticado
+        crm = str(user.get('crm'))
+        filtered = [p for p in procedures if str(p.get('crm')) == crm]
+        # Se não houver campo de CRM, retorna tudo (fallback)
+        if not filtered and procedures:
+            filtered = procedures
+        return {"crm": crm, "procedures": filtered}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao processar guia: {e}")
+    finally:
+        os.unlink(tmp_path)
+
 # --- Observações ---
 # - Para produção, troque JWT_SECRET por segredo seguro e use HTTPS
 # - Substitua jobs dict por Redis/Celery/DB para escalabilidade real

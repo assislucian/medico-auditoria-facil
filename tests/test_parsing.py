@@ -5,7 +5,7 @@ from pathlib import Path
 
 @pytest.fixture
 def demo_df():
-    df = parse_demonstrativo("tests/fixtures/Demonstrativo-outubro_2024.pdf")
+    df = parse_demonstrativo("data/demonstrativos/Demonstrativo-outubro_2024.pdf", "6091")
     # Renomeia e garante colunas para schema
     if 'Cód. Serv.' in df.columns and 'codigo' not in df.columns:
         df = df.rename(columns={'Cód. Serv.': 'codigo'})
@@ -30,7 +30,10 @@ def test_demo_schema(demo_df):
     demo_schema.validate(demo_df)
 
 def test_guides_parse_correctly():
-    guides = process_guides(Path("tests/fixtures/guias"), "6091")
+    guides = process_guides(Path("data/guias"), "6091")
+    print("[DEBUG] DataFrame de guias extraído:\n", guides.head())
+    print("[DEBUG] Colunas extraídas:", guides.columns.tolist())
+    print("[DEBUG] Procedimentos por guia:", guides['guia'].value_counts() if 'guia' in guides.columns else 'Sem coluna guia')
     guide_schema.validate(guides)
     # Exemplo: noivana.pdf deve ter pelo menos 1 procedimento para CRM 6091
     assert guides.query("guia=='10696456' and papel=='Cirurgião'").shape[0] >= 1 

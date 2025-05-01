@@ -1,13 +1,12 @@
 import { FileWithStatus } from '@/types/upload';
 import { toast } from 'sonner';
-import { processFiles } from '@/services/upload';
-import { determineProcessingMode } from '@/utils/uploadUtils';
 import axios from 'axios';
 
 // Define the result type
 interface ProcessResult {
   success: boolean;
-  analysisId: string | null;
+  analysisId?: string | null;
+  data?: any;
 }
 
 /**
@@ -36,44 +35,57 @@ export function useFileUploadService() {
       toast.error('Nenhum arquivo selecionado', {
         description: 'Por favor, selecione arquivos para processar.'
       });
-      return { success: false, analysisId: null };
+      return { success: false };
     }
-
     if (!files.some(file => file.status === 'valid')) {
       toast.error('Arquivos inválidos', {
         description: 'Todos os arquivos selecionados são inválidos. Por favor, selecione arquivos válidos.'
       });
-      return { success: false, analysisId: null };
+      return { success: false };
     }
-
     try {
       setProgress(0);
       setProcessingStage('extracting');
       setProcessingMsg('Enviando arquivos...');
-
-      // Apenas demonstrativo
-      const demoFile = files.find(f => f.type === 'demonstrativo' && f.status === 'valid');
-      if (!demoFile) {
-        toast.error('Selecione um demonstrativo válido para upload.');
-        return { success: false, analysisId: null };
+      const guiaFile = files.find(f => f.type === 'guia' && f.status === 'valid');
+      if (guiaFile) {
+        const formData = new FormData();
+        formData.append('file', guiaFile.file, guiaFile.name);
+        const token = localStorage.getItem('token');
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const res = await axios.post(`${apiUrl}/api/v1/guias/upload`, formData, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        setProgress(100);
+        setProcessingStage('complete');
+        setProcessingMsg('Processamento concluído!');
+        toast.success('Guia processada com sucesso!');
+        return { success: true, data: res.data };
       }
-      const formData = new FormData();
-      formData.append('file', demoFile.file, demoFile.name);
-      // Se desejar, pode adicionar periodo/lote vindos do usuário
-
-      const token = localStorage.getItem('token');
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const res = await axios.post(`${apiUrl}/api/v1/demonstrativos/upload`, formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      setProgress(100);
-      setProcessingStage('complete');
-      setProcessingMsg('Processamento concluído!');
-      toast.success('Demonstrativo processado com sucesso!');
-      return { success: true, analysisId: res.data.id };
+      // fallback: demonstrativo
+      const demoFile = files.find(f => f.type === 'demonstrativo' && f.status === 'valid');
+      if (demoFile) {
+        const formData = new FormData();
+        formData.append('file', demoFile.file, demoFile.name);
+        const token = localStorage.getItem('token');
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const res = await axios.post(`${apiUrl}/api/v1/demonstrativos/upload`, formData, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        setProgress(100);
+        setProcessingStage('complete');
+        setProcessingMsg('Processamento concluído!');
+        toast.success('Demonstrativo processado com sucesso!');
+        return { success: true, analysisId: res.data.id, data: res.data };
+      }
+      toast.error('Nenhum arquivo válido para upload.');
+      return { success: false };
     } catch (error) {
       console.error('Erro ao processar arquivos:', error);
       setProcessingStage('error');
@@ -81,12 +93,18 @@ export function useFileUploadService() {
       toast.error('Erro ao processar os arquivos', {
         description: 'Por favor, tente novamente ou contate o suporte.'
       });
-      return { success: false, analysisId: null };
+      return { success: false };
     }
   };
 
   return {
     processUploadedFiles,
-    determineProcessingMode: (files: FileWithStatus[]) => determineProcessingMode(files),
+    determineProcessingMode: (files: FileWithStatus[]) => {
+      const hasGuias = files.some(f => f.type === 'guia' && f.status === 'valid');
+      const hasDemonstrativos = files.some(f => f.type === 'demonstrativo' && f.status === 'valid');
+      if (hasGuias && hasDemonstrativos) return 'complete';
+      if (hasGuias) return 'guia-only';
+      return 'demonstrativo-only';
+    },
   };
 }

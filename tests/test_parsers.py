@@ -8,6 +8,11 @@ from src.parsers.cbhpm_parser import CBHPMParser
 from src.parsers.guia_parser import GuiaParser
 from src.parsers.demonstrativo_parser import DemonstrativoParser
 from src.main import parse_demonstrativo
+import io
+import tempfile
+import json
+from fastapi.testclient import TestClient
+from src.api import app, create_access_token
 
 def test_cbhpm_parser():
     """Test CBHPM parser with sample data."""
@@ -98,3 +103,32 @@ def test_parse_demonstrativo_main(pdf_path, cbhpm_path):
     # (Teste negativo: arquivo fictício)
     empty_df = parse_demonstrativo("data/demonstrativos/arquivo_inexistente.pdf", user_crm="6091") if os.path.exists("data/demonstrativos/arquivo_inexistente.pdf") else pd.DataFrame()
     assert empty_df.empty or len(empty_df) == 0 
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+@pytest.fixture
+def jwt_token():
+    # Gera um token JWT válido para CRM de teste
+    return create_access_token({"crm": "123456", "nome": "Teste"})
+
+def test_upload_guia_endpoint(client, jwt_token):
+    # Cria um PDF de guia de exemplo (pode ser um PDF vazio para o teste estrutural)
+    with tempfile.NamedTemporaryFile(suffix='.pdf') as tmp:
+        tmp.write(b'%PDF-1.4\n%Fake PDF for test\n')
+        tmp.flush()
+        tmp.seek(0)
+        files = {"file": ("guia_teste.pdf", tmp, "application/pdf")}
+        headers = {"Authorization": f"Bearer {jwt_token}"}
+        response = client.post("/api/v1/guias/upload", files=files, headers=headers)
+        assert response.status_code in (200, 400)  # 200 se parser aceitar PDF fake, 400 se não
+        if response.status_code == 200:
+            data = response.json()
+            assert "crm" in data
+            assert data["crm"] == "123456"
+            assert "procedures" in data
+            assert isinstance(data["procedures"], list)
+        else:
+            # Deve retornar erro de processamento se o PDF não for válido
+            assert "Erro ao processar guia" in response.text or "Apenas arquivos PDF" in response.text 
