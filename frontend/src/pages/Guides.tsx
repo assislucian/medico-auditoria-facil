@@ -12,6 +12,7 @@ import { FileType } from "../types/upload";
 import FileList from "../components/upload/FileList";
 import { toast } from "sonner";
 import { GuideDetailDialog } from "../components/guides/GuideDetailDialog";
+import DetalhesGuia from "../components/guides/DetalhesGuia";
 
 // Tipos para os dados extraídos da guia
 interface ExtractedProcedure {
@@ -57,6 +58,7 @@ const GuidesPage = () => {
   const [extractedGuides, setExtractedGuides] = useState<ExtractedProcedure[]>([]);
   const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedGuia, setSelectedGuia] = useState<string | null>(null);
 
   const fileUpload = useFileUpload();
   const {
@@ -103,14 +105,52 @@ const GuidesPage = () => {
     await handleFileChangeByType(type, fileList);
   };
 
-  // Filtro simples por código, descrição ou beneficiário
-  const filteredRows = extractedGuides.filter(proc =>
+  // Agrupamento macro por numero_guia
+  const grouped = extractedGuides.reduce((acc, proc) => {
+    if (!acc[proc.numero_guia]) acc[proc.numero_guia] = [];
+    acc[proc.numero_guia].push(proc);
+    return acc;
+  }, {} as Record<string, ExtractedProcedure[]>);
+
+  // Lista macro para DataGrid
+  const macroRows = Object.entries(grouped).map(([numero_guia, procs]) => {
+    const datas = procs.map(p => p.data).sort();
+    const dataMaisRecente = datas[datas.length - 1];
+    const beneficiario = procs[0]?.beneficiario || "";
+    const prestador = procs[0]?.prestador || "";
+    const qtdProcedimentos = procs.length;
+    // Status mais comum
+    const statusCount = procs.reduce((acc, p) => { acc[p.status] = (acc[p.status] || 0) + 1; return acc; }, {} as Record<string, number>);
+    const statusComum = Object.entries(statusCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+    return {
+      numero_guia,
+      data: dataMaisRecente,
+      beneficiario,
+      prestador,
+      qtdProcedimentos,
+      status: statusComum,
+      detalhes: procs
+    };
+  });
+
+  // Filtro macro
+  const filteredMacroRows = macroRows.filter(row =>
     (!filter ||
-      proc.codigo?.toString().includes(filter) ||
-      proc.descricao?.toLowerCase().includes(filter.toLowerCase()) ||
-      proc.beneficiario?.toLowerCase().includes(filter.toLowerCase())
+      row.numero_guia?.toString().includes(filter) ||
+      row.beneficiario?.toLowerCase().includes(filter.toLowerCase())
     )
   );
+
+  const macroColumns = [
+    { field: 'numero_guia', headerName: 'Nº Guia', width: 120 },
+    { field: 'data', headerName: 'Data', width: 120 },
+    { field: 'beneficiario', headerName: 'Beneficiário', width: 180 },
+    { field: 'qtdProcedimentos', headerName: 'Qtd Procedimentos', width: 120 },
+    { field: 'status', headerName: 'Status', width: 120, renderCell: ({ value }: { value: string }) => <Badge variant={value === "Fechada" ? "success" : value === "Pendente" ? "warning" : "default"}>{value || "-"}</Badge> },
+    { field: 'actions', headerName: 'Ações', width: 120, renderCell: ({ row }: { row: any }) => (
+      <Button size="sm" variant="outline" onClick={() => setSelectedGuia(row.numero_guia)}>Ver Detalhes</Button>
+    ) }
+  ];
 
   return (
     <AuthenticatedLayout title="Guias Médicas">
@@ -119,7 +159,7 @@ const GuidesPage = () => {
           <div className="flex space-x-2">
             <input
               type="text"
-              placeholder="Filtrar por código, descrição ou beneficiário"
+              placeholder="Filtrar por número, beneficiário"
               value={filter}
               onChange={e => setFilter(e.target.value)}
               className="border rounded px-2 py-1 text-sm"
@@ -155,11 +195,18 @@ const GuidesPage = () => {
               </CardHeader>
               <CardContent>
                 <DataGrid
-                  rows={filteredRows}
-                  columns={guidesColumns}
+                  rows={filteredMacroRows}
+                  columns={macroColumns}
                   pageSize={10}
                   className="min-h-[500px]"
                 />
+                {selectedGuia && (
+                  <DetalhesGuia
+                    guia={selectedGuia}
+                    procedimentos={grouped[selectedGuia]}
+                    onClose={() => setSelectedGuia(null)}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>

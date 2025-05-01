@@ -12,10 +12,12 @@ class GuiaParser:
         """Parse the medical guide PDF and extract procedures."""
         try:
             with pdfplumber.open(self.file_path) as pdf:
-                # Extrai beneficiário do cabeçalho
+                # Extrai beneficiário e prestador do cabeçalho
                 header_text = pdf.pages[0].extract_text() or ''
                 beneficiary_match = re.search(r'Benefici[áa]rio: [^\-]+- ([A-ZÇÁÉÍÓÚÂÊÔÃÕÜ\s]+)', header_text)
                 beneficiario = beneficiary_match.group(1).strip() if beneficiary_match else ''
+                prestador_match = re.search(r'Prestador: ([^\|\n]+)', header_text)
+                prestador = prestador_match.group(1).strip() if prestador_match else ''
 
                 for page in pdf.pages:
                     text = page.extract_text() or ''
@@ -51,7 +53,8 @@ class GuiaParser:
                                     'crm': crm,
                                     'qtd': qtd,
                                     'status': status,
-                                    'beneficiario': beneficiario
+                                    'beneficiario': beneficiario,
+                                    'prestador': prestador
                                 })
         except Exception as e:
             raise Exception(f"Error parsing medical guide: {str(e)}")
