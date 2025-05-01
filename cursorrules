@@ -25,7 +25,7 @@ Código 10101012 (consulta) sempre vale R$ 85,00.
 // Business Rules
 Filtre tudo por CRM.
 Compare valor_liberado com valor_tabela e calcule diferença.
-Marque como “divergente” se a diferença percentual for maior que 10%.
+Marque como "divergente" se a diferença percentual for maior que 10%.
 Identifique glosas como ausência de guia ou de pagamento correspondente.
 
 // Segurança e escopo
