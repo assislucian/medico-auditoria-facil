@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, BackgroundTasks, Form
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, BackgroundTasks, Form, Body
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from src.main import parse_demonstrativo, parse_guide_pdf
 import pandas as pd
 import bcrypt
-from sqlalchemy import create_engine, Column, String, Integer, DateTime
+from sqlalchemy import create_engine, Column, String, Integer, DateTime, desc
 from sqlalchemy.orm import declarative_base, sessionmaker
 from typing import List
 
@@ -53,6 +53,21 @@ class Demonstrativo(Base):
     liberado = Column(String, nullable=False, default="R$ 0,00")
     glosa = Column(String, nullable=False, default="R$ 0,00")
     upload_time = Column(DateTime, default=datetime.utcnow)
+
+class Guia(Base):
+    __tablename__ = "guias"
+    id = Column(Integer, primary_key=True, index=True)
+    numero_guia = Column(String, nullable=False, index=True)
+    data = Column(String, nullable=False)
+    paciente = Column(String, nullable=True)
+    codigo = Column(String, nullable=False)
+    descricao = Column(String, nullable=False)
+    papel = Column(String, nullable=False)
+    crm = Column(String, nullable=False)
+    qtd = Column(Integer, nullable=False)
+    status = Column(String, nullable=True)
+    prestador = Column(String, nullable=True)
+    user_id = Column(String, nullable=False, index=True)  # CRM do médico
 
 Base.metadata.create_all(bind=engine)
 
@@ -463,7 +478,7 @@ def upload_guia(
     user: dict = Depends(get_current_user)
 ):
     """
-    Recebe um PDF de guia TISS, extrai os dados e retorna em JSON.
+    Recebe um PDF de guia TISS, extrai os dados, salva no banco e retorna em JSON.
     Exige autenticação e filtra por CRM.
     """
     import tempfile
@@ -488,11 +503,90 @@ def upload_guia(
         # Se não houver campo de CRM, retorna tudo (fallback)
         if not filtered and procedures:
             filtered = procedures
+        # Salva no banco automaticamente
+        db = SessionLocal()
+        try:
+            for proc in filtered:
+                guia = Guia(
+                    numero_guia=proc.get('numero_guia'),
+                    data=proc.get('data'),
+                    paciente=proc.get('beneficiario'),
+                    codigo=proc.get('codigo'),
+                    descricao=proc.get('descricao'),
+                    papel=proc.get('papel'),
+                    crm=proc.get('crm'),
+                    qtd=proc.get('qtd'),
+                    status=proc.get('status'),
+                    prestador=proc.get('prestador'),
+                    user_id=crm
+                )
+                db.add(guia)
+            db.commit()
+        finally:
+            db.close()
         return {"crm": crm, "procedures": filtered}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro ao processar guia: {e}")
     finally:
         os.unlink(tmp_path)
+
+# --- Endpoint para salvar guias ---
+@app.post("/api/v1/guias/save")
+def save_guias(
+    procedimentos: list = Body(...),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Salva array de procedimentos extraídos de guias no banco, associando ao usuário autenticado.
+    """
+    db = SessionLocal()
+    try:
+        for proc in procedimentos:
+            guia = Guia(
+                numero_guia=proc.get('numero_guia'),
+                data=proc.get('data'),
+                paciente=proc.get('beneficiario'),
+                codigo=proc.get('codigo'),
+                descricao=proc.get('descricao'),
+                papel=proc.get('papel'),
+                crm=proc.get('crm'),
+                qtd=proc.get('qtd'),
+                status=proc.get('status'),
+                prestador=proc.get('prestador'),
+                user_id=user['crm']
+            )
+            db.add(guia)
+        db.commit()
+        return {"message": f"{len(procedimentos)} guias salvas com sucesso"}
+    finally:
+        db.close()
+
+# --- Endpoint para listar guias ---
+@app.get("/api/v1/guias")
+def list_guias(user: dict = Depends(get_current_user)):
+    """
+    Retorna todas as guias do usuário autenticado, ordenadas por data decrescente.
+    """
+    db = SessionLocal()
+    try:
+        guias = db.query(Guia).filter_by(user_id=user['crm']).order_by(desc(Guia.data)).all()
+        return [
+            {
+                "numero_guia": g.numero_guia,
+                "data": g.data,
+                "beneficiario": g.paciente,
+                "codigo": g.codigo,
+                "descricao": g.descricao,
+                "papel": g.papel,
+                "crm": g.crm,
+                "qtd": g.qtd,
+                "status": g.status,
+                "prestador": g.prestador
+            }
+            for g in guias
+        ]
+    finally:
+        db.close()
 
 # --- Observações ---
 # - Para produção, troque JWT_SECRET por segredo seguro e use HTTPS

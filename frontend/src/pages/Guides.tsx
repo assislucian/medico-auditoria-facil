@@ -4,7 +4,7 @@ import { DataGrid } from "../components/ui/data-grid";
 import { Button } from "../components/ui/button";
 import { FileText, Upload } from "lucide-react";
 import { Badge } from "../components/ui/badge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import FileDropZone from "../components/upload/FileDropZone";
 import { useFileUpload } from "../hooks/useFileUpload";
@@ -13,6 +13,7 @@ import FileList from "../components/upload/FileList";
 import { toast } from "sonner";
 import { GuideDetailDialog } from "../components/guides/GuideDetailDialog";
 import DetalhesGuia from "../components/guides/DetalhesGuia";
+import axios from "axios";
 
 // Tipos para os dados extraídos da guia
 interface ExtractedProcedure {
@@ -69,6 +70,26 @@ const GuidesPage = () => {
     handleFileChangeByType,
     processUploadedFiles
   } = fileUpload;
+
+  // Fetch guias salvas ao carregar a página
+  useEffect(() => {
+    const fetchSavedGuias = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const res = await axios.get(`${apiUrl}/api/v1/guias`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (Array.isArray(res.data)) {
+          setExtractedGuides(res.data);
+        }
+      } catch (err) {
+        // Não bloqueia a tela se não houver guias salvas
+        setExtractedGuides([]);
+      }
+    };
+    fetchSavedGuias();
+  }, []);
 
   // Upload e processamento da guia
   const handleUploadGuias = async () => {

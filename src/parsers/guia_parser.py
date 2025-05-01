@@ -21,41 +21,47 @@ class GuiaParser:
 
                 for page in pdf.pages:
                     text = page.extract_text() or ''
-                    # Extrai linhas de procedimentos
-                    # Exemplo: 10696456 04/09/2024 30602076 Roll 1 Fechada
-                    proc_pattern = re.compile(r'(?P<numero_guia>\d{8})\s+(?P<data>\d{2}/\d{2}/\d{4})\s+(?P<codigo>30\d{6})\s+(?P<descricao>.+?)\s+(?P<qtd>\d+)\s+(?P<status>\w+)', re.MULTILINE)
-                    for m in proc_pattern.finditer(text):
-                        numero_guia = m.group('numero_guia')
-                        data = m.group('data')
-                        codigo = m.group('codigo')
-                        descricao = m.group('descricao').strip()
-                        qtd = int(m.group('qtd'))
-                        status = m.group('status')
+                    # Divide por procedimentos (cada bloco começa com 8 dígitos + data)
+                    proc_blocks = re.split(r'(?=\d{8}\s+\d{2}/\d{2}/\d{4})', text)
+                    for blk in proc_blocks:
+                        proc_match = re.match(r'(?P<numero_guia>\d{8})\s+(?P<data>\d{2}/\d{2}/\d{4})\s+(?P<codigo>30\d{6})\s+(?P<descricao>.+?)\s+(?P<qtd>\d+)\s+(?P<status>\w+)', blk, re.DOTALL)
+                        if not proc_match:
+                            continue
+                        numero_guia = proc_match.group('numero_guia')
+                        data = proc_match.group('data')
+                        codigo = proc_match.group('codigo')
+                        descricao = proc_match.group('descricao').strip()
+                        qtd = int(proc_match.group('qtd'))
+                        status = proc_match.group('status')
 
-                        # Para cada papel possível, verifica se está presente no texto do bloco
-                        papel_map = {
-                            r'Cirurgiao': 'Cirurgião',
-                            r'Anestesista': 'Anestesista',
-                            r'Primeiro Auxiliar': '1º Auxiliar',
-                            r'Segundo Auxiliar': '2º Auxiliar'
-                        }
-                        for pat, papel_nome in papel_map.items():
-                            papel_regex = re.compile(rf'{pat}\s+(?P<crm>\d+)', re.IGNORECASE)
-                            papel_match = papel_regex.search(text)
-                            if papel_match:
-                                crm = papel_match.group('crm')
-                                self.procedures.append({
-                                    'numero_guia': numero_guia,
-                                    'data': data,
-                                    'codigo': codigo,
-                                    'descricao': descricao,
-                                    'papel': papel_nome,
-                                    'crm': crm,
-                                    'qtd': qtd,
-                                    'status': status,
-                                    'beneficiario': beneficiario,
-                                    'prestador': prestador
-                                })
+                        # Extrai bloco de participação imediatamente após o procedimento
+                        part_match = re.search(r'Participa[çc][ãa]o\s+M[ée]dico(.+)', blk, re.DOTALL)
+                        part_text = blk.split('Participação')[1] if 'Participação' in blk else ''
+                        # Cada papel pode aparecer em qualquer ordem
+                        papel_crm_regex = re.compile(r'(Cirurgiao|Anestesista|Primeiro Auxiliar|Segundo Auxiliar)\s*(\d+)\s*-\s*([A-ZÇÁÉÍÓÚÂÊÔÃÕÜ\s]+)\s*(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})?\s*(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})?\s*(\w+)?', re.IGNORECASE)
+                        for papel_match in papel_crm_regex.finditer(part_text):
+                            papel_raw = papel_match.group(1)
+                            crm = papel_match.group(2)
+                            # nome = papel_match.group(3)  # pode ser usado se quiser
+                            papel_map = {
+                                'Cirurgiao': 'Cirurgião',
+                                'Anestesista': 'Anestesista',
+                                'Primeiro Auxiliar': '1º Auxiliar',
+                                'Segundo Auxiliar': '2º Auxiliar'
+                            }
+                            papel = papel_map.get(papel_raw, papel_raw)
+                            self.procedures.append({
+                                'numero_guia': numero_guia,
+                                'data': data,
+                                'codigo': codigo,
+                                'descricao': descricao,
+                                'papel': papel,
+                                'crm': crm,
+                                'qtd': qtd,
+                                'status': status,
+                                'beneficiario': beneficiario,
+                                'prestador': prestador
+                            })
         except Exception as e:
             raise Exception(f"Error parsing medical guide: {str(e)}")
     
