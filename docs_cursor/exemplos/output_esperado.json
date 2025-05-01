@@ -1,0 +1,51 @@
+{
+  "crm": "123456",
+  "cbhpm_version": "2015",
+  "procedures": [
+    {
+      "guia": "00012345",
+      "data": "2024-10-15",
+      "codigo": "10101012",
+      "descricao": "Consulta",
+      "papel": "Cirurgião",
+      "beneficiario": "João da Silva",
+      "qtd": 1,
+      "valor_liberado": 80.00,
+      "valor_tabela": 85.00,
+      "diferenca": -5.00,
+      "diferenca_percentual": -5.88,
+      "status": "divergente"
+    },
+    {
+      "guia": "00012346",
+      "data": "2024-10-16",
+      "codigo": "12345678",
+      "descricao": "Cirurgia X",
+      "papel": "Cirurgião",
+      "beneficiario": "Maria Oliveira",
+      "qtd": 1,
+      "valor_liberado": 500.00,
+      "valor_tabela": 500.00,
+      "diferenca": 0.00,
+      "diferenca_percentual": 0.00,
+      "status": "ok"
+    }
+  ],
+  "glosas": [
+    {
+      "guia": "00012347",
+      "codigo": "87654321",
+      "descricao": "Procedimento Y",
+      "valor_glosa": 100.00,
+      "motivo": "Procedimento não autorizado"
+    }
+  ],
+  "resumo": {
+    "total_procedimentos": 2,
+    "total_liberado": 580.00,
+    "total_tabela": 585.00,
+    "total_diferenca": -5.00,
+    "percentual_diferenca": -0.85,
+    "total_glosas": 100.00
+  }
+}
