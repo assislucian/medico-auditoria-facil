@@ -1,0 +1,34 @@
+// ⛑ MedCheck - Regras Cursor
+
+// Stack
+Use FastAPI + Pydantic para o backend. 
+Use PostgreSQL como banco de dados.
+Use React com Next.js + TypeScript + Tailwind CSS no frontend.
+Utilize os componentes do shadcn/ui sempre que possível.
+Para autenticação, utilize JWT com refresh token seguro.
+
+// Estrutura
+Organize o backend em módulos versionados com rotas REST em /api/v1/.
+O frontend deve ter pastas para pages, components, services, hooks, types e utils.
+Apenas um médico por login, identificado pelo CRM.
+
+// Parsing
+Extraia dados de demonstrativos via tabelas ou regex. 
+Extraia dados de guias em blocos, reconhecendo participações médicas.
+Valide e relacione informações por: guia + código + CRM + papel + quantidade.
+
+// Tabela de Referência
+A CBHPM 2015 é a única base de valores. 
+Use valores conforme papel (valor_cirurgiao, valor_anestesista, valor_primeiro_auxiliar).
+Código 10101012 (consulta) sempre vale R$ 85,00.
+
+// Business Rules
+Filtre tudo por CRM.
+Compare valor_liberado com valor_tabela e calcule diferença.
+Marque como “divergente” se a diferença percentual for maior que 10%.
+Identifique glosas como ausência de guia ou de pagamento correspondente.
+
+// Segurança e escopo
+Nunca permita acesso cruzado entre CRMs.
+Use autenticação JWT. Armazene senhas com bcrypt.
+Use CORS e HTTPS obrigatoriamente.
