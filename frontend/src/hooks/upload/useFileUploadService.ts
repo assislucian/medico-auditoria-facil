@@ -68,20 +68,20 @@ export function useFileUploadService() {
       // fallback: demonstrativo
       const demoFile = files.find(f => f.type === 'demonstrativo' && f.status === 'valid');
       if (demoFile) {
-        const formData = new FormData();
-        formData.append('file', demoFile.file, demoFile.name);
-        const token = localStorage.getItem('token');
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        const res = await axios.post(`${apiUrl}/api/v1/demonstrativos/upload`, formData, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        setProgress(100);
-        setProcessingStage('complete');
-        setProcessingMsg('Processamento concluído!');
-        toast.success('Demonstrativo processado com sucesso!');
+      const formData = new FormData();
+      formData.append('file', demoFile.file, demoFile.name);
+      const token = localStorage.getItem('token');
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const res = await axios.post(`${apiUrl}/api/v1/demonstrativos/upload`, formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      setProgress(100);
+      setProcessingStage('complete');
+      setProcessingMsg('Processamento concluído!');
+      toast.success('Demonstrativo processado com sucesso!');
         return { success: true, analysisId: res.data.id, data: res.data };
       }
       toast.error('Nenhum arquivo válido para upload.');

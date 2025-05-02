@@ -588,6 +588,20 @@ def list_guias(user: dict = Depends(get_current_user)):
     finally:
         db.close()
 
+# --- Endpoint para deletar guia ---
+from fastapi import status
+@app.delete("/api/v1/guias/{numero_guia}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_guia(numero_guia: str, user: dict = Depends(get_current_user)):
+    db = SessionLocal()
+    try:
+        deleted = db.query(Guia).filter_by(numero_guia=numero_guia, user_id=user['crm']).delete()
+        db.commit()
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Guia não encontrada.")
+        return
+    finally:
+        db.close()
+
 # --- Observações ---
 # - Para produção, troque JWT_SECRET por segredo seguro e use HTTPS
 # - Substitua jobs dict por Redis/Celery/DB para escalabilidade real

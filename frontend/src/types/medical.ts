@@ -1,4 +1,3 @@
-
 export interface DoctorParticipation {
   code: string;
   name: string;
@@ -65,4 +64,18 @@ export interface DemonstrativeData {
   valorLiberado: number;
   proRata: number;
   glosa: number;
+}
+
+export interface GuideProcedure {
+  numero_guia: string;
+  data: string;
+  codigo: string;
+  descricao: string;
+  papel: string;
+  crm: string;
+  qtd: number;
+  status: string;
+  beneficiario: string;
+  prestador?: string;
+  [key: string]: any;
 }

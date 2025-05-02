@@ -5,28 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, X } from "lucide-react";
 import { DataGrid } from "@/components/ui/data-grid";
 import React from "react";
-
-interface Procedure {
-  numero_guia: string;
-  data: string;
-  codigo: string;
-  descricao: string;
-  papel: string;
-  crm: string;
-  qtd: number;
-  status: string;
-  beneficiario: string;
-  prestador?: string;
-  [key: string]: any;
-}
+import { GuideProcedure } from "@/types/medical";
 
 interface DetalhesGuiaProps {
   guia: string;
-  procedimentos: Procedure[];
+  procedimentos: GuideProcedure[];
   onClose: () => void;
 }
 
 const detalhesColumns = [
+  { field: 'data', headerName: 'Data de Execução', width: 120 },
   { field: 'codigo', headerName: 'Código', width: 120 },
   { field: 'descricao', headerName: 'Descrição', flex: 1 },
   { field: 'papel', headerName: 'Papel', width: 120 },

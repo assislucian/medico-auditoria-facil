@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -18,6 +17,7 @@ interface DataGridProps {
   rowsPerPageOptions?: number[];
   disableSelectionOnClick?: boolean;
   className?: string;
+  renderExpandedRow?: (row: any) => React.ReactNode;
 }
 
 export function DataGrid({
@@ -25,6 +25,7 @@ export function DataGrid({
   columns,
   pageSize = 10,
   className = "",
+  renderExpandedRow,
 }: DataGridProps) {
   // Make sure rows is always an array, even if undefined is passed
   const safeRows = Array.isArray(rows) ? rows : [];
@@ -54,11 +55,10 @@ export function DataGrid({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {safeRows.slice(0, pageSize).map((row, rowIndex) => (
+          {safeRows.slice(0, pageSize).map((row, rowIndex) => [
             <TableRow key={row?.id || rowIndex}>
               {columns.map((column) => {
                 const cellValue = getCellValue(row, column.field);
-                
                 return (
                   <TableCell key={`${row?.id || rowIndex}-${column.field}`}>
                     {column.renderCell ? (
@@ -71,8 +71,9 @@ export function DataGrid({
                   </TableCell>
                 );
               })}
-            </TableRow>
-          ))}
+            </TableRow>,
+            renderExpandedRow && renderExpandedRow(row)
+          ])}
           {safeRows.length === 0 && (
             <TableRow>
               <TableCell colSpan={columns.length} className="text-center py-4">
