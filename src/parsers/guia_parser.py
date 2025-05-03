@@ -44,7 +44,7 @@ PART_RE = re.compile(
 
 # cabeçalho (beneficiário e prestador)
 HEAD_PREST_RE = re.compile(
-    r"Prestador:\s+(?:\d+\s+-\s+)?(?P<prestador>[^|]+?)\s*(?:\||$)",
+    r"Prestador:\s+(?P<cod>\d{5,})\s+-\s+(?P<prestador>[^\|]+)",
     re.IGNORECASE,
 )
 HEAD_BENEF_RE = re.compile(

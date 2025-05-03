@@ -574,7 +574,7 @@ const GuidesPage = () => {
                                     <td>{proc.papel}</td>
                                     <td>{proc.qtd}</td>
                                     <td>{proc.status}</td>
-                                    <td>{proc.prestador || "Não informado"}</td>
+                                    <td>{proc.prestador}</td>
                                   </tr>
                                 ))}
                               </tbody>
