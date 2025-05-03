@@ -1,6 +1,5 @@
 import { AuthenticatedLayout } from "../components/layout/AuthenticatedLayout";
 import {
-  Card,
   CardContent,
   CardHeader,
   CardTitle,
@@ -9,7 +8,7 @@ import {
 import { DataGrid } from "../components/ui/data-grid";
 import { Button } from "../components/ui/button";
 import { FileText, Upload, Eye, Trash2, HelpCircle } from "lucide-react";
-import { Badge } from "../components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import {
   Tabs,
@@ -28,6 +27,8 @@ import { GuideProcedure } from "../types/medical";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "../components/ui/tooltip";
 import { Link } from "react-router-dom";
 import LoaderTable from "../components/ui/LoaderTable";
+import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 // import Fuse from 'fuse.js';
 
 // Logger utilitário
@@ -555,35 +556,40 @@ const GuidesPage = () => {
                     renderExpandedRow={(row) =>
                       expandedRow === row.numero_guia ? (
                         <tr>
-                          <td colSpan={macroColumns.length} className="bg-muted p-0">
-                            <div className="p-4">
-                              <table className="w-full text-xs">
+                          <td colSpan={macroColumns.length} className="bg-[#F7F9FC] p-0">
+                            <Card className="overflow-x-auto">
+                              <table className="w-full text-sm">
                                 <thead>
                                   <tr>
-                                    <th className="text-left">Data</th>
-                                    <th className="text-left">Código</th>
-                                    <th className="text-left">Descrição</th>
-                                    <th className="text-left">Papel</th>
-                                    <th className="text-left">Qtd</th>
-                                    <th className="text-left">Status</th>
-                                    <th className="text-left">Prestador</th>
+                                    {["Data", "Código", "Descrição", "Papel", "Qtd", "Status", "Prestador"].map(h => (
+                                      <th
+                                        key={h}
+                                        className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-low dark:text-slate-400"
+                                      >
+                                        {h}
+                                      </th>
+                                    ))}
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {row.detalhes.map((proc: any, idx: number) => (
-                                    <tr key={idx} className="border-b last:border-0">
-                                      <td>{proc.data}</td>
-                                      <td>{proc.codigo}</td>
-                                      <td>{proc.descricao}</td>
-                                      <td>{proc.papel}</td>
-                                      <td>{proc.qtd}</td>
-                                      <td>{proc.status}</td>
-                                      <td>{proc.prestador}</td>
+                                  {row.detalhes.map((proc: any) => (
+                                    <tr key={proc.codigo} className="odd:bg-gray-50 dark:odd:bg-surface-dark/50">
+                                      <td className="py-3 px-4 whitespace-nowrap">{proc.data}</td>
+                                      <td className="py-3 px-4 whitespace-nowrap font-mono">{proc.codigo}</td>
+                                      <td className="py-3 px-4 whitespace-nowrap">{proc.descricao}</td>
+                                      <td className="py-3 px-4 whitespace-nowrap">{proc.papel}</td>
+                                      <td className="py-3 px-4 whitespace-nowrap text-center">{proc.qtd}</td>
+                                      <td className="py-3 px-4 whitespace-nowrap">
+                                        <Badge variant="secondary">
+                                          {proc.status === "Gerado pela execução" ? "Gerado pela execução" : proc.status}
+                                        </Badge>
+                                      </td>
+                                      <td className="py-3 px-4 whitespace-nowrap">{proc.prestador}</td>
                                     </tr>
                                   ))}
                                 </tbody>
                               </table>
-                            </div>
+                            </Card>
                           </td>
                         </tr>
                       ) : null
