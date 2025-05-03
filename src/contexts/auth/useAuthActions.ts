@@ -66,9 +66,7 @@ export const useAuthActions = (userId: string | undefined) => {
 
   // Reset password
   const resetPassword = async (email: string) => {
-    return await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/reset-password',
-    });
+    return await supabase.auth.resetPasswordForEmail(email);
   };
 
   // Update password

@@ -59,5 +59,12 @@ export function useAuthState() {
     };
   }, []);
 
-  return { session, user, loading, initialized };
+  return { 
+    session, 
+    user, 
+    loading, 
+    initialized,
+    // Add isAuthenticated helper
+    isAuthenticated: !!session 
+  };
 }

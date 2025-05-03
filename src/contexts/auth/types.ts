@@ -1,12 +1,23 @@
 
-import { Session, User } from '@supabase/supabase-js';
-import { Profile } from '@/types';
+import { User } from '@supabase/supabase-js';
 
-export type UserProfile = Profile;
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  crm?: string;
+  specialty?: string;
+  notification_preferences?: any;
+  reference_tables_preferences?: any;
+  trial_status?: string;
+  trial_end_date?: string;
+  onboarding_completed?: boolean;
+  onboarding_completed_at?: string;
+}
 
 export interface AuthContextProps {
   user: User | null;
-  session: Session | null;
+  session: any;
   isAuthenticated: boolean;
   loading: boolean;
   userProfile: UserProfile | null;
