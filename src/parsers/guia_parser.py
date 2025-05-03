@@ -44,7 +44,11 @@ PART_RE = re.compile(
 
 # cabeçalho (beneficiário e prestador)
 HEAD_PREST_RE = re.compile(
-    r"Prestador:\s+(?P<cod>\d{5,})\s+-\s+(?P<prestador>[^\|]+)",
+    r"Prestador:\s*(?P<cod>\d{5,})\s*-\s*(?P<prestador>[^\|\n]+)",
+    re.IGNORECASE,
+)
+HEAD_PREST_FALLBACK_RE = re.compile(
+    r"Prestador:\s*(?P<prestador>[^\|\n]+)",
     re.IGNORECASE,
 )
 HEAD_BENEF_RE = re.compile(
@@ -167,7 +171,21 @@ def parse_guia_pdf(pdf_path: str | Path, crm_filter: str) -> List[Dict[str, Any]
     text = _extract_text(pdf_path)
     lines = [line.strip() for line in text.splitlines() if line.strip()]
 
-    prestador = beneficiario = ""
+    # Captura robusta do prestador
+    prestador = ""
+    for line in lines:
+        m = HEAD_PREST_RE.search(line)
+        if m:
+            prestador = m.group("prestador").strip()
+            break
+    if not prestador:
+        for line in lines:
+            m = HEAD_PREST_FALLBACK_RE.search(line)
+            if m:
+                prestador = m.group("prestador").strip()
+                break
+
+    beneficiario = ""
     procedimentos: List[Dict[str, Any]] = []
     current_proc = None
     i = 0
