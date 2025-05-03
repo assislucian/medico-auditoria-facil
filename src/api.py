@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, BackgroundTasks, Form, Body
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, BackgroundTasks, Form, Body, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
@@ -16,6 +16,11 @@ import bcrypt
 from sqlalchemy import create_engine, Column, String, Integer, DateTime, desc
 from sqlalchemy.orm import declarative_base, sessionmaker
 from typing import List
+import pdb
+import sys
+import json
+import sqlite3
+import tempfile
 
 # --- Configurações ---
 UPLOAD_DIR = "uploads"
@@ -68,11 +73,27 @@ class Guia(Base):
     status = Column(String, nullable=True)
     prestador = Column(String, nullable=True)
     user_id = Column(String, nullable=False, index=True)  # CRM do médico
+    nome_medico = Column(String, nullable=True)  # Nome do médico participante
+    dt_inicio = Column(String, nullable=True)  # Data/hora de início do procedimento
+    dt_fim = Column(String, nullable=True)  # Data/hora de fim do procedimento
+    status_part = Column(String, nullable=True)  # Status da participação (ex: Fechada, Pendente)
 
 Base.metadata.create_all(bind=engine)
 
 # --- Autenticação JWT real (MVP) ---
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# Quando SKIP_AUTH é true, precisamos deixar o token opcional
+skip_auth = os.environ.get("SKIP_AUTH", "").lower() == "true"
+if skip_auth:
+    # Use our custom Bearer class that doesn't require authentication
+    class OptionalOAuth2PasswordBearer(OAuth2PasswordBearer):
+        async def __call__(self, request: Request = None):
+            try:
+                return await super().__call__(request)
+            except HTTPException:
+                return None
+    oauth2_scheme = OptionalOAuth2PasswordBearer(tokenUrl="token")
+else:
+    oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
@@ -88,6 +109,29 @@ def decode_jwt(token: str):
         raise HTTPException(status_code=401, detail="Token inválido ou expirado")
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
+    # Check if authentication should be skipped (for development/testing)
+    skip_auth = os.environ.get("SKIP_AUTH", "").lower() == "true"
+    if skip_auth:
+        # Use CRM_LOGADO environment variable to simulate a logged-in user
+        crm_logado = os.environ.get("CRM_LOGADO")
+        if not crm_logado:
+            logger.warning("SKIP_AUTH is true but CRM_LOGADO is not set!")
+            raise HTTPException(status_code=401, detail="CRM_LOGADO environment variable is required when SKIP_AUTH=true")
+        db = SessionLocal()
+        try:
+            # Try to find medico in database to get the nome
+            medico = db.query(Medico).filter_by(crm=crm_logado).first()
+            nome = medico.nome if medico else "Médico Teste"
+            logger.info(f"Autenticação ignorada. Usando CRM {crm_logado} ({nome})")
+            return {"crm": crm_logado, "nome": nome}
+        finally:
+            db.close()
+    
+    # If token is None and auth is not skipped, raise error
+    if token is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+        
+    # Normal authentication flow
     payload = decode_jwt(token)
     return {"crm": payload.get("crm"), "nome": payload.get("nome")}
 
@@ -104,8 +148,8 @@ app.add_middleware(
 )
 
 # --- Logging estruturado ---
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
-logger = logging.getLogger("validador")
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("api")
 
 # --- Models ---
 class RegisterRequest(BaseModel):
@@ -479,10 +523,10 @@ def upload_guia(
 ):
     """
     Recebe um PDF de guia TISS, extrai os dados, salva no banco e retorna em JSON.
-    Exige autenticação e filtra por CRM.
+    Exige autenticação e filtra automaticamente por CRM do usuário logado.
     """
     import tempfile
-    from src.parsers.guia_parser import GuiaParser
+    from src.parsers.guia_parser import parse_guia_pdf
     import json
     import shutil
     import os
@@ -490,42 +534,115 @@ def upload_guia(
     # Valida tipo de arquivo
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Apenas arquivos PDF são aceitos.")
+    
     # Salva arquivo temporário
     with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
         shutil.copyfileobj(file.file, tmp)
         tmp_path = tmp.name
+    
     try:
-        parser = GuiaParser(tmp_path)
-        procedures = parser.get_procedures()
-        # Filtra por CRM do usuário autenticado
-        crm = str(user.get('crm'))
-        filtered = [p for p in procedures if str(p.get('crm')) == crm]
-        # Se não houver campo de CRM, retorna tudo (fallback)
-        if not filtered and procedures:
-            filtered = procedures
-        # Salva no banco automaticamente
+        # Extrai procedimentos usando o CRM do usuário autenticado
+        crm = str(user.get('crm', ''))
+        logger.info(f"Processando guia para CRM {crm}")
+        
+        # Utiliza a nova função parse_guia_pdf com filtro por CRM
+        procedures = parse_guia_pdf(tmp_path, crm_filter=crm)
+        
+        if not procedures:
+            logger.warning(f"Nenhum procedimento encontrado para o CRM {crm} nesta guia")
+            return {
+                "message": "Guia processada, mas nenhum procedimento encontrado para o seu CRM",
+                "crm": crm,
+                "procedures": []
+            }
+        
+        # Salva no banco evitando duplicados
         db = SessionLocal()
+        guias_adicionadas = 0
+        
         try:
-            for proc in filtered:
-                guia = Guia(
-                    numero_guia=proc.get('numero_guia'),
-                    data=proc.get('data'),
-                    paciente=proc.get('beneficiario'),
-                    codigo=proc.get('codigo'),
-                    descricao=proc.get('descricao'),
-                    papel=proc.get('papel'),
-                    crm=proc.get('crm'),
-                    qtd=proc.get('qtd'),
-                    status=proc.get('status'),
-                    prestador=proc.get('prestador'),
+            for proc in procedures:
+                # Converte para o formato esperado pelo banco
+                guia_data = {
+                    "numero_guia": proc.get('guia'),
+                    "data": proc.get('data_execucao', '').replace('-', '/'),
+                    "paciente": proc.get('beneficiario', ''),
+                    "codigo": proc.get('codigo', ''),
+                    "descricao": proc.get('descricao', ''),
+                    "papel": proc.get('papel_exercido', ''),
+                    "crm": crm,
+                    "qtd": proc.get('quantidade', 1),
+                    "status": "Gerado pela execução",
+                    "prestador": proc.get('prestador', ''),
+                    "nome_medico": next((p.get('nome', '') for p in proc.get('participacoes', []) if p.get('crm') == crm), ''),
+                    "dt_inicio": next((p.get('inicio', '') for p in proc.get('participacoes', []) if p.get('crm') == crm), ''),
+                    "dt_fim": next((p.get('fim', '') for p in proc.get('participacoes', []) if p.get('crm') == crm), ''),
+                    "status_part": next((p.get('status', '') for p in proc.get('participacoes', []) if p.get('crm') == crm), '')
+                }
+                
+                # Verifica se já existe esta guia + código + papel para este usuário
+                existing = db.query(Guia).filter_by(
+                    numero_guia=guia_data['numero_guia'],
+                    codigo=guia_data['codigo'],
+                    papel=guia_data['papel'],
                     user_id=crm
-                )
-                db.add(guia)
+                ).first()
+                
+                # Se não existir, adiciona
+                if not existing:
+                    guia = Guia(
+                        numero_guia=guia_data['numero_guia'],
+                        data=guia_data['data'],
+                        paciente=guia_data['paciente'],
+                        codigo=guia_data['codigo'],
+                        descricao=guia_data['descricao'],
+                        papel=guia_data['papel'],
+                        crm=guia_data['crm'],
+                        qtd=guia_data['qtd'],
+                        status=guia_data['status'],
+                        prestador=guia_data['prestador'],
+                        user_id=crm,
+                        nome_medico=guia_data['nome_medico'],
+                        dt_inicio=guia_data['dt_inicio'],
+                        dt_fim=guia_data['dt_fim'],
+                        status_part=guia_data['status_part']
+                    )
+                    db.add(guia)
+                    guias_adicionadas += 1
+            
             db.commit()
+            
+            # Adapta para o formato esperado pelo frontend
+            formatted_procedures = [
+                {
+                    "numero_guia": p.get('guia'),
+                    "data": p.get('data_execucao', '').replace('-', '/'),
+                    "beneficiario": p.get('beneficiario', ''),
+                    "codigo": p.get('codigo', ''),
+                    "descricao": p.get('descricao', ''),
+                    "papel": p.get('papel_exercido', ''),
+                    "crm": crm,
+                    "qtd": p.get('quantidade', 1),
+                    "status": "Gerado pela execução",
+                    "prestador": p.get('prestador', ''),
+                    "nome_medico": next((part.get('nome', '') for part in p.get('participacoes', []) if part.get('crm') == crm), ''),
+                    "dt_inicio": next((part.get('inicio', '') for part in p.get('participacoes', []) if part.get('crm') == crm), ''),
+                    "dt_fim": next((part.get('fim', '') for part in p.get('participacoes', []) if part.get('crm') == crm), ''),
+                    "status_part": next((part.get('status', '') for part in p.get('participacoes', []) if part.get('crm') == crm), '')
+                }
+                for p in procedures
+            ]
+            
+            logger.info(f"Guia processada: {len(procedures)} procedimentos encontrados, {guias_adicionadas} novos adicionados")
+            return {
+                "message": f"Guia processada: {len(procedures)} procedimentos encontrados, {guias_adicionadas} novos adicionados",
+                "crm": crm,
+                "procedures": formatted_procedures
+            }
         finally:
             db.close()
-        return {"crm": crm, "procedures": filtered}
     except Exception as e:
+        logger.error(f"Erro ao processar guia: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=f"Erro ao processar guia: {e}")
     finally:
         os.unlink(tmp_path)
@@ -553,7 +670,11 @@ def save_guias(
                 qtd=proc.get('qtd'),
                 status=proc.get('status'),
                 prestador=proc.get('prestador'),
-                user_id=user['crm']
+                user_id=user['crm'],
+                nome_medico=proc.get('nome_medico', ''),
+                dt_inicio=proc.get('dt_inicio', ''),
+                dt_fim=proc.get('dt_fim', ''),
+                status_part=proc.get('status_part', '')
             )
             db.add(guia)
         db.commit()
@@ -563,28 +684,79 @@ def save_guias(
 
 # --- Endpoint para listar guias ---
 @app.get("/api/v1/guias")
-def list_guias(user: dict = Depends(get_current_user)):
+def list_guias(
+    page: int = 1,
+    pageSize: int = 10,
+    search: str = None,
+    status: str = None,
+    data: str = None,
+    user: dict = Depends(get_current_user)
+):
     """
-    Retorna todas as guias do usuário autenticado, ordenadas por data decrescente.
+    Retorna todas as guias do usuário autenticado, com paginação e filtros.
+    Permite busca por texto, filtro por status e data.
     """
     db = SessionLocal()
     try:
-        guias = db.query(Guia).filter_by(user_id=user['crm']).order_by(desc(Guia.data)).all()
-        return [
-            {
-                "numero_guia": g.numero_guia,
-                "data": g.data,
-                "beneficiario": g.paciente,
-                "codigo": g.codigo,
-                "descricao": g.descricao,
-                "papel": g.papel,
-                "crm": g.crm,
-                "qtd": g.qtd,
-                "status": g.status,
-                "prestador": g.prestador
-            }
-            for g in guias
-        ]
+        # Consulta base
+        query = db.query(Guia).filter_by(user_id=user['crm'])
+        
+        # Aplicar filtros se fornecidos
+        if search:
+            search_term = f"%{search.lower()}%"
+            query = query.filter(
+                (Guia.numero_guia.like(search_term)) | 
+                (Guia.paciente.ilike(search_term)) |
+                (Guia.codigo.like(search_term)) |
+                (Guia.descricao.ilike(search_term)) |
+                (Guia.papel.ilike(search_term)) |
+                (Guia.nome_medico.ilike(search_term)) |
+                (Guia.prestador.ilike(search_term))
+            )
+        
+        if status:
+            query = query.filter(Guia.status == status)
+            
+        if data:
+            query = query.filter(Guia.data == data)
+            
+        # Contagem total para paginação
+        total = query.count()
+        
+        # Aplicar ordenação e paginação
+        query = query.order_by(desc(Guia.data), desc(Guia.id))
+        if page and pageSize:
+            offset = (page - 1) * pageSize
+            query = query.offset(offset).limit(pageSize)
+            
+        guias = query.all()
+        
+        # Retornar no formato esperado pelo frontend
+        result = {
+            "procedures": [
+                {
+                    "numero_guia": g.numero_guia,
+                    "data": g.data,
+                    "beneficiario": g.paciente,
+                    "codigo": g.codigo,
+                    "descricao": g.descricao,
+                    "papel": g.papel,
+                    "crm": g.crm,
+                    "qtd": g.qtd,
+                    "status": g.status,
+                    "prestador": g.prestador,
+                    "nome_medico": g.nome_medico,
+                    "dt_inicio": g.dt_inicio,
+                    "dt_fim": g.dt_fim,
+                    "status_part": g.status_part
+                }
+                for g in guias
+            ],
+            "total": total,
+            "page": page,
+            "pageSize": pageSize
+        }
+        return result
     finally:
         db.close()
 
