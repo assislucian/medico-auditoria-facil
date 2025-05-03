@@ -77,5 +77,8 @@ export interface GuideProcedure {
   status: string;
   beneficiario: string;
   prestador?: string;
-  [key: string]: any;
+  nome_medico?: string;
+  dt_inicio?: string;
+  dt_fim?: string;
+  status_part?: string;
 }

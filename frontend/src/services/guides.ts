@@ -37,7 +37,7 @@ export async function deleteGuide(numeroGuia: string, token: string): Promise<vo
 export async function uploadGuide(file: File, token: string): Promise<GuideProcedure[]> {
   const formData = new FormData();
   formData.append("file", file, file.name);
-  const res = await axios.post<{ procedures: GuideProcedure[] }>(
+  const res = await axios.post<{ message: string; crm: string; procedures: GuideProcedure[] }>(
     `${apiUrl}/api/v1/guias/upload`,
     formData,
     {
