@@ -7,6 +7,7 @@ import { PricingSection } from "@/components/landing/PricingSection";
 import { DemoSection } from "@/components/landing/DemoSection";
 import { HowItHelpsSection } from "@/components/landing/HowItHelpsSection";
 import { WhatAreGlosasSection } from "@/components/landing/WhatAreGlosasSection";
+import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { motion } from "framer-motion";
 
 const Index = () => {
@@ -24,6 +25,7 @@ const Index = () => {
       >
         <HeroSection />
         <HowItHelpsSection />
+        <HowItWorksSection />
         <WhatAreGlosasSection />
         <BenefitsSection />
         <ProductFeatures />

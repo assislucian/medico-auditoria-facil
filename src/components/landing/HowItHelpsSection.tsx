@@ -69,19 +69,6 @@ export function HowItHelpsSection() {
             </motion.div>
           ))}
         </div>
-        
-        <motion.div
-          className="mt-12 text-center"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          viewport={{ once: true }}
-        >
-          <a href="/how-it-works" className="inline-flex items-center text-primary font-medium hover:underline">
-            Saiba mais sobre nosso processo
-            <ArrowUpRight className="ml-1 h-4 w-4" />
-          </a>
-        </motion.div>
       </div>
     </section>
   );

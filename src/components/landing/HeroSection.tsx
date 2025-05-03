@@ -29,7 +29,8 @@ export function HeroSection() {
             </h1>
             
             <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-300 leading-relaxed mt-6 max-w-lg">
-              O MedCheck verifica automaticamente seus procedimentos, compara com a tabela CBHPM e mostra o que foi pago a menos — de forma simples, visual e segura.
+              O MedCheck analisa suas guias e demonstrativos em PDF, compara com a CBHPM 2015 e mostra exatamente o que foi pago a menos.
+              Médicos já recuperaram até 20% da receita mensal com a nossa plataforma.
             </p>
 
             <div className="flex flex-wrap gap-4 pt-6">
@@ -39,7 +40,7 @@ export function HeroSection() {
                 rightIcon={<ArrowRight className="h-5 w-5" />}
               >
                 <Link to="/register">
-                  Comece agora – 7 dias grátis
+                  Comece grátis — sem cartão de crédito
                 </Link>
               </Button>
               <Button 
@@ -55,15 +56,15 @@ export function HeroSection() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-8">
               <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
                 <Clock size={16} className="text-primary-500" />
-                <span>Economize até 80% do tempo</span>
+                <span>Economize até 80% do tempo com auditoria</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
                 <DollarSign size={16} className="text-primary-500" />
-                <span>Recupere valores glosados</span>
+                <span>Recupere valores glosados que passariam despercebidos</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
                 <Shield size={16} className="text-primary-500" />
-                <span>Conformidade com LGPD</span>
+                <span>Proteção de dados com segurança LGPD e CFM</span>
               </div>
             </div>
           </motion.div>
@@ -92,8 +93,8 @@ export function HeroSection() {
               </div>
               
               <div className="absolute -top-6 -left-6 bg-white dark:bg-neutral-800 rounded-lg p-4 shadow-lg border border-neutral-200 dark:border-neutral-700 transform -rotate-3 hidden md:block">
-                <div className="text-3xl font-bold text-primary-500">99%</div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">Taxa de precisão</div>
+                <div className="text-3xl font-bold text-primary-500">20%</div>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">Recuperação de receita</div>
               </div>
             </div>
           </motion.div>
@@ -111,14 +112,14 @@ export function HeroSection() {
               <div className="md:w-1/4 flex justify-center">
                 <img 
                   src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2340&q=80" 
-                  alt="Dr. Carla Mendes" 
+                  alt="Dra. Carla Ribeiro" 
                   className="w-16 h-16 rounded-full object-cover"
                 />
               </div>
               <div className="md:w-3/4">
-                <p className="text-neutral-700 dark:text-neutral-300 italic">"O MedCheck transformou nossa auditoria médica, aumentando nosso faturamento em 23% no primeiro trimestre de uso. A interface é intuitiva e os resultados são impressionantes."</p>
-                <p className="font-semibold mt-2">Dra. Carla Mendes</p>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">Diretora Clínica, Hospital São Paulo</p>
+                <p className="text-neutral-700 dark:text-neutral-300 italic">"O MedCheck transformou nossa auditoria médica. Em apenas 3 meses, recuperamos mais de R$ 14.000 em glosas. A ferramenta é simples de usar, e os relatórios são poderosos."</p>
+                <p className="font-semibold mt-2">Dra. Carla Ribeiro</p>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">Mastologista – Unimed MG</p>
               </div>
             </div>
           </div>

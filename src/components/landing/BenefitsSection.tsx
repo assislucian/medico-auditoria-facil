@@ -1,37 +1,44 @@
 
-import { CheckCircle, Microscope, BriefcaseMedical, Shield } from "lucide-react";
+import { CheckCircle, Microscope, BriefcaseMedical, Shield, BarChart, Database } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const benefits = [
   {
-    icon: Microscope,
-    title: "Análise Inteligente",
-    description: "Nossa tecnologia proprietária analisa automaticamente seus pagamentos e identifica inconsistências com precisão.",
+    icon: CheckCircle,
+    title: "Detecta erros de pagamento",
+    description: "Identifica automaticamente divergências entre o que foi feito e o que foi pago.",
     color: "bg-blue-50 dark:bg-blue-950/30",
     textColor: "text-blue-600 dark:text-blue-400"
   },
   {
-    icon: CheckCircle,
+    icon: Microscope,
     title: "Validação CBHPM",
-    description: "Comparação automática entre valores cobrados e tabelas de referência atualizadas, garantindo que você seja pago corretamente.",
+    description: "Compara seus procedimentos com a CBHPM 2015, considerando seu papel: cirurgião, auxiliar, anestesista…",
     color: "bg-green-50 dark:bg-green-950/30",
     textColor: "text-green-600 dark:text-green-400"
   },
   {
-    icon: BriefcaseMedical,
-    title: "Gestão Completa",
-    description: "Acompanhe todo o processo de contestação de glosas através de dashboards informativos e relatórios detalhados.",
+    icon: BarChart,
+    title: "Relatórios completos",
+    description: "Gere PDF com detalhes para contestação e registro.",
     color: "bg-purple-50 dark:bg-purple-950/30",
     textColor: "text-purple-600 dark:text-purple-400"
   },
   {
-    icon: Shield,
-    title: "Segurança e Conformidade",
-    description: "Seus dados protegidos com a mais alta tecnologia em nuvem e em conformidade com a LGPD e requisitos do CFM.",
+    icon: BriefcaseMedical,
+    title: "Dashboard intuitivo",
+    description: "Visualize glosas por procedimento, valor e frequência.",
     color: "bg-amber-50 dark:bg-amber-950/30",
     textColor: "text-amber-600 dark:text-amber-400"
+  },
+  {
+    icon: Shield,
+    title: "Segurança total",
+    description: "Proteção de dados com criptografia e conformidade com a LGPD.",
+    color: "bg-indigo-50 dark:bg-indigo-950/30",
+    textColor: "text-indigo-600 dark:text-indigo-400"
   }
 ];
 
@@ -50,11 +57,11 @@ export function BenefitsSection() {
             Por que milhares de médicos escolhem o <span className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">MedCheck</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Veja como nossa plataforma transforma o processo de auditoria médica
+            Nossa tecnologia analisa pagamentos e mostra, com clareza, onde você deixou de receber.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {benefits.map((benefit, index) => (
             <motion.div
               key={benefit.title}
@@ -62,9 +69,9 @@ export function BenefitsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="flex flex-row gap-4 p-6 rounded-xl bg-background border border-border/50 hover:border-primary/20 hover:shadow-md transition-all duration-300"
+              className="flex flex-col gap-4 p-6 rounded-xl bg-background border border-border/50 hover:border-primary/20 hover:shadow-md transition-all duration-300"
             >
-              <div className={`${benefit.color} p-3 rounded-xl h-fit`}>
+              <div className={`${benefit.color} p-3 rounded-xl self-start`}>
                 <benefit.icon className={`h-6 w-6 ${benefit.textColor}`} />
               </div>
               <div>
@@ -80,15 +87,20 @@ export function BenefitsSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="text-center mt-12"
+          className="text-center mt-12 bg-primary/5 py-10 px-6 rounded-lg"
         >
+          <p className="text-xl font-semibold mb-6">
+            Com menos de R$ 3 por dia, médicos recuperam até R$ 2.000 por mês com o MedCheck.
+            <br />
+            Transforme glosas ocultas em faturamento.
+          </p>
           <Button 
             asChild 
             size="lg" 
             className="text-lg px-8 h-12 rounded-md"
           >
             <Link to="/register">
-              Experimente grátis por 14 dias
+              Comece grátis — sem cartão de crédito
             </Link>
           </Button>
         </motion.div>
