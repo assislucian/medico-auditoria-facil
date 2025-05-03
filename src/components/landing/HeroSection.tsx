@@ -22,15 +22,14 @@ export function HeroSection() {
             transition={{ duration: 0.7 }}
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-              Auditoria médica
+              Você está perdendo dinheiro com 
               <span className="block mt-2 bg-gradient-to-r from-primary-500 via-primary-500 to-primary-400 bg-clip-text text-transparent">
-                simplificada
+                glosas médicas?
               </span>
             </h1>
             
             <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-300 leading-relaxed mt-6 max-w-lg">
-              Recupere valores glosados e maximize seus resultados com a 
-              plataforma que já ajudou mais de 10.000 médicos brasileiros.
+              O MedCheck verifica automaticamente seus procedimentos, compara com a tabela CBHPM e mostra o que foi pago a menos — de forma simples, visual e segura.
             </p>
 
             <div className="flex flex-wrap gap-4 pt-6">
@@ -40,7 +39,7 @@ export function HeroSection() {
                 rightIcon={<ArrowRight className="h-5 w-5" />}
               >
                 <Link to="/register">
-                  Comece agora
+                  Comece agora – 7 dias grátis
                 </Link>
               </Button>
               <Button 
