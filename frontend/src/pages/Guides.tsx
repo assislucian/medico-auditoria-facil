@@ -97,13 +97,23 @@ const GuidesPage = () => {
       const token = localStorage.getItem("token") || "";
       const guiaFile = files.find((f) => f.type === "guia");
       if (!guiaFile) throw new Error("Nenhum arquivo de guia válido");
-      const data = await uploadGuide(guiaFile.file, token);
-      setExtractedGuides(Array.isArray(data) ? data : []);
+      
+      // Faz o upload da guia
+      const uploadResult = await uploadGuide(guiaFile.file, token);
       toast.success("Guias processadas com sucesso");
+      
+      // Recarrega os dados do servidor para ter a lista completa e atualizada
+      const params: GuidesQueryParams = { page, pageSize, search, status, data };
+      const res = await getGuides(token, params);
+      setExtractedGuides(Array.isArray(res.procedures) ? res.procedures : []);
+      setTotal(res.total || 0);
+      
       resetFiles();
       setActiveTab("list");
-      const uniqueGuias = new Set(data.map((p: any) => p.numero_guia));
-      logActivity("Upload de Guias", `Processada(s) ${uniqueGuias.size} guia(s) com ${data.length} procedimento(s)`);
+      
+      // Registra atividade
+      const uniqueGuias = new Set(uploadResult.map((p: any) => p.numero_guia));
+      logActivity("Upload de Guias", `Processada(s) ${uniqueGuias.size} guia(s) com ${uploadResult.length} procedimento(s)`);
       setActivities(getRecentActivities());
     } catch (err: any) {
       toast.error("Erro ao processar os arquivos", { description: err?.response?.data?.detail || err?.message });
@@ -193,13 +203,21 @@ const GuidesPage = () => {
     try {
       const token = localStorage.getItem("token") || "";
       await Promise.all(selectedRows.map((numeroGuia) => deleteGuide(numeroGuia, token)));
-      setExtractedGuides((g) => g.filter((p) => !selectedRows.includes(p.numero_guia)));
+      
+      // Recarrega os dados do servidor para ter a lista atualizada
+      const params: GuidesQueryParams = { page, pageSize, search, status, data };
+      const res = await getGuides(token, params);
+      setExtractedGuides(Array.isArray(res.procedures) ? res.procedures : []);
+      setTotal(res.total || 0);
+      
       setSelectedRows([]);
       toast.success("Guias removidas!");
       logActivity("Remoção de Guias", `Removidas ${selectedRows.length} guias`);
       setActivities(getRecentActivities());
     } catch (err: any) {
-      toast.error("Erro ao remover guias", { description: err?.response?.data?.detail || err?.message });
+      toast.error("Erro ao remover guias", {
+        description: err?.response?.data?.detail || err?.message,
+      });
     }
   };
 
@@ -248,16 +266,26 @@ const GuidesPage = () => {
   ];
 
   const handleDeleteGuia = async (numeroGuia: string) => {
-    if (!window.confirm("Deseja remover esta guia?")) return;
+    if (!window.confirm(`Deseja realmente remover a guia ${numeroGuia}?`)) {
+      return;
+    }
     try {
       const token = localStorage.getItem("token") || "";
       await deleteGuide(numeroGuia, token);
-      setExtractedGuides((g) => g.filter((p) => p.numero_guia !== numeroGuia));
-      toast.success("Guia removida!");
-      logActivity("Remoção de Guia", `Removida guia ${numeroGuia}`);
+      
+      // Recarrega os dados do servidor para ter a lista atualizada
+      const params: GuidesQueryParams = { page, pageSize, search, status, data };
+      const res = await getGuides(token, params);
+      setExtractedGuides(Array.isArray(res.procedures) ? res.procedures : []);
+      setTotal(res.total || 0);
+      
+      toast.success("Guia removida com sucesso");
+      logActivity("Remoção de Guia", `Guia ${numeroGuia} removida`);
       setActivities(getRecentActivities());
     } catch (err: any) {
-      toast.error("Erro ao remover guia", { description: err?.response?.data?.detail || err?.message });
+      toast.error("Erro ao remover guia", {
+        description: err?.response?.data?.detail || err?.message,
+      });
     }
   };
 
@@ -546,7 +574,7 @@ const GuidesPage = () => {
                                     <td>{proc.papel}</td>
                                     <td>{proc.qtd}</td>
                                     <td>{proc.status}</td>
-                                    <td>{proc.prestador || '-'}</td>
+                                    <td>{proc.prestador || "Não informado"}</td>
                                   </tr>
                                 ))}
                               </tbody>
