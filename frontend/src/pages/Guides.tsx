@@ -27,6 +27,7 @@ import DetalhesGuia from "../components/guides/DetalhesGuia";
 import { GuideProcedure } from "../types/medical";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "../components/ui/tooltip";
 import { Link } from "react-router-dom";
+import LoaderTable from "../components/ui/LoaderTable";
 // import Fuse from 'fuse.js';
 
 // Logger utilitário
@@ -543,48 +544,52 @@ const GuidesPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <DataGrid
-                  rows={filteredMacroRows}
-                  columns={macroColumns}
-                  pageSize={10}
-                  className="min-h-[500px]"
-                  renderExpandedRow={(row) =>
-                    expandedRow === row.numero_guia ? (
-                      <tr>
-                        <td colSpan={macroColumns.length} className="bg-muted p-0">
-                          <div className="p-4">
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr>
-                                  <th className="text-left">Data</th>
-                                  <th className="text-left">Código</th>
-                                  <th className="text-left">Descrição</th>
-                                  <th className="text-left">Papel</th>
-                                  <th className="text-left">Qtd</th>
-                                  <th className="text-left">Status</th>
-                                  <th className="text-left">Prestador</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {row.detalhes.map((proc: any, idx: number) => (
-                                  <tr key={idx} className="border-b last:border-0">
-                                    <td>{proc.data}</td>
-                                    <td>{proc.codigo}</td>
-                                    <td>{proc.descricao}</td>
-                                    <td>{proc.papel}</td>
-                                    <td>{proc.qtd}</td>
-                                    <td>{proc.status}</td>
-                                    <td>{proc.prestador}</td>
+                {loading ? (
+                  <LoaderTable />
+                ) : (
+                  <DataGrid
+                    rows={filteredMacroRows}
+                    columns={macroColumns}
+                    pageSize={10}
+                    className="min-h-[500px]"
+                    renderExpandedRow={(row) =>
+                      expandedRow === row.numero_guia ? (
+                        <tr>
+                          <td colSpan={macroColumns.length} className="bg-muted p-0">
+                            <div className="p-4">
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr>
+                                    <th className="text-left">Data</th>
+                                    <th className="text-left">Código</th>
+                                    <th className="text-left">Descrição</th>
+                                    <th className="text-left">Papel</th>
+                                    <th className="text-left">Qtd</th>
+                                    <th className="text-left">Status</th>
+                                    <th className="text-left">Prestador</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : null
-                  }
-                />
+                                </thead>
+                                <tbody>
+                                  {row.detalhes.map((proc: any, idx: number) => (
+                                    <tr key={idx} className="border-b last:border-0">
+                                      <td>{proc.data}</td>
+                                      <td>{proc.codigo}</td>
+                                      <td>{proc.descricao}</td>
+                                      <td>{proc.papel}</td>
+                                      <td>{proc.qtd}</td>
+                                      <td>{proc.status}</td>
+                                      <td>{proc.prestador}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : null
+                    }
+                  />
+                )}
                 {selectedGuia && (
                   <DetalhesGuia
                     guia={selectedGuia}

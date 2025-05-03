@@ -2,11 +2,8 @@ import { type Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
 export default {
-  darkMode: ["class"],
-  content: [
-    "./src/**/*.{ts,tsx}",
-    "./public/index.html"
-  ],
+  darkMode: "class",
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     container: {
       center: true,
@@ -17,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
+        sans: ["Inter", ...fontFamily.sans],
         serif: ["Merriweather", "Georgia", "Cambria", "Times New Roman", "serif"],
         mono: ["Fira Code", "Consolas", "Monaco", "Courier New", "monospace"],
       },
@@ -56,7 +53,7 @@ export default {
       },
       letterSpacing: {
         tighter: '-0.05em',
-        tight: '-0.025em',
+        tight: '-0.015em',
         normal: '0',
         wide: '0.025em',
         wider: '0.05em',
@@ -68,10 +65,13 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
+        primary: { DEFAULT: "#0062FF", foreground: "#FFFFFF" },
+        accent:  { DEFAULT: "#00C4C7", foreground: "#08142E" },
+        surface: { DEFAULT: "#FFFFFF", dark: "#1F2937" },
+        ink:     { high: "#0F172A", low: "#64748B" },
+        success: { DEFAULT: "#22C55E", foreground: "#FFFFFF" },
+        warning: { DEFAULT: "#FACC15", foreground: "#0F172A" },
+        danger:  { DEFAULT: "#EF4444", foreground: "#FFFFFF" },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
@@ -84,10 +84,6 @@ export default {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -96,19 +92,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        success: {
-          DEFAULT: "hsl(var(--success))",
-          foreground: "hsl(var(--success-foreground))",
-        },
-        warning: {
-          DEFAULT: "hsl(var(--warning))",
-          foreground: "hsl(var(--warning-foreground))",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "1rem",
       },
       keyframes: {
         "accordion-down": {
@@ -124,7 +113,10 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      boxShadow: {
+        card: "0 2px 8px 0 rgb(0 0 0 / 0.05)",
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 } satisfies Config;

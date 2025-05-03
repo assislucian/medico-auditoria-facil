@@ -23,7 +23,7 @@ export function HeroSection() {
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
               Auditoria médica
-              <span className="block mt-2 bg-gradient-to-r from-primary-500 via-primary-500 to-primary-400 bg-clip-text text-transparent">
+              <span className="block mt-2 text-primary">
                 simplificada
               </span>
             </h1>
