@@ -27,7 +27,8 @@ from fastapi import APIRouter
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from slowapi.decorator import limiter as rate_limit
+import re
+from collections import defaultdict
 
 # --- Configurações ---
 UPLOAD_DIR = "uploads"
@@ -228,6 +229,14 @@ def log_audit(action, user_crm=None, ip=None, details=None):
         "details": details
     }))
 
+def sanitize_text(text):
+    import re
+    if not text:
+        return text
+    text = re.sub(r'<.*?>', '', text)
+    text = re.sub(r'script', '', text, flags=re.IGNORECASE)
+    return text.strip()
+
 # --- Models ---
 class RegisterRequest(BaseModel):
     uf: str
@@ -302,10 +311,31 @@ class BulkDeleteResponse(BaseModel):
 # --- Simulação de fila de jobs (substitua por Celery/RQ em produção) ---
 jobs = {}
 
+# --- Brute force protection ---
+FAILED_LOGINS = defaultdict(list)  # (crm, ip) -> [timestamps]
+BLOCKED_LOGINS = {}  # (crm, ip) -> unblock_timestamp
+MAX_FAILED_ATTEMPTS = 5
+BLOCK_TIME_SECONDS = 600  # 10 minutos
+WINDOW_SECONDS = 600  # 10 minutos
+
 # --- Endpoint de cadastro de médico (persistente) ---
 @app.post("/api/v1/register", response_model=RegisterResponse)
-@rate_limit("5/minute")
+@limiter.limit("5/minute")
 def register_medico(req: RegisterRequest, request: Request):
+    # Sanitizar nome
+    req.nome = sanitize_text(req.nome)
+    def senha_forte(s):
+        if len(s) < 8:
+            return False
+        if not re.search(r"[A-Za-z]", s):
+            return False
+        if not re.search(r"[0-9]", s):
+            return False
+        if not re.search(r"[^A-Za-z0-9]", s):
+            return False
+        return True
+    if not senha_forte(req.senha):
+        raise HTTPException(status_code=400, detail="A senha deve ter pelo menos 8 caracteres, incluir letra, número e caractere especial.")
     db = SessionLocal()
     try:
         if db.query(Medico).filter_by(crm=req.crm).first():
@@ -341,24 +371,38 @@ def register_medico(req: RegisterRequest, request: Request):
 
 # --- Endpoint de login/token (persistente) ---
 @app.post("/token", response_model=TokenResponse)
-@rate_limit("5/minute")
-def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    # Espera-se que o frontend envie 'username' como CRM e 'uf' como parte do form
+@limiter.limit("5/minute")
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     crm = form_data.username
     senha = form_data.password
-    uf = form_data.scopes[0] if form_data.scopes else None  # Usar scopes para transportar a UF
+    uf = form_data.scopes[0] if form_data.scopes else None
+    ip = request.client.host if request and request.client else None
+    key = (crm, ip)
+    now = time()
+    # Checar bloqueio
+    if key in BLOCKED_LOGINS and BLOCKED_LOGINS[key] > now:
+        raise HTTPException(status_code=429, detail="Muitas tentativas de login. Tente novamente em alguns minutos.")
+    # Limpar tentativas antigas
+    FAILED_LOGINS[key] = [t for t in FAILED_LOGINS[key] if now - t < WINDOW_SECONDS]
     if not uf:
         raise HTTPException(status_code=400, detail="UF obrigatória para login")
     db = SessionLocal()
     try:
         medico = db.query(Medico).filter_by(crm=crm, uf=uf).first()
         if not medico or not bcrypt.checkpw(senha.encode(), medico.senha_hash.encode()):
-            log_audit("login_failed", user_crm=crm, ip=None, details={"uf": uf})
+            log_audit("login_failed", user_crm=crm, ip=ip, details={"uf": uf})
+            FAILED_LOGINS[key].append(now)
+            if len(FAILED_LOGINS[key]) >= MAX_FAILED_ATTEMPTS:
+                BLOCKED_LOGINS[key] = now + BLOCK_TIME_SECONDS
+                FAILED_LOGINS[key] = []
             raise HTTPException(status_code=401, detail="CRM, UF ou senha inválidos")
-        # Atualizar last_login_at
+        # Resetar tentativas após sucesso
+        FAILED_LOGINS[key] = []
+        if key in BLOCKED_LOGINS:
+            del BLOCKED_LOGINS[key]
         medico.last_login_at = datetime.utcnow()
         db.commit()
-        log_audit("login_success", user_crm=crm, ip=None, details={"uf": uf})
+        log_audit("login_success", user_crm=crm, ip=ip, details={"uf": uf})
         access_token = create_access_token({"crm": crm, "uf": uf, "nome": medico.nome})
         return {"access_token": access_token, "token_type": "bearer"}
     finally:
@@ -406,8 +450,9 @@ def process_validation_job(job_id: str, file_path: str, user: dict):
 
 # --- Endpoint de upload/validação ---
 @app.post("/api/v1/validate", response_model=ValidateResponse)
-@rate_limit("10/minute")
+@limiter.limit("10/minute")
 def validate_file(
+    request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     user: dict = Depends(get_current_user)
@@ -549,6 +594,15 @@ def upload_demonstrativo(
             apresentado = 0.0
             liberado = 0.0
             glosa = 0.0
+        # Sanitizar campos livres
+        if 'period' in summary:
+            summary['period'] = sanitize_text(summary['period'])
+        if 'total_presented' in summary:
+            summary['total_presented'] = sanitize_text(str(summary['total_presented']))
+        if 'total_approved' in summary:
+            summary['total_approved'] = sanitize_text(str(summary['total_approved']))
+        if 'total_glosa' in summary:
+            summary['total_glosa'] = sanitize_text(str(summary['total_glosa']))
         # Log detalhado do upload
         logger.info(f"[UPLOAD] CRM={user['crm']} | periodo={periodo} | lote={lote or filename} | filename={filename}")
         # Validação obrigatória do período
@@ -705,6 +759,14 @@ def upload_guia(
                 "procedures": []
             }
         
+        # Sanitizar campos livres
+        for proc in procedures:
+            proc['beneficiario'] = sanitize_text(proc.get('beneficiario', ''))
+            proc['descricao'] = sanitize_text(proc.get('descricao', ''))
+            proc['prestador'] = sanitize_text(proc.get('prestador', ''))
+            for part in proc.get('participacoes', []):
+                part['nome'] = sanitize_text(part.get('nome', ''))
+        
         # Salva no banco evitando duplicados
         db = SessionLocal()
         guias_adicionadas = 0
@@ -805,6 +867,12 @@ def save_guias(
     """
     Salva array de procedimentos extraídos de guias no banco, associando ao usuário autenticado.
     """
+    # Sanitizar campos livres
+    for proc in procedimentos:
+        proc['beneficiario'] = sanitize_text(proc.get('beneficiario', ''))
+        proc['descricao'] = sanitize_text(proc.get('descricao', ''))
+        proc['prestador'] = sanitize_text(proc.get('prestador', ''))
+        proc['nome_medico'] = sanitize_text(proc.get('nome_medico', ''))
     db = SessionLocal()
     try:
         for proc in procedimentos:
@@ -1025,15 +1093,15 @@ def listar_consentimentos(user: dict = Depends(get_current_user)):
 # --- Endpoint para atualizar perfil do usuário ---
 @app.patch("/api/v1/profile", response_model=UpdateProfileResponse)
 def update_profile(data: UpdateProfileRequest, user: dict = Depends(get_current_user)):
+    # Sanitizar nome
+    if data.nome:
+        data.nome = sanitize_text(data.nome)
     db = SessionLocal()
     try:
         medico = db.query(Medico).filter_by(crm=user["crm"]).first()
         if not medico:
             raise HTTPException(status_code=404, detail="Usuário não encontrado")
         updated = False
-        if data.nome:
-            medico.nome = data.nome
-            updated = True
         if data.uf:
             medico.uf = data.uf
             updated = True
@@ -1209,10 +1277,12 @@ def listar_suboperadores():
 
 # --- Endpoint para registrar requisição LGPD ---
 @app.post("/api/v1/lgpd-request", response_model=LGPDRequestResponse)
-@rate_limit("3/minute")
+@limiter.limit("3/minute")
 def canal_lgpd(data: LGPDRequest, request: Request):
+    # Sanitizar mensagem
+    mensagem_limpa = sanitize_text(data.mensagem)
     # Salvar log da requisição
-    logger.info(f"[LGPD] Nova requisição: tipo={data.tipo}, nome={data.nome}, email={data.email}, crm={data.crm}, mensagem={data.mensagem}, ip={request.client.host if request and request.client else None}")
+    logger.info(f"[LGPD] Nova requisição: tipo={data.tipo}, nome={data.nome}, email={data.email}, crm={data.crm}, mensagem={mensagem_limpa}, ip={request.client.host if request and request.client else None}")
     # (Opcional) Salvar em tabela LGPDRequests no banco para auditoria
     # (Opcional) Enviar e-mail para admin/DPO
     # Simular resposta automática
