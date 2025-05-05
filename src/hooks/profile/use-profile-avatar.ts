@@ -1,4 +1,3 @@
-
 /**
  * use-profile-avatar.ts
  * 
@@ -10,7 +9,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
 import { toast } from "sonner";
-import { getProfileData, updateProfileData } from "@/utils/supabase";
+import { getProfile, updateProfile } from "@/utils/supabase";
 
 /**
  * Hook que fornece funcionalidades para gerenciar o avatar do perfil do usuário
@@ -38,10 +37,17 @@ export const useProfileAvatar = () => {
       const fileExt = file.name.split('.').pop();
       const filePath = `avatars/${userId}/profile-${Date.now()}.${fileExt}`;
       
-      // Verifica se o bucket "profiles" existe - removendo a verificação de buckets
-      // já que a API supabase.storage.listBuckets() não está disponível
+      // Verifica se o bucket de armazenamento existe e cria se necessário
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const profilesBucketExists = buckets?.some(b => b.name === 'profiles');
       
-      // Faz upload do arquivo diretamente
+      if (!profilesBucketExists) {
+        await supabase.storage.createBucket('profiles', {
+          public: true
+        });
+      }
+      
+      // Faz upload do arquivo
       const { error: uploadError } = await supabase.storage
         .from('profiles')
         .upload(filePath, file, {

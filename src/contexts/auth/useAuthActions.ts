@@ -24,7 +24,7 @@ export const useAuthActions = (userId: string | undefined) => {
     return await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`
+        redirectTo: window.location.origin + '/auth/callback',
       }
     });
   };
@@ -66,7 +66,9 @@ export const useAuthActions = (userId: string | undefined) => {
 
   // Reset password
   const resetPassword = async (email: string) => {
-    return await supabase.auth.resetPasswordForEmail(email);
+    return await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password',
+    });
   };
 
   // Update password

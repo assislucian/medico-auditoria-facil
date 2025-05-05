@@ -3,11 +3,8 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ProductFeatures } from "@/components/landing/ProductFeatures";
 import { BenefitsSection } from "@/components/landing/BenefitsSection";
-import { PricingSection } from "@/components/landing/PricingSection";
 import { DemoSection } from "@/components/landing/DemoSection";
-import { HowItHelpsSection } from "@/components/landing/HowItHelpsSection";
-import { WhatAreGlosasSection } from "@/components/landing/WhatAreGlosasSection";
-import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
+import { PricingSection } from "@/components/landing/PricingSection";
 import { motion } from "framer-motion";
 
 const Index = () => {
@@ -24,11 +21,8 @@ const Index = () => {
         transition={{ duration: 0.5 }}
       >
         <HeroSection />
-        <HowItHelpsSection />
-        <HowItWorksSection />
-        <WhatAreGlosasSection />
-        <BenefitsSection />
         <ProductFeatures />
+        <BenefitsSection />
         <PricingSection />
         <DemoSection />
       </motion.div>

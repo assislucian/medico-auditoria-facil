@@ -1,7 +1,6 @@
 
 import { FileWithStatus, ProcessMode } from '@/types/upload';
 import { supabase } from '@/integrations/supabase/client';
-import { ProcedureData } from '@/utils/supabase/procedureHelpers';
 
 /**
  * Saves analysis results to database
@@ -34,7 +33,6 @@ export async function saveAnalysisToDatabase(
       procedimentosNaoPagos: extractedData.totais?.procedimentosNaoPagos || 0
     };
     
-    // Since we're using a mock client, we'll just simulate the insertion
     const { data: analysisData, error: analysisError } = await supabase
       .from('analysis_results')
       .insert({
@@ -70,60 +68,45 @@ export async function saveAnalysisToDatabase(
 async function saveProcedures(analysisId: string, userId: string, procedures: any[]) {
   if (!procedures?.length) return;
   
-  // Convert procedures to the format expected by our mock database
   const proceduresForInsert = procedures.map(proc => ({
     analysis_id: analysisId,
     user_id: userId,
-    codigo: proc.codigo || '',
-    procedimento: proc.procedimento || '',
-    papel: proc.papel || '',
-    valor_cbhpm: proc.valorCBHPM || 0,
-    valor_pago: proc.valorPago || 0,
-    diferenca: proc.diferenca || 0,
-    pago: proc.pago || false,
-    guia: proc.guia || '',
-    beneficiario: proc.beneficiario || '',
-    doctors: proc.doctors || [],
-    created_at: new Date().toISOString(),
-    id: `proc-${Math.random().toString(36).substring(2, 9)}`
+    codigo: proc.codigo,
+    procedimento: proc.procedimento,
+    papel: proc.papel,
+    valor_cbhpm: proc.valorCBHPM,
+    valor_pago: proc.valorPago,
+    diferenca: proc.diferenca,
+    pago: proc.pago,
+    guia: proc.guia,
+    beneficiario: proc.beneficiario,
+    doctors: proc.doctors
   }));
   
-  // Mock insert
-  console.log('Procedimentos a serem inseridos:', proceduresForInsert);
-  
-  try {
-    // In our mock implementation this won't actually add to the data
-    const { error } = await supabase
-      .from('procedures')
-      .insert(proceduresForInsert);
-      
-    if (error) {
-      console.error('Erro ao inserir procedimentos:', error);
-    }
-  } catch (error) {
-    console.error('Exceção ao inserir procedimentos:', error);
+  const { error: proceduresError } = await supabase
+    .from('procedures')
+    .insert(proceduresForInsert);
+    
+  if (proceduresError) {
+    console.error('Erro ao inserir procedimentos:', proceduresError);
   }
 }
 
 async function saveAnalysisHistory(userId: string, extractedData: any, processMode: ProcessMode) {
-  try {
-    const { error: historyError } = await supabase
-      .from('analysis_history')
-      .insert({
-        user_id: userId,
-        type: processMode === 'complete' ? 'Guia + Demonstrativo' : 
-              processMode === 'guia-only' ? 'Guia' : 'Demonstrativo',
-        hospital: extractedData.demonstrativoInfo?.hospital || null,
-        description: `${extractedData.demonstrativoInfo?.hospital || 'Hospital'} - ${extractedData.demonstrativoInfo?.competencia || 'Competência não informada'}`,
-        procedimentos: extractedData.procedimentos?.length || 0,
-        glosados: extractedData.totais?.procedimentosNaoPagos || 0,
-        status: 'Analisado'
-      });
-      
-    if (historyError) {
-      console.error('Erro ao inserir no histórico:', historyError);
-    }
-  } catch (error) {
-    console.error('Exceção ao salvar histórico:', error);
+  const { error: historyError } = await supabase
+    .from('analysis_history')
+    .insert({
+      user_id: userId,
+      type: processMode === 'complete' ? 'Guia + Demonstrativo' : 
+            processMode === 'guia-only' ? 'Guia' : 'Demonstrativo',
+      hospital: extractedData.demonstrativoInfo?.hospital || null,
+      description: `${extractedData.demonstrativoInfo?.hospital || 'Hospital'} - ${extractedData.demonstrativoInfo?.competencia || 'Competência não informada'}`,
+      procedimentos: extractedData.procedimentos?.length || 0,
+      glosados: extractedData.totais?.procedimentosNaoPagos || 0,
+      status: 'Analisado'
+    });
+    
+  if (historyError) {
+    console.error('Erro ao inserir no histórico:', historyError);
   }
 }

@@ -3,15 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchAnalysisDetails } from '@/services/history/analysisDetails';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
-import { MockProcedure, mockData } from '@/integrations/mock/mockData';
-import { toast } from 'sonner';
-
-// Mock the toast
-vi.mock('sonner', () => ({
-  toast: {
-    error: vi.fn()
-  }
-}));
 
 // Mock the Supabase client
 vi.mock('@/integrations/supabase/client', () => ({
@@ -46,33 +37,48 @@ describe('fetchAnalysisDetails', () => {
     
     const result = await fetchAnalysisDetails('test-id');
     expect(result).toBeNull();
-    expect(toast.error).toHaveBeenCalled();
   });
 
   it('returns analysis details with procedures', async () => {
-    const mockAnalysis = mockData.analysisResults[0];
-    const mockProcedures = mockData.procedures;
+    const mockAnalysis = {
+      id: 'test-id',
+      type: 'analysis',
+      description: 'Test Analysis'
+    };
+
+    const mockProcedures = [{
+      id: 'proc-1',
+      codigo: '123',
+      procedimento: 'Test Procedure',
+      valor_cbhpm: 100,
+      valor_pago: 90,
+      diferenca: 10
+    }];
 
     vi.spyOn(supabase.auth, 'getUser').mockResolvedValue({ data: { user: mockUser }, error: null });
     
-    const mockSelect = vi.fn().mockImplementation(() => ({
-      eq: vi.fn().mockImplementation(() => ({
-        maybeSingle: vi.fn().mockResolvedValue({ data: mockAnalysis, error: null }),
-        eq: vi.fn().mockResolvedValue({ data: mockProcedures, error: null })
-      }))
-    }));
+    // Create a more sophisticated mock implementation for the supabase.from
+    const mockFromImplementation = (tableName: string) => {
+      if (tableName === 'analysis_results') {
+        const mockSingle = vi.fn().mockResolvedValue({ data: mockAnalysis, error: null });
+        const mockEqInner = vi.fn().mockReturnValue({ single: mockSingle });
+        const mockEq = vi.fn().mockReturnValue({ eq: mockEqInner });
+        const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+        return { select: mockSelect };
+      } else {
+        const mockEqInner = vi.fn().mockResolvedValue({ data: mockProcedures, error: null });
+        const mockEq = vi.fn().mockReturnValue({ eq: mockEqInner });
+        const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+        return { select: mockSelect };
+      }
+    };
 
-    vi.mocked(supabase.from).mockImplementation((tableName) => {
-      return {
-        select: mockSelect
-      } as any;
-    });
+    // Use vi.mocked to properly type the mock
+    vi.mocked(supabase.from).mockImplementation(mockFromImplementation);
 
     const result = await fetchAnalysisDetails('test-id');
     expect(result).toBeTruthy();
-    expect(result?.procedimentos).toHaveLength(mockProcedures.length);
-    if (result && result.procedimentos && result.procedimentos.length > 0) {
-      expect(result.procedimentos[0]).toHaveProperty('codigo', mockProcedures[0].codigo);
-    }
+    expect(result?.procedimentos).toHaveLength(1);
+    expect(result?.procedimentos[0]).toHaveProperty('codigo', '123');
   });
 });

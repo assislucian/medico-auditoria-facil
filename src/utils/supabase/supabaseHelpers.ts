@@ -191,8 +191,7 @@ export async function sendTicketMessage(ticketId: string, userId: string, conten
       .insert({
         ticket_id: ticketId,
         content,
-        sent_by_user: true,
-        user_id: userId  // Added missing user_id field
+        sent_by_user: true
       })
       .select()
       .single();

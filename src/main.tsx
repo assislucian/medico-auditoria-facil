@@ -17,21 +17,6 @@ const queryClient = new QueryClient({
   },
 })
 
-// Font loading check
-const checkFontsLoaded = () => {
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(() => {
-      console.log('Fonts loaded successfully');
-      document.documentElement.classList.add('fonts-loaded');
-    }).catch(err => {
-      console.error('Error loading fonts:', err);
-    });
-  }
-};
-
-// Call font loading check
-checkFontsLoaded();
-
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider defaultTheme="light" storageKey="medcheck-theme">
     <QueryClientProvider client={queryClient}>

@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ProcedureData } from '@/utils/supabase/procedureHelpers';
 
 export async function fetchAnalysisDetails(analysisId: string) {
   try {
@@ -19,7 +18,8 @@ export async function fetchAnalysisDetails(analysisId: string) {
       .from('analysis_results')
       .select('*')
       .eq('id', analysisId)
-      .maybeSingle();
+      .eq('user_id', user.id)
+      .single();
     
     if (analysisError) {
       console.error('Erro ao buscar detalhes da análise:', analysisError);
@@ -30,7 +30,8 @@ export async function fetchAnalysisDetails(analysisId: string) {
     const { data: proceduresData, error: proceduresError } = await supabase
       .from('procedures')
       .select('*')
-      .eq('analysis_id', analysisId);
+      .eq('analysis_id', analysisId)
+      .eq('user_id', user.id);
     
     if (proceduresError) {
       console.error('Erro ao buscar procedimentos:', proceduresError);
@@ -42,7 +43,7 @@ export async function fetchAnalysisDetails(analysisId: string) {
     
     return {
       ...analysisData,
-      procedimentos: proceduresData.map((proc: ProcedureData) => ({
+      procedimentos: proceduresData.map((proc: any) => ({
         id: proc.id,
         codigo: proc.codigo,
         procedimento: proc.procedimento,

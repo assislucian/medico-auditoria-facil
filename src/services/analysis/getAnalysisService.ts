@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAnalysisById, fetchProceduresByAnalysisId } from '@/utils/supabase';
-import { ProcedureData } from '@/utils/supabase/procedureHelpers';
 
 interface AnalysisSummary {
   totalCBHPM?: number;
@@ -10,30 +9,6 @@ interface AnalysisSummary {
   procedimentosNaoPagos?: number;
   procedimentosTotal?: number;
   [key: string]: any;
-}
-
-/**
- * Maps procedure data to frontend format
- * @param proc Procedure data from database
- * @returns Mapped procedure data
- */
-function mapProcedureData(proc: any) {
-  // Type assertion to ensure we have the expected fields
-  const procData = proc as Required<ProcedureData>;
-  
-  return {
-    id: procData.id,
-    codigo: procData.codigo || '',
-    procedimento: procData.procedimento || '',
-    papel: procData.papel || '',
-    valorCBHPM: procData.valor_cbhpm || 0,
-    valorPago: procData.valor_pago || 0,
-    diferenca: procData.diferenca || 0,
-    pago: procData.pago || false,
-    guia: procData.guia || '',
-    beneficiario: procData.beneficiario || '',
-    doctors: procData.doctors || []
-  };
 }
 
 /**
@@ -63,7 +38,19 @@ export async function getAnalysisById(analysisId: string) {
         data: new Date(analysisData.created_at).toLocaleDateString('pt-BR'),
         beneficiario: proceduresData[0]?.beneficiario || 'Não especificado'
       },
-      procedimentos: proceduresData.map(mapProcedureData),
+      procedimentos: proceduresData.map(proc => ({
+        id: proc.id,
+        codigo: proc.codigo,
+        procedimento: proc.procedimento,
+        papel: proc.papel,
+        valorCBHPM: proc.valor_cbhpm,
+        valorPago: proc.valor_pago,
+        diferenca: proc.diferenca,
+        pago: proc.pago,
+        guia: proc.guia,
+        beneficiario: proc.beneficiario,
+        doctors: proc.doctors || []
+      })),
       totais: {
         valorCBHPM: summary?.totalCBHPM || 0,
         valorPago: summary?.totalPago || 0,

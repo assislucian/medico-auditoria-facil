@@ -10,7 +10,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types";
 import { toast } from "sonner";
-import { getProfileData, updateProfileData } from "@/utils/supabase";
+import { getProfile, updateProfile as updateProfileHelper } from "@/utils/supabase";
 import { useProfileAvatar } from "./use-profile-avatar";
 import { Json } from '@/integrations/supabase/types';
 
@@ -44,7 +44,7 @@ export const useProfileData = () => {
         throw new Error('Não autenticado');
       }
       
-      const profileData = await getProfileData(session.user.id);
+      const profileData = await getProfile(supabase, session.user.id);
       return profileData as Profile;
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -77,7 +77,7 @@ export const useProfileData = () => {
       }
       
       // Obtém dados atuais do perfil para preservar preferências
-      const profileData = await getProfileData(session.user.id);
+      const profileData = await getProfile(supabase, session.user.id);
       
       const currentNotificationPrefs = profileData && 
         profileData.notification_preferences 
@@ -100,7 +100,7 @@ export const useProfileData = () => {
       }
       
       // Atualiza o perfil com os novos dados
-      const success = await updateProfileData(session.user.id, {
+      const success = await updateProfileHelper(supabase, session.user.id, {
         name: data.name,
         email: data.email,
         specialty: data.especialidade,

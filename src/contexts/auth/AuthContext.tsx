@@ -1,10 +1,9 @@
-
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthState } from './useAuthState';
 import { useAuthActions } from './useAuthActions';
-import { AuthContextProps, UserProfile } from './types';
+import { AuthContextProps } from './types';
 import { toast } from 'sonner';
 
 // Create context
@@ -15,7 +14,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user, session, isAuthenticated, loading: authStateLoading } = useAuthState();
   const actions = useAuthActions(user?.id);
   const [profileLoading, setProfileLoading] = useState(false);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   
   // Fetch user profile data when user is authenticated
   useEffect(() => {
@@ -40,7 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (user) {
       fetchUserProfile();
     }
-  }, [user, actions, userProfile]);
+  }, [user, actions]);
 
   // For CRM validation - Check if current user has valid CRM
   const validateUserCRM = async (crmToCheck: string): Promise<boolean> => {
@@ -60,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
-      return Boolean(data);
+      return data || false;
     } catch (error) {
       console.error('Exception during CRM validation:', error);
       return false;
@@ -69,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Combine state and actions to create context value
   const contextValue: AuthContextProps = {
-    user: user as User,
+    user,
     session,
     isAuthenticated,
     loading: authStateLoading || profileLoading,
