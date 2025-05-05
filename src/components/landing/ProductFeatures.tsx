@@ -1,71 +1,115 @@
 
-import { CheckCircle, ChartBar, FileStack, ShieldCheck } from "lucide-react";
+import { CheckCircle, Shield, Microscope, BriefcaseMedical, BarChart, Sparkles, Download } from "lucide-react";
 import { motion } from "framer-motion";
-
-const features = [
-  {
-    icon: FileStack,
-    title: "Auditoria Inteligente",
-    description: "Upload e análise automática de guias hospitalares e demonstrativos de pagamento"
-  },
-  {
-    icon: ChartBar,
-    title: "Relatórios Detalhados",
-    description: "Visualize análises completas de pagamentos e glosas em dashboards interativos"
-  },
-  {
-    icon: CheckCircle,
-    title: "Detecção de Inconsistências",
-    description: "Identificação automática de divergências entre valores CBHPM e pagamentos"
-  },
-  {
-    icon: ShieldCheck,
-    title: "Segurança de Dados",
-    description: "Seus dados protegidos com criptografia e conformidade com LGPD"
-  }
-];
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export function ProductFeatures() {
   return (
-    <section className="py-24 px-6 bg-gradient-to-b from-background to-secondary/5 relative overflow-hidden">
-      <div className="absolute inset-0 -z-10 bg-grid-pattern opacity-[0.02]" />
-      
+    <section className="py-24 px-6 bg-gradient-to-b from-background to-muted/10 relative overflow-hidden">
       <div className="container mx-auto max-w-6xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Recursos <span className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">Premium</span>
-          </h2>
-          <p className="text-muted-foreground text-xl max-w-2xl mx-auto">
-            Ferramentas avançadas para otimizar seu processo de auditoria médica
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group p-8 rounded-xl bg-card hover:bg-accent/5 border border-border/50 hover:border-primary/20 transition-all duration-300"
-            >
-              <div className="relative mb-6">
-                <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-primary/20 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity blur" />
-                <div className="relative bg-background rounded-lg p-4 w-fit">
-                  <feature.icon className="h-8 w-8 text-primary" />
+        <div className="grid md:grid-cols-2 gap-16 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              Tecnologia avançada para <span className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">maximizar seus resultados</span>
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              Nossa plataforma integra inteligência artificial e análise avançada de dados para automatizar processos que antes eram manuais e demorados.
+            </p>
+            
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <CheckCircle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-lg font-semibold">Detecção automática de inconsistências</h3>
+                  <p className="text-muted-foreground">Nossa IA identifica padrões de glosa e erros de pagamento que passariam despercebidos.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <CheckCircle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-lg font-semibold">Dashboard intuitivo</h3>
+                  <p className="text-muted-foreground">Visualize métricas importantes e acompanhe seu progresso em tempo real.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <CheckCircle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-lg font-semibold">Conformidade com normas brasileiras</h3>
+                  <p className="text-muted-foreground">Totalmente adaptado às normas do CFM e operadoras de saúde brasileiras.</p>
+                </div>
+              </li>
+            </ul>
+            
+            <div className="mt-8">
+              <Button 
+                asChild 
+                className="rounded-md"
+              >
+                <Link to="/how-it-works">
+                  Saiba como funciona
+                </Link>
+              </Button>
+            </div>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="relative"
+          >
+            <div className="bg-background rounded-xl border border-border/50 shadow-xl p-6 md:p-8 relative z-10">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2 p-4 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                  <BarChart className="h-8 w-8 text-primary" />
+                  <h3 className="font-medium">Análise de Dados</h3>
+                  <p className="text-sm text-muted-foreground">Visualize padrões e tendências de pagamento</p>
+                </div>
+                <div className="space-y-2 p-4 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                  <Sparkles className="h-8 w-8 text-primary" />
+                  <h3 className="font-medium">IA Integrada</h3>
+                  <p className="text-sm text-muted-foreground">Detecção automática de inconsistências</p>
+                </div>
+                <div className="space-y-2 p-4 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                  <Download className="h-8 w-8 text-primary" />
+                  <h3 className="font-medium">Relatórios</h3>
+                  <p className="text-sm text-muted-foreground">Documentação completa para contestações</p>
+                </div>
+                <div className="space-y-2 p-4 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                  <Shield className="h-8 w-8 text-primary" />
+                  <h3 className="font-medium">Segurança</h3>
+                  <p className="text-sm text-muted-foreground">Criptografia de ponta a ponta</p>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
-            </motion.div>
-          ))}
+              
+              {/* Estatísticas */}
+              <div className="mt-8 grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-primary">+30%</div>
+                  <p className="text-sm text-muted-foreground">Aumento médio de faturamento</p>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-primary">80%</div>
+                  <p className="text-sm text-muted-foreground">Redução de tempo em auditoria</p>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-primary">99.9%</div>
+                  <p className="text-sm text-muted-foreground">Precisão nas análises</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Background elements */}
+            <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+            <div className="absolute -top-10 -left-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+          </motion.div>
         </div>
       </div>
     </section>
