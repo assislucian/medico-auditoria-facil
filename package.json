@@ -4,9 +4,17 @@
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^7.0.2",
     "@mui/material": "^7.0.2",
+    "@radix-ui/react-dropdown-menu": "^2.1.12",
+    "@radix-ui/react-tooltip": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
-    "pdfjs-dist": "^5.2.133"
+    "lucide-react": "^0.507.0",
+    "pdfjs-dist": "^5.2.133",
+    "react-icons": "^5.5.0"
   },
-  "packageManager": "yarn@4.1.1+sha512.ec40d0639bb307441b945d9467139cbb88d14394baac760b52eca038b330d16542d66fef61574271534ace5a200518dabf3b53a85f1f9e4bfa37141b538a9590"
+  "packageManager": "yarn@4.1.1+sha512.ec40d0639bb307441b945d9467139cbb88d14394baac760b52eca038b330d16542d66fef61574271534ace5a200518dabf3b53a85f1f9e4bfa37141b538a9590",
+  "devDependencies": {
+    "jscodeshift": "^17.3.0"
+  }
 }

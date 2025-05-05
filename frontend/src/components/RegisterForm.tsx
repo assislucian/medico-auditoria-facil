@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { z } from 'zod';
@@ -24,6 +24,8 @@ const registerSchema = z.object({
   path: ['confirmPassword'],
 });
 
+const TERMS_VERSION = "2025-05-05"; // Atualize conforme a versão/data dos termos
+
 const RegisterForm = () => {
   const [uf, setUf] = useState('');
   const [crm, setCrm] = useState('');
@@ -33,6 +35,8 @@ const RegisterForm = () => {
   const [errors, setErrors] = useState<{uf?: string, crm?: string, nome?: string, password?: string, confirmPassword?: string}>({});
   const [isLoading, setIsLoading] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptError, setAcceptError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -59,12 +63,24 @@ const RegisterForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegisterError(null);
+    setAcceptError(null);
+    if (!acceptedTerms) {
+      setAcceptError('É necessário aceitar os Termos de Uso e a Política de Privacidade para se cadastrar.');
+      return;
+    }
     if (!validateForm()) {
       return;
     }
     setIsLoading(true);
     try {
-      await axios.post(`${API_URL}/api/v1/register`, { uf, crm, nome, senha: password });
+      await axios.post(`${API_URL}/api/v1/register`, {
+        uf,
+        crm,
+        nome,
+        senha: password,
+        terms_accepted: acceptedTerms,
+        terms_version: TERMS_VERSION
+      });
       toast.success('Cadastro realizado com sucesso! Faça login abaixo.');
       navigate('/login');
     } catch (error: any) {
@@ -179,6 +195,24 @@ const RegisterForm = () => {
             />
             {errors.confirmPassword && <div className="text-xs text-red-600 mt-1">{errors.confirmPassword}</div>}
           </div>
+          <div className="flex items-start gap-2 mt-2">
+            <input
+              id="acceptTerms"
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={e => setAcceptedTerms(e.target.checked)}
+              className="mt-1"
+              disabled={isLoading}
+              required
+            />
+            <label htmlFor="acceptTerms" className="text-xs text-muted-foreground select-none">
+              Declaro que li e concordo com os <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary underline">Termos de Uso</a> e a <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary underline">Política de Privacidade</a> do MedCheck, e estou ciente do tratamento de dados conforme LGPD.
+            </label>
+          </div>
+          <p className="text-xs text-gray-500 mb-2 mt-1">
+            <strong>Atenção:</strong> O uso do MedCheck não substitui a análise profissional. O usuário é responsável pelos dados inseridos e pelas decisões tomadas a partir dos relatórios da plataforma.
+          </p>
+          {acceptError && <div className="text-xs text-red-600 mt-1">{acceptError}</div>}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <span className="flex items-center gap-2">

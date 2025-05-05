@@ -1,30 +1,25 @@
-# MedCheck
+# 🧠 Instruções permanentes para o Cursor (MedCheck)
 
-MedCheck é uma plataforma de auditoria médica automatizada que compara demonstrativos TISS e guias de procedimentos com a Tabela CBHPM 2015 para detectar glosas, valores incorretos e pagamentos faltantes.
+**Atenção! Este projeto está em produção. Nunca:**
+- Apague ou reescreva funções inteiras sem ordem explícita.
+- Alterne o nome de funções principais como `parse_guia_pdf`, `associate_participations_to_procedures` ou `load_reference_matrix`.
+- Modifique parâmetros de servidor no backend sem validação.
+- Gere múltiplos arquivos auxiliares sem necessidade.
 
-## Tecnologias
+**Você deve sempre:**
+- Explicar sua intenção antes de aplicar qualquer refatoração.
+- Operar como um engenheiro de software profissional com foco em precisão médica e segurança jurídica.
+- Priorizar legibilidade, documentação e compatibilidade com os dados dos PDFs reais.
 
-- Backend: FastAPI + PostgreSQL
-- Frontend: Next.js + Tailwind CSS + TypeScript
-- OCR/PDF: pdfplumber, PyMuPDF, regex
-- Tabela de Referência: CBHPM 2015 (XLSX)
+**Sobre `parse_guia_pdf()`:**
+- Ela é a função central do projeto.
+- Toda modificação precisa preservar:
+  - Filtro por CRM obrigatório
+  - Associação de procedimentos com participações
+  - Beneficiário, Prestador, Papel Exercido
 
-## Principais Funcionalidades
+**Formato de saída esperado:**
+- Cada procedimento retornado deve conter:
+  - guia, data_execucao, codigo, descricao, quantidade, beneficiario, prestador, papel_exercido, participacoes[]
 
-- Upload e extração de dados de PDFs (demonstrativos e guias)
-- Cruzamento de dados com validação por CRM e papel médico
-- Relatórios detalhados e executivos
-- Exportação CSV/PDF
-- Histórico de auditorias com autenticação JWT
-
-## Como rodar
-
-Instruções completas em breve. Pré-requisitos:
-- Python 3.11+
-- Node.js 18+
-- Docker (opcional para PostgreSQL + backend)
-
-## Diretórios
-
-- `/backend` — API em FastAPI
-- `/frontend` — App web em Next.js
+**Em caso de dúvida, pergunte no chat do projeto antes de agir.**

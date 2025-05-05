@@ -1,19 +1,19 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, BackgroundTasks, Form, Body, Request
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, BackgroundTasks, Form, Body, Request, Query
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
-from pydantic import BaseModel
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
+from pydantic import BaseModel, Field
 from uuid import uuid4
 import os
 import shutil
 import logging
 import time
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from src.main import parse_demonstrativo, parse_guide_pdf
 import pandas as pd
 import bcrypt
-from sqlalchemy import create_engine, Column, String, Integer, DateTime, desc
+from sqlalchemy import create_engine, Column, String, Integer, DateTime, desc, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker
 from typing import List
 import pdb
@@ -21,6 +21,13 @@ import sys
 import json
 import sqlite3
 import tempfile
+import zipfile
+import io
+from fastapi import APIRouter
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.decorator import limiter as rate_limit
 
 # --- Configurações ---
 UPLOAD_DIR = "uploads"
@@ -45,6 +52,10 @@ class Medico(Base):
     uf = Column(String, nullable=False)
     nome = Column(String, nullable=False)
     senha_hash = Column(String, nullable=False)
+    terms_accepted = Column(Integer, nullable=False, default=0)  # 0 = False, 1 = True
+    terms_accepted_at = Column(DateTime, nullable=True)
+    terms_version = Column(String, nullable=True)
+    last_login_at = Column(DateTime, nullable=True)
 
 class Demonstrativo(Base):
     __tablename__ = "demonstrativos"
@@ -77,6 +88,48 @@ class Guia(Base):
     dt_inicio = Column(String, nullable=True)  # Data/hora de início do procedimento
     dt_fim = Column(String, nullable=True)  # Data/hora de fim do procedimento
     status_part = Column(String, nullable=True)  # Status da participação (ex: Fechada, Pendente)
+
+class Consentimento(Base):
+    __tablename__ = "consentimentos"
+    id = Column(Integer, primary_key=True, index=True)
+    crm = Column(String, ForeignKey("medicos.crm"), nullable=False, index=True)
+    terms_version = Column(String, nullable=False)
+    accepted_at = Column(DateTime, nullable=False)
+    ip = Column(String, nullable=True)
+
+class Incident(Base):
+    __tablename__ = "incidents"
+    id = Column(Integer, primary_key=True, index=True)
+    type = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    occurred_at = Column(DateTime, nullable=False)
+    user_crm = Column(String, nullable=True)
+    ip = Column(String, nullable=True)
+    status = Column(String, nullable=False, default="open")
+
+class IncidentListItem(BaseModel):
+    id: int
+    type: str
+    description: str
+    occurred_at: str
+    user_crm: str = None
+    ip: str = None
+    status: str
+
+class SuboperadorItem(BaseModel):
+    nome: str
+    finalidade: str
+    pais: str
+
+class LGPDRequest(BaseModel):
+    nome: str
+    email: str
+    crm: str = None
+    tipo: str  # acesso, portabilidade, exclusao, revogacao, duvida
+    mensagem: str
+
+class LGPDRequestResponse(BaseModel):
+    message: str
 
 Base.metadata.create_all(bind=engine)
 
@@ -138,6 +191,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 # --- FastAPI app ---
 app = FastAPI(title="Validador de Demonstrativos e Guias Médicas", version="1.0.0")
 
+# --- SlowAPI Rate Limiter ---
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # CORS para frontend local
 app.add_middleware(
     CORSMiddleware,
@@ -151,12 +209,33 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("api")
 
+# --- Logging estruturado para auditoria ---
+AUDIT_LOG_PATH = os.path.join("logs", "medcheck_audit.log")
+os.makedirs("logs", exist_ok=True)
+audit_logger = logging.getLogger("audit")
+audit_logger.setLevel(logging.INFO)
+if not audit_logger.handlers:
+    handler = logging.FileHandler(AUDIT_LOG_PATH)
+    handler.setLevel(logging.INFO)
+    audit_logger.addHandler(handler)
+
+def log_audit(action, user_crm=None, ip=None, details=None):
+    audit_logger.info(json.dumps({
+        "timestamp": datetime.utcnow().isoformat(),
+        "action": action,
+        "user_crm": user_crm,
+        "ip": ip,
+        "details": details
+    }))
+
 # --- Models ---
 class RegisterRequest(BaseModel):
     uf: str
     crm: str
     nome: str
     senha: str
+    terms_accepted: bool
+    terms_version: str
 
 class RegisterResponse(BaseModel):
     message: str
@@ -178,27 +257,91 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str
 
+class ActivityLogEntry(BaseModel):
+    action: str
+    target: dict = None
+    result: str = None
+    details: str = None
+
+class UpdateProfileRequest(BaseModel):
+    nome: str = Field(None, description="Nome completo")
+    uf: str = Field(None, description="UF do CRM")
+    senha: str = Field(None, description="Nova senha (opcional)")
+
+class UpdateProfileResponse(BaseModel):
+    message: str
+
+class AnonimizationResponse(BaseModel):
+    message: str
+
+class IncidentRequest(BaseModel):
+    type: str
+    description: str
+    user_crm: str = None
+    ip: str = None
+
+class IncidentResponse(BaseModel):
+    message: str
+    incident_id: int
+
+class InactiveAccountItem(BaseModel):
+    crm: str
+    nome: str
+    uf: str
+    last_login_at: str = None
+    created_at: str = None
+
+class NotifyInactiveResponse(BaseModel):
+    message: str
+    notified_crms: list[str]
+
+class BulkDeleteResponse(BaseModel):
+    message: str
+    deleted_crms: list[str]
+
 # --- Simulação de fila de jobs (substitua por Celery/RQ em produção) ---
 jobs = {}
 
 # --- Endpoint de cadastro de médico (persistente) ---
 @app.post("/api/v1/register", response_model=RegisterResponse)
-def register_medico(req: RegisterRequest):
+@rate_limit("5/minute")
+def register_medico(req: RegisterRequest, request: Request):
     db = SessionLocal()
     try:
         if db.query(Medico).filter_by(crm=req.crm).first():
             raise HTTPException(status_code=400, detail="CRM já cadastrado")
+        if not req.terms_accepted:
+            raise HTTPException(status_code=400, detail="É necessário aceitar os Termos de Uso e a Política de Privacidade.")
         senha_hash = bcrypt.hashpw(req.senha.encode(), bcrypt.gensalt()).decode()
-        medico = Medico(crm=req.crm, uf=req.uf, nome=req.nome, senha_hash=senha_hash)
+        medico = Medico(
+            crm=req.crm,
+            uf=req.uf,
+            nome=req.nome,
+            senha_hash=senha_hash,
+            terms_accepted=1 if req.terms_accepted else 0,
+            terms_accepted_at=datetime.utcnow(),
+            terms_version=req.terms_version
+        )
         db.add(medico)
         db.commit()
-        logger.info(f"Novo médico cadastrado: {req.uf}-{req.crm} - {req.nome}")
+        # Registrar consentimento histórico
+        ip = request.client.host if request and request.client else None
+        consent = Consentimento(
+            crm=req.crm,
+            terms_version=req.terms_version,
+            accepted_at=datetime.utcnow(),
+            ip=ip
+        )
+        db.add(consent)
+        log_audit("register", user_crm=req.crm, ip=ip, details={"uf": req.uf, "nome": req.nome})
+        logger.info(f"Novo médico cadastrado: {req.uf}-{req.crm} - {req.nome} (aceite termos v{req.terms_version}, IP {ip})")
         return RegisterResponse(message="Cadastro realizado com sucesso!")
     finally:
         db.close()
 
 # --- Endpoint de login/token (persistente) ---
 @app.post("/token", response_model=TokenResponse)
+@rate_limit("5/minute")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     # Espera-se que o frontend envie 'username' como CRM e 'uf' como parte do form
     crm = form_data.username
@@ -210,7 +353,12 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     try:
         medico = db.query(Medico).filter_by(crm=crm, uf=uf).first()
         if not medico or not bcrypt.checkpw(senha.encode(), medico.senha_hash.encode()):
+            log_audit("login_failed", user_crm=crm, ip=None, details={"uf": uf})
             raise HTTPException(status_code=401, detail="CRM, UF ou senha inválidos")
+        # Atualizar last_login_at
+        medico.last_login_at = datetime.utcnow()
+        db.commit()
+        log_audit("login_success", user_crm=crm, ip=None, details={"uf": uf})
         access_token = create_access_token({"crm": crm, "uf": uf, "nome": medico.nome})
         return {"access_token": access_token, "token_type": "bearer"}
     finally:
@@ -258,6 +406,7 @@ def process_validation_job(job_id: str, file_path: str, user: dict):
 
 # --- Endpoint de upload/validação ---
 @app.post("/api/v1/validate", response_model=ValidateResponse)
+@rate_limit("10/minute")
 def validate_file(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
@@ -773,6 +922,301 @@ def delete_guia(numero_guia: str, user: dict = Depends(get_current_user)):
         return
     finally:
         db.close()
+
+# --- Endpoint para registrar atividade ---
+@app.post("/api/v1/activity-log")
+async def log_activity(
+    entry: ActivityLogEntry,
+    request: Request,
+    user: dict = Depends(get_current_user)
+):
+    log_data = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "user_crm": user.get("crm"),
+        "user_nome": user.get("nome"),
+        "action": entry.action,
+        "target": entry.target,
+        "result": entry.result,
+        "details": entry.details,
+        "ip": request.client.host,
+        "user_agent": request.headers.get("user-agent"),
+    }
+    print("LOG DE ATIVIDADE:", log_data)  # Troque por insert no banco se desejar
+    return {"ok": True}
+
+# --- Endpoint para exportar dados do usuário ---
+@app.get("/api/v1/export-data")
+def export_user_data(user: dict = Depends(get_current_user)):
+    db = SessionLocal()
+    try:
+        log_audit("export_data", user_crm=user["crm"], ip=None, details=None)
+        try:
+            # Coletar dados do usuário
+            guias = db.query(Guia).filter_by(user_id=user['crm']).all()
+            demonstrativos = db.query(Demonstrativo).filter_by(crm=user['crm']).all()
+            # Simular logs (poderia ser de uma tabela de logs)
+            logs = []
+            # Montar JSONs
+            def to_serializable(obj):
+                d = obj.__dict__.copy()
+                d.pop('_sa_instance_state', None)
+                for k, v in d.items():
+                    if isinstance(v, (datetime, date)):
+                        d[k] = v.isoformat()
+                return d
+            guias_json = [to_serializable(g) for g in guias]
+            demonstrativos_json = [to_serializable(d) for d in demonstrativos]
+            # Encoder customizado para garantir serialização de qualquer datetime
+            class DateTimeEncoder(json.JSONEncoder):
+                def default(self, o):
+                    if isinstance(o, (datetime, date)):
+                        return o.isoformat()
+                    return super().default(o)
+            # Criar ZIP em memória
+            mem_zip = io.BytesIO()
+            with zipfile.ZipFile(mem_zip, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+                zf.writestr("guias.json", json.dumps(guias_json, ensure_ascii=False, indent=2, cls=DateTimeEncoder))
+                zf.writestr("demonstrativos.json", json.dumps(demonstrativos_json, ensure_ascii=False, indent=2, cls=DateTimeEncoder))
+                zf.writestr("logs.json", json.dumps(logs, ensure_ascii=False, indent=2, cls=DateTimeEncoder))
+            mem_zip.seek(0)
+            logger.info(f"Exportação de dados para CRM {user['crm']}")
+            return StreamingResponse(mem_zip, media_type="application/zip", headers={"Content-Disposition": "attachment; filename=medcheck-dados-usuario.zip"})
+        except Exception as e:
+            logger.error(f"Erro ao exportar dados do usuário: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Erro ao exportar dados: {e}")
+    finally:
+        db.close()
+
+# --- Endpoint para deletar conta do usuário ---
+@app.delete("/api/v1/delete-account")
+def delete_account(user: dict = Depends(get_current_user)):
+    db = SessionLocal()
+    try:
+        log_audit("delete_account", user_crm=user["crm"], ip=None, details=None)
+        # Apagar guias
+        db.query(Guia).filter_by(user_id=user['crm']).delete()
+        # Apagar demonstrativos
+        db.query(Demonstrativo).filter_by(crm=user['crm']).delete()
+        # Apagar cadastro
+        db.query(Medico).filter_by(crm=user['crm']).delete()
+        db.commit()
+        logger.info(f"Conta e dados excluídos para CRM {user['crm']}")
+        return {"message": "Conta e dados excluídos com sucesso."}
+    finally:
+        db.close()
+
+# --- Endpoint para consultar histórico de consentimentos ---
+@app.get("/api/v1/consentimentos")
+def listar_consentimentos(user: dict = Depends(get_current_user)):
+    db = SessionLocal()
+    try:
+        consentimentos = db.query(Consentimento).filter_by(crm=user["crm"]).order_by(Consentimento.accepted_at.desc()).all()
+        return [
+            {
+                "terms_version": c.terms_version,
+                "accepted_at": c.accepted_at.isoformat(),
+                "ip": c.ip
+            }
+            for c in consentimentos
+        ]
+    finally:
+        db.close()
+
+# --- Endpoint para atualizar perfil do usuário ---
+@app.patch("/api/v1/profile", response_model=UpdateProfileResponse)
+def update_profile(data: UpdateProfileRequest, user: dict = Depends(get_current_user)):
+    db = SessionLocal()
+    try:
+        medico = db.query(Medico).filter_by(crm=user["crm"]).first()
+        if not medico:
+            raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        updated = False
+        if data.nome:
+            medico.nome = data.nome
+            updated = True
+        if data.uf:
+            medico.uf = data.uf
+            updated = True
+        if data.senha:
+            if len(data.senha) < 8:
+                raise HTTPException(status_code=400, detail="A senha deve ter pelo menos 8 caracteres.")
+            medico.senha_hash = bcrypt.hashpw(data.senha.encode(), bcrypt.gensalt()).decode()
+            updated = True
+        if updated:
+            log_audit("update_profile", user_crm=user["crm"], ip=None, details={"nome": data.nome, "uf": data.uf})
+            db.commit()
+            logger.info(f"Perfil atualizado para CRM {user['crm']}: nome={data.nome}, uf={data.uf}, senha={'***' if data.senha else None}")
+            return UpdateProfileResponse(message="Perfil atualizado com sucesso.")
+        else:
+            return UpdateProfileResponse(message="Nenhuma alteração realizada.")
+    finally:
+        db.close()
+
+# --- Endpoint para anonimizar dados do usuário ---
+@app.post("/api/v1/request-anonimization", response_model=AnonimizationResponse)
+def request_anonimization(user: dict = Depends(get_current_user)):
+    db = SessionLocal()
+    try:
+        log_audit("anonimization", user_crm=user["crm"], ip=None, details=None)
+        medico = db.query(Medico).filter_by(crm=user["crm"]).first()
+        if not medico:
+            raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        # Anonimizar dados do médico
+        medico.nome = "ANONIMIZADO"
+        medico.senha_hash = "ANONIMIZADO"
+        # Anonimizar dados de guias
+        guias = db.query(Guia).filter_by(user_id=user["crm"]).all()
+        for g in guias:
+            g.paciente = "ANONIMIZADO"
+            g.nome_medico = "ANONIMIZADO"
+        # Anonimizar dados de demonstrativos
+        demonstrativos = db.query(Demonstrativo).filter_by(crm=user["crm"]).all()
+        for d in demonstrativos:
+            d.lote = "ANONIMIZADO"
+        db.commit()
+        logger.info(f"Dados anonimizados para CRM {user['crm']}")
+        return AnonimizationResponse(message="Dados anonimizados com sucesso. O acesso à conta foi bloqueado.")
+    finally:
+        db.close()
+
+# --- Endpoint para registrar incidente ---
+@app.post("/api/v1/incidents", response_model=IncidentResponse)
+def report_incident(data: IncidentRequest, request: Request):
+    db = SessionLocal()
+    try:
+        ip = data.ip or (request.client.host if request and request.client else None)
+        incident = Incident(
+            type=data.type,
+            description=data.description,
+            occurred_at=datetime.utcnow(),
+            user_crm=data.user_crm,
+            ip=ip,
+            status="open"
+        )
+        db.add(incident)
+        db.commit()
+        log_audit("incident_reported", user_crm=data.user_crm, ip=ip, details={"type": data.type, "description": data.description})
+        logger.error(f"[INCIDENT] Tipo: {data.type} | Usuário: {data.user_crm} | IP: {ip} | Desc: {data.description}")
+        return IncidentResponse(message="Incidente registrado com sucesso.", incident_id=incident.id)
+    finally:
+        db.close()
+
+# --- Endpoint para listar incidentes ---
+@app.get("/api/v1/incidents", response_model=list[IncidentListItem])
+def list_incidents(admin: bool = False):
+    # Em produção, proteger este endpoint com autenticação/admin
+    db = SessionLocal()
+    try:
+        incidents = db.query(Incident).order_by(Incident.occurred_at.desc()).all()
+        return [
+            IncidentListItem(
+                id=i.id,
+                type=i.type,
+                description=i.description,
+                occurred_at=i.occurred_at.isoformat(),
+                user_crm=i.user_crm,
+                ip=i.ip,
+                status=i.status
+            ) for i in incidents
+        ]
+    finally:
+        db.close()
+
+# --- Endpoint para listar contas inativas há mais de X anos ---
+@app.get("/api/v1/inactive-accounts", response_model=list[InactiveAccountItem])
+def list_inactive_accounts(years: int = Query(2, ge=1, le=10)):
+    # Em produção, proteger este endpoint com autenticação/admin
+    db = SessionLocal()
+    try:
+        cutoff = datetime.utcnow() - timedelta(days=365*years)
+        inativos = db.query(Medico).filter(
+            (Medico.last_login_at == None) | (Medico.last_login_at < cutoff)
+        ).all()
+        return [
+            InactiveAccountItem(
+                crm=m.crm,
+                nome=m.nome,
+                uf=m.uf,
+                last_login_at=m.last_login_at.isoformat() if m.last_login_at else None,
+                created_at=m.terms_accepted_at.isoformat() if m.terms_accepted_at else None
+            ) for m in inativos
+        ]
+    finally:
+        db.close()
+
+# --- Endpoint para notificar usuários inativos ---
+@app.post("/api/v1/notify-inactive", response_model=NotifyInactiveResponse)
+def notify_inactive_accounts(years: int = Query(2, ge=1, le=10)):
+    # Em produção, proteger este endpoint com autenticação/admin
+    db = SessionLocal()
+    try:
+        cutoff = datetime.utcnow() - timedelta(days=365*years)
+        inativos = db.query(Medico).filter(
+            (Medico.last_login_at == None) | (Medico.last_login_at < cutoff)
+        ).all()
+        notified = []
+        for m in inativos:
+            # Aqui, simular envio de notificação (ex: e-mail)
+            logger.info(f"[NOTIFY] Conta inativa: CRM={m.crm}, nome={m.nome}, UF={m.uf}, last_login={m.last_login_at}")
+            notified.append(m.crm)
+        return NotifyInactiveResponse(message=f"Notificações simuladas para {len(notified)} contas inativas.", notified_crms=notified)
+    finally:
+        db.close()
+
+# --- Endpoint para deletar contas inativas ---
+@app.delete("/api/v1/delete-inactive", response_model=BulkDeleteResponse)
+def delete_inactive_accounts(years: int = Query(2, ge=1, le=10)):
+    # Em produção, proteger este endpoint com autenticação/admin
+    db = SessionLocal()
+    try:
+        cutoff = datetime.utcnow() - timedelta(days=365*years)
+        inativos = db.query(Medico).filter(
+            (Medico.last_login_at == None) | (Medico.last_login_at < cutoff)
+        ).all()
+        deleted = []
+        for m in inativos:
+            # Anonimizar antes de deletar (boa prática LGPD)
+            m.nome = "ANONIMIZADO"
+            m.senha_hash = "ANONIMIZADO"
+            # Anonimizar guias
+            guias = db.query(Guia).filter_by(user_id=m.crm).all()
+            for g in guias:
+                g.paciente = "ANONIMIZADO"
+                g.nome_medico = "ANONIMIZADO"
+            # Anonimizar demonstrativos
+            demonstrativos = db.query(Demonstrativo).filter_by(crm=m.crm).all()
+            for d in demonstrativos:
+                d.lote = "ANONIMIZADO"
+            deleted.append(m.crm)
+            # Opcional: deletar o médico após anonimização
+            db.delete(m)
+        db.commit()
+        return BulkDeleteResponse(message=f"{len(deleted)} contas inativas anonimizadas e removidas.", deleted_crms=deleted)
+    finally:
+        db.close()
+
+# --- Endpoint para listar suboperadores ---
+@app.get("/api/v1/suboperadores", response_model=list[SuboperadorItem])
+def listar_suboperadores():
+    suboperadores = [
+        SuboperadorItem(nome="AWS", finalidade="Infraestrutura de nuvem e armazenamento de arquivos", pais="Brasil/EUA"),
+        SuboperadorItem(nome="SendGrid", finalidade="Envio de e-mails transacionais", pais="EUA"),
+        SuboperadorItem(nome="Supabase", finalidade="Banco de dados e analytics", pais="EUA"),
+        SuboperadorItem(nome="Google", finalidade="Analytics e monitoramento", pais="EUA"),
+        SuboperadorItem(nome="Vercel", finalidade="Hospedagem e deploy do frontend", pais="EUA")
+    ]
+    return suboperadores
+
+# --- Endpoint para registrar requisição LGPD ---
+@app.post("/api/v1/lgpd-request", response_model=LGPDRequestResponse)
+@rate_limit("3/minute")
+def canal_lgpd(data: LGPDRequest, request: Request):
+    # Salvar log da requisição
+    logger.info(f"[LGPD] Nova requisição: tipo={data.tipo}, nome={data.nome}, email={data.email}, crm={data.crm}, mensagem={data.mensagem}, ip={request.client.host if request and request.client else None}")
+    # (Opcional) Salvar em tabela LGPDRequests no banco para auditoria
+    # (Opcional) Enviar e-mail para admin/DPO
+    # Simular resposta automática
+    return LGPDRequestResponse(message="Sua solicitação foi recebida. Você receberá uma resposta em até 2 dias úteis. Obrigado!")
 
 # --- Observações ---
 # - Para produção, troque JWT_SECRET por segredo seguro e use HTTPS

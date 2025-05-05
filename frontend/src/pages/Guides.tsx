@@ -8,7 +8,7 @@ import {
 import { DataGrid } from "../components/ui/data-grid";
 import { Button } from "../components/ui/button";
 import { FileText, Upload, Eye, Trash2, HelpCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "../components/ui/badge";
 import { useState, useEffect } from "react";
 import {
   Tabs,
@@ -27,21 +27,80 @@ import { GuideProcedure } from "../types/medical";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "../components/ui/tooltip";
 import { Link } from "react-router-dom";
 import LoaderTable from "../components/ui/LoaderTable";
-import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
+import { cn } from "../lib/utils";
+import { Card } from "../components/ui/card";
 // import Fuse from 'fuse.js';
 
-// Logger utilitário
-function logActivity(acao: string, detalhes: string) {
-  const logs = JSON.parse(localStorage.getItem('guias_activity_log') || '[]');
-  logs.unshift({ timestamp: new Date().toISOString(), acao, detalhes });
-  localStorage.setItem('guias_activity_log', JSON.stringify(logs.slice(0, 20)));
+function getCurrentCrm() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user && user.crm ? user.crm : '';
+  } catch {
+    return '';
+  }
+}
+
+function logActivity(action: string, details: string, extra: any = {}) {
+  const crm = getCurrentCrm();
+  if (!crm) return; // Não loga se não houver CRM
+  const key = `guias_activity_log_${crm}`;
+  const logs = JSON.parse(localStorage.getItem(key) || '[]');
+  let user = {};
+  try {
+    user = JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {}
+  const logObj = {
+    timestamp: new Date().toISOString(),
+    action,
+    user: {
+      crm: typeof user === 'object' && user && 'crm' in user ? (user as any).crm : '',
+      nome: typeof user === 'object' && user && 'nome' in user ? (user as any).nome : ''
+    },
+    ...extra,
+    details,
+  };
+  logs.unshift(logObj);
+  localStorage.setItem(key, JSON.stringify(logs.slice(0, 20)));
+
+  // Envia para o backend (não quebra se falhar)
+  fetch('/api/v1/activity-log', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + (localStorage.getItem('token') || ''),
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      action,
+      details,
+      ...extra
+    })
+  }).catch(() => {});
 }
 function getRecentActivities() {
-  return JSON.parse(localStorage.getItem('guias_activity_log') || '[]');
+  const crm = getCurrentCrm();
+  if (!crm) return [];
+  const key = `guias_activity_log_${crm}`;
+  return JSON.parse(localStorage.getItem(key) || '[]');
 }
 function clearActivities() {
-  localStorage.removeItem('guias_activity_log');
+  const crm = getCurrentCrm();
+  if (!crm) return;
+  const key = `guias_activity_log_${crm}`;
+  localStorage.removeItem(key);
+}
+
+// Função para normalizar papel (remove acentos, minúsculas, converte números por extenso)
+function normalizePapel(papel: string) {
+  return papel
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .replace(/1º|primeiro/, 'primeiro')
+    .replace(/2º|segundo/, 'segundo')
+    .replace(/auxiliar/, 'auxiliar')
+    .replace(/cirurgiao/, 'cirurgiao')
+    .replace(/anestesista/, 'anestesista')
+    .replace(/[^a-z\s]/g, '') // remove caracteres especiais
+    .trim();
 }
 
 const GuidesPage = () => {
@@ -115,7 +174,10 @@ const GuidesPage = () => {
       
       // Registra atividade
       const uniqueGuias = new Set(uploadResult.map((p: any) => p.numero_guia));
-      logActivity("Upload de Guias", `Processada(s) ${uniqueGuias.size} guia(s) com ${uploadResult.length} procedimento(s)`);
+      logActivity("Upload de Guias", `Processada(s) ${uniqueGuias.size} guia(s) com ${uploadResult.length} procedimento(s)`, {
+        target: { numero_guia: Array.from(uniqueGuias) },
+        result: `${uploadResult.length} procedimentos processados`
+      });
       setActivities(getRecentActivities());
     } catch (err: any) {
       toast.error("Erro ao processar os arquivos", { description: err?.response?.data?.detail || err?.message });
@@ -214,7 +276,7 @@ const GuidesPage = () => {
       
       setSelectedRows([]);
       toast.success("Guias removidas!");
-      logActivity("Remoção de Guias", `Removidas ${selectedRows.length} guias`);
+      logActivity("Remoção de Guias", `Removidas ${selectedRows.length} guias`, { target: { numero_guia: selectedRows } });
       setActivities(getRecentActivities());
     } catch (err: any) {
       toast.error("Erro ao remover guias", {
@@ -282,7 +344,7 @@ const GuidesPage = () => {
       setTotal(res.total || 0);
       
       toast.success("Guia removida com sucesso");
-      logActivity("Remoção de Guia", `Guia ${numeroGuia} removida`);
+      logActivity("Remoção de Guia", `Guia ${numeroGuia} removida`, { target: { numero_guia: numeroGuia } });
       setActivities(getRecentActivities());
     } catch (err: any) {
       toast.error("Erro ao remover guia", {
@@ -322,7 +384,7 @@ const GuidesPage = () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    logActivity("Exportação de Guias", `Exportadas ${rows.length} guias para CSV`);
+    logActivity("Exportação de Guias", `Exportadas ${rows.length} guias para CSV`, { result: `${rows.length} guias exportadas` });
     setActivities(getRecentActivities());
   }
 
@@ -364,7 +426,7 @@ const GuidesPage = () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    logActivity("Exportação de Procedimentos", `Exportados ${allProcedures.length} procedimentos para CSV`);
+    logActivity("Exportação de Procedimentos", `Exportados ${allProcedures.length} procedimentos para CSV`, { result: `${allProcedures.length} procedimentos exportados` });
     setActivities(getRecentActivities());
   }
 
@@ -378,6 +440,15 @@ const GuidesPage = () => {
     return acc;
   }, {} as Record<string, number>);
   const papelMaisFrequente = Object.entries(papelCounts).sort((a, b) => b[1] - a[1])[0] || ["-", 0];
+
+  // Mapeamento de cores para cada tipo de papel
+  const papelColors: Record<string, { bg: string; text: string }> = {
+    'cirurgiao':   { bg: 'rgba(59,130,246,0.18)', text: '#1e3a8a' }, // azul
+    'anestesista': { bg: 'rgba(139,92,246,0.18)', text: '#6d28d9' }, // roxo
+    'primeiro auxiliar': { bg: 'rgba(16,185,129,0.18)', text: '#065f46' }, // verde
+    'segundo auxiliar': { bg: 'rgba(251,191,36,0.18)', text: '#92400e' }, // laranja
+  };
+  const defaultPapelColor = { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' }; // fallback suave
 
   return (
     <AuthenticatedLayout title="Guias Médicas">
@@ -417,13 +488,21 @@ const GuidesPage = () => {
             <Button variant="ghost" size="sm" onClick={() => { clearActivities(); setActivities([]); }}>Limpar</Button>
           </div>
           <ul className="text-xs space-y-1">
-            {activities.slice(0, 5).map((log: any, idx: number) => (
-              <li key={idx} className="flex items-center gap-2">
-                <span className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</span>
-                <span className="font-medium">{log.acao}</span>
-                <span className="truncate">{log.detalhes}</span>
-              </li>
-            ))}
+            {activities.slice(0, 5).map((log: any, idx: number) => {
+              if (typeof log === "string") {
+                return <li key={idx} className="flex items-center gap-2">{log}</li>;
+              }
+              return (
+                <li key={idx} className="flex items-center gap-2">
+                  <span className="font-medium">{log.action}</span>
+                  {log.target?.numero_guia && <span>Guia: <b>{log.target.numero_guia}</b></span>}
+                  {log.target?.beneficiario && <span>- {log.target.beneficiario}</span>}
+                  {log.result && <span className="text-green-700">({log.result})</span>}
+                  <span className="truncate">{log.details}</span>
+                  <span className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</span>
+                </li>
+              );
+            })}
             {activities.length === 0 && <li className="text-muted-foreground">Nenhuma atividade registrada</li>}
           </ul>
         </div>
@@ -527,6 +606,11 @@ const GuidesPage = () => {
           </div>
         </div>
 
+        {/* AVISO DE RESPONSABILIDADE LGPD */}
+        <div className="mb-4 p-3 rounded bg-yellow-50 border border-yellow-200 text-yellow-900 text-sm">
+          <strong>Aviso de Privacidade:</strong> Ao inserir dados de pacientes (ex: upload de guias), você declara que possui consentimento ou base legal para tratar dados sensíveis de terceiros, conforme a LGPD. O uso indevido pode gerar responsabilidade legal.
+        </div>
+
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "list" | "upload")} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="list">Lista de Guias</TabsTrigger>
@@ -557,38 +641,43 @@ const GuidesPage = () => {
                       expandedRow === row.numero_guia ? (
                         <tr>
                           <td colSpan={macroColumns.length} className="bg-[#F7F9FC] p-0">
-                            <Card className="overflow-x-auto">
-                              <table className="w-full text-sm">
-                                <thead>
-                                  <tr>
-                                    {["Data", "Código", "Descrição", "Papel", "Qtd", "Status", "Prestador"].map(h => (
-                                      <th
-                                        key={h}
-                                        className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-low dark:text-slate-400"
-                                      >
-                                        {h}
-                                      </th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {row.detalhes.map((proc: any) => (
-                                    <tr key={proc.codigo} className="odd:bg-gray-50 dark:odd:bg-surface-dark/50">
-                                      <td className="py-3 px-4 whitespace-nowrap">{proc.data}</td>
-                                      <td className="py-3 px-4 whitespace-nowrap font-mono">{proc.codigo}</td>
-                                      <td className="py-3 px-4 whitespace-nowrap">{proc.descricao}</td>
-                                      <td className="py-3 px-4 whitespace-nowrap">{proc.papel}</td>
-                                      <td className="py-3 px-4 whitespace-nowrap text-center">{proc.qtd}</td>
-                                      <td className="py-3 px-4 whitespace-nowrap">
-                                        <Badge variant="secondary">
-                                          {proc.status === "Gerado pela execução" ? "Gerado pela execução" : proc.status}
-                                        </Badge>
-                                      </td>
-                                      <td className="py-3 px-4 whitespace-nowrap">{proc.prestador}</td>
+                            <Card className="w-full max-w-full overflow-hidden px-2">
+                              <div className="overflow-x-auto w-full" style={{ maxWidth: 'calc(100vw - 220px)' }}>
+                                <table className="w-full text-sm min-w-[600px]">
+                                  <thead>
+                                    <tr>
+                                      {['Data', 'Código', 'Descrição', 'Participação', 'Qtd', 'Prestador'].map(h => (
+                                        <th
+                                          key={h}
+                                          className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-ink-low dark:text-slate-400"
+                                        >
+                                          {h}
+                                        </th>
+                                      ))}
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+                                  </thead>
+                                  <tbody>
+                                    {row.detalhes.map((proc: any) => (
+                                      <tr key={proc.codigo} className="odd:bg-gray-50 dark:odd:bg-surface-dark/50">
+                                        <td className="py-2 px-3 whitespace-nowrap">{proc.data}</td>
+                                        <td className="py-2 px-3 whitespace-nowrap font-mono">{proc.codigo}</td>
+                                        <td className="py-2 px-3 whitespace-nowrap max-w-[180px] truncate">{proc.descricao}</td>
+                                        <td className="py-2 px-3 whitespace-nowrap">
+                                          <Badge
+                                            variant="participacao"
+                                            color={(papelColors[normalizePapel(proc.papel)] || defaultPapelColor).bg}
+                                            textColor={(papelColors[normalizePapel(proc.papel)] || defaultPapelColor).text}
+                                          >
+                                            {proc.papel}
+                                          </Badge>
+                                        </td>
+                                        <td className="py-2 px-3 whitespace-nowrap text-center">{proc.qtd}</td>
+                                        <td className="py-2 px-3 whitespace-nowrap max-w-[180px] truncate">{proc.prestador}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
                             </Card>
                           </td>
                         </tr>
