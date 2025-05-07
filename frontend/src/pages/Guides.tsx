@@ -7,7 +7,7 @@ import {
 } from "../components/ui/card";
 import { DataGrid } from "../components/ui/data-grid";
 import { Button } from "../components/ui/button";
-import { FileText, Upload, Eye, Trash2, HelpCircle } from "lucide-react";
+import { FileText, Upload, Eye, Trash2, HelpCircle, Users, UserCheck } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import { useState, useEffect } from "react";
 import {
@@ -29,6 +29,10 @@ import { Link } from "react-router-dom";
 import LoaderTable from "../components/ui/LoaderTable";
 import { cn } from "../lib/utils";
 import { Card } from "../components/ui/card";
+import PageHeader from "../components/layout/PageHeader";
+import { useAuth } from "../contexts/auth/AuthContext";
+import { UserMenu } from "../components/navbar/UserMenu";
+import InfoCard from "../components/ui/InfoCard";
 // import Fuse from 'fuse.js';
 
 function getCurrentCrm() {
@@ -128,6 +132,8 @@ const GuidesPage = () => {
     handleFileChangeByType,
     processUploadedFiles,
   } = fileUpload;
+
+  const { userProfile, signOut } = useAuth();
 
   // Carrega guias já salvas
   useEffect(() => {
@@ -451,36 +457,56 @@ const GuidesPage = () => {
   const defaultPapelColor = { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' }; // fallback suave
 
   return (
-    <AuthenticatedLayout title="Guias Médicas">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold">Guias Médicas</h2>
+    <AuthenticatedLayout title="Guias" description="Gerencie e consulte suas guias médicas processadas">
+      <PageHeader
+        title={
+          <span className="flex items-center">
+            Guias Médicas
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link to="/help" className="text-primary hover:underline flex items-center" aria-label="Central de Ajuda">
+                  <Link to="/help" className="ml-2 text-brand hover:underline flex items-center" aria-label="Central de Ajuda">
                     <HelpCircle className="w-5 h-5" />
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>Central de Ajuda: tutoriais, vídeos e perguntas frequentes</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          </div>
-        </div>
+          </span>
+        }
+        icon={<FileText size={28} />}
+        description="Gerencie e consulte suas guias médicas processadas"
+        size="md"
+        actions={userProfile ? (
+          <UserMenu
+            name={userProfile.name || 'Usuário'}
+            email={userProfile.email || 'sem-email@exemplo.com'}
+            specialty={userProfile.crm || ''}
+            avatarUrl={userProfile.avatarUrl || undefined}
+            onLogout={signOut}
+          />
+        ) : null}
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
-          <div className="bg-card rounded-lg shadow p-4 flex flex-col items-center">
-            <span className="text-xs text-muted-foreground">Guias</span>
-            <span className="text-xl font-bold">{totalGuias}</span>
-          </div>
-          <div className="bg-card rounded-lg shadow p-4 flex flex-col items-center">
-            <span className="text-xs text-muted-foreground">Procedimentos</span>
-            <span className="text-xl font-bold">{totalProcedimentos}</span>
-          </div>
-          <div className="bg-card rounded-lg shadow p-4 flex flex-col items-center">
-            <span className="text-xs text-muted-foreground">Papel mais frequente</span>
-            <span className="text-xl font-bold">{papelMaisFrequente[0]} ({papelMaisFrequente[1]})</span>
-          </div>
+          <InfoCard
+            icon={<FileText className="h-6 w-6 text-blue-500" />}
+            title="Guias"
+            value={totalGuias}
+            variant="info"
+          />
+          <InfoCard
+            icon={<Users className="h-6 w-6 text-green-500" />}
+            title="Procedimentos"
+            value={totalProcedimentos}
+            variant="success"
+          />
+          <InfoCard
+            icon={<UserCheck className="h-6 w-6 text-purple-500" />}
+            title="Papel mais frequente"
+            value={`${papelMaisFrequente[0]} (${papelMaisFrequente[1]})`}
+            variant="neutral"
+          />
         </div>
         <div className="bg-muted rounded-lg p-3 mb-2">
           <div className="flex justify-between items-center mb-1">
