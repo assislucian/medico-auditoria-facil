@@ -11,7 +11,13 @@ import {
   ChevronRight,
   Calendar,
   DollarSign,
-  Trash2
+  Trash2,
+  ArrowUpRight,
+  ArrowDownRight,
+  Loader2,
+  AlertCircle,
+  FileText,
+  ClipboardList
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
@@ -30,6 +36,8 @@ import PageHeader from "../components/layout/PageHeader";
 import { useAuth } from "../contexts/auth/AuthContext";
 import { UserMenu } from "../components/navbar/UserMenu";
 import InfoCard from "../components/ui/InfoCard";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
+import { useNavigate } from 'react-router-dom';
 
 const mockDetailedProcedures = [
   {
@@ -83,64 +91,241 @@ const formatCurrency = (value: number | undefined | null) => {
   }).format(value);
 };
 
+// Mapeamento de cores para cada tipo de papel (copiado do GuidesPage)
+const papelColors = {
+  'cirurgiao':   { bg: 'rgba(59,130,246,0.18)', text: '#1e3a8a' }, // azul
+  'anestesista': { bg: 'rgba(139,92,246,0.18)', text: '#6d28d9' }, // roxo
+  'primeiro auxiliar': { bg: 'rgba(16,185,129,0.18)', text: '#065f46' }, // verde
+  'segundo auxiliar': { bg: 'rgba(251,191,36,0.18)', text: '#92400e' }, // laranja
+};
+const defaultPapelColor = { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' };
+function normalizePapel(papel) {
+  return String(papel || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+}
+
+const papelDisplay = (papel) => {
+  const norm = normalizePapel(papel);
+  if (norm === 'primeiro auxiliar') return '1º Auxiliar';
+  if (norm === 'segundo auxiliar') return '2º Auxiliar';
+  if (norm === 'cirurgiao') return 'Cirurgião';
+  if (norm === 'anestesista') return 'Anestesista';
+  return papel || '--';
+};
+
+// Mapeia papel para o valor esperado pela CBHPM
+function mapPapelToCBHPM(papel: string): string {
+  const norm = String(papel || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+  if (/(1|primeiro|1º)[^a-zA-Z0-9]*aux/.test(norm)) return 'primeiro auxiliar';
+  if (/(2|segundo|2º)[^a-zA-Z0-9]*aux/.test(norm)) return 'segundo auxiliar';
+  if (/anest/.test(norm)) return 'anestesista';
+  if (/cirurg/.test(norm)) return 'cirurgiao';
+  return norm;
+}
+
+// Converte string BRL para número
+function parseBRL(str) {
+  if (typeof str === 'number') return str;
+  if (!str) return 0;
+  let cleaned = String(str).replace('R$', '').replace(/\s/g, '');
+  cleaned = cleaned.replace(/\./g, '');
+  const parts = cleaned.split(',');
+  if (parts.length > 2) {
+    cleaned = parts.slice(0, -1).join('') + ',' + parts[parts.length - 1];
+  }
+  const lastComma = cleaned.lastIndexOf(',');
+  if (lastComma !== -1) {
+    cleaned = cleaned.substring(0, lastComma) + '.' + cleaned.substring(lastComma + 1);
+  }
+  return Number(cleaned) || 0;
+}
+
+// Limpa string BRL para conter apenas números, vírgula e ponto
+function cleanBRL(str) {
+  if (typeof str === 'number') return str.toString();
+  if (!str) return '0';
+  return str.replace(/[^0-9.,-]/g, '');
+}
+
 const proceduresColumns = [
   { field: 'guia', headerName: 'Guia', minWidth: 90, flex: 0 },
   { field: 'data', headerName: 'Data', minWidth: 90, flex: 0 },
   { field: 'paciente', headerName: 'Paciente', minWidth: 140, flex: 1 },
-  { field: 'codigo', headerName: 'Código', minWidth: 90, flex: 0 },
-  { field: 'descricao', headerName: 'Descrição', minWidth: 160, flex: 2 },
-  { field: 'participacao', headerName: 'Participação', minWidth: 120, flex: 0 },
+  { field: 'codigo', headerName: 'Código', minWidth: 90, flex: 0, renderCell: ({ value }) => <span title={value}>{value}</span> },
+  { field: 'descricao', headerName: 'Descrição', minWidth: 160, flex: 2, renderCell: ({ value }) => <span title={value}>{value}</span> },
+  {
+    field: 'participacao',
+    headerName: 'Participação',
+    minWidth: 90,
+    maxWidth: 110,
+    flex: 0,
+    renderCell: ({ value }) => {
+      const papel = value || '--';
+      const norm = String(papel).trim().toLowerCase();
+      if (norm === 'upload guia') {
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  variant="participacao"
+                  style={{
+                    background: 'rgba(251,191,36,0.18)',
+                    color: '#92400e',
+                    border: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.93em',
+                    letterSpacing: 0.1,
+                    padding: '2px 10px',
+                    minWidth: 70,
+                    maxWidth: 110,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: 'inline-block',
+                    textAlign: 'center',
+                  }}
+                  title="Upload da guia"
+                >
+                  Upload guia
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                Este procedimento está pendente de upload da guia TISS. Clique em 'Enviar Guia' para anexar o documento.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      }
+      const color = papelColors[normalizePapel(papel)] || defaultPapelColor;
+      return (
+        <Badge
+          variant="participacao"
+          style={{
+            background: color.bg,
+            color: color.text,
+            border: 'none',
+            fontWeight: 600,
+            fontSize: '0.98em',
+            letterSpacing: 0.1,
+            padding: '2px 10px',
+            minWidth: 70,
+            maxWidth: 110,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: 'inline-block',
+            textAlign: 'center',
+          }}
+          title={papelDisplay(papel)}
+        >
+          {papelDisplay(papel)}
+        </Badge>
+      );
+    }
+  },
   { field: 'quantidade', headerName: 'Qtd', minWidth: 60, flex: 0 },
   {
     field: 'cbhpm',
     headerName: 'CBHPM',
     minWidth: 110, flex: 0,
-    valueGetter: (params) => {
-      const proc = findProcedureByCodigo(params.row.codigo);
-      return proc ? calculateTotalCBHPM(proc, params.row.participacao) : null;
-    },
+    valueGetter: (params) => params.row.cbhpm,
     valueFormatter: (params) => params.value !== null ? formatCurrency(params.value) : '--'
   },
   {
     field: 'liberado',
     headerName: 'Liberado',
     minWidth: 110, flex: 0,
-    valueGetter: (params) => params.row.financial?.approved_value ?? params.row.liberado,
+    valueGetter: (params) => params.row.liberado,
     valueFormatter: (params) => formatCurrency(params.value)
   },
   {
     field: 'diferenca',
     headerName: 'Diferença',
     minWidth: 110, flex: 0,
-    valueGetter: (params) => {
-      const proc = findProcedureByCodigo(params.row.codigo);
-      const cbhpm = proc ? calculateTotalCBHPM(proc, params.row.participacao) : null;
-      const liberado = Number(params.row.financial?.approved_value ?? params.row.liberado) || 0;
-      return cbhpm !== null ? liberado - cbhpm : null;
-    },
-    renderCell: ({ value }) => (
-      value !== null ? (
-        <span className={value < 0 ? "text-red-600 font-medium" : ""}>{formatCurrency(value)}</span>
-      ) : '--'
-    )
+    valueGetter: (params) => params.row.diferenca ?? 0,
+    renderCell: ({ value }) => {
+      let color = '#64748b'; // cinza
+      let Icon = null;
+      if (value < 0) {
+        color = '#e11d48'; // vermelho
+        Icon = <ArrowDownRight className="inline w-4 h-4 ml-1 text-red-500" />;
+      } else if (value > 0) {
+        color = '#059669'; // verde
+        Icon = <ArrowUpRight className="inline w-4 h-4 ml-1 text-green-500" />;
+      }
+      return (
+        <span style={{ color, fontWeight: 700, fontSize: '1.08em', display: 'flex', alignItems: 'center' }}>
+          {formatCurrency(value)}
+          {Icon}
+        </span>
+      );
+    }
+  },
+  {
+    field: 'delta_percent',
+    headerName: 'Delta %',
+    minWidth: 90, flex: 0,
+    description: 'Percentual da diferença entre liberado e CBHPM',
+    valueGetter: (params) => params.row.delta_percent ?? 0,
+    renderCell: ({ value }) => {
+      let color = '#64748b'; // cinza
+      if (value < 0) color = '#a21caf'; // roxo
+      if (value > 0) color = '#059669'; // verde
+      return (
+        <span style={{ color, fontWeight: 700, fontSize: '1.08em' }}>
+          {value !== null && value !== undefined ? `${value.toFixed(2)}%` : '--'}
+        </span>
+      );
+    }
   },
   {
     field: 'apresentado',
     headerName: 'Apresentado',
     minWidth: 110, flex: 0,
-    valueGetter: (params) => params.row.financial?.presented_value ?? params.row.apresentado,
+    valueGetter: (params) => params.row.apresentado,
     valueFormatter: (params) => formatCurrency(params.value)
   },
   {
     field: 'glosa',
     headerName: 'Glosa',
     minWidth: 110, flex: 0,
-    valueGetter: (params) => params.row.financial?.glosa ?? params.row.glosa,
+    valueGetter: (params) => params.row.glosa,
     renderCell: ({ value }) => (
       <span className={value > 0 ? "text-red-600 font-medium" : ""}>
         {formatCurrency(value)}
       </span>
     )
+  },
+  {
+    field: 'acao',
+    headerName: 'Ação',
+    minWidth: 80,
+    flex: 0,
+    sortable: false,
+    filterable: false,
+    renderCell: (params) => {
+      const participacao = String(params.row.participacao || '').trim().toLowerCase();
+      if (participacao !== 'upload guia') return null;
+      const codigo = encodeURIComponent(params.row.codigo || '');
+      const paciente = encodeURIComponent(params.row.paciente || '');
+      const navigate = useNavigate();
+      return (
+        <Button
+          size="sm"
+          variant="outline"
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navigate(`/guides?codigo=${codigo}&paciente=${paciente}`);
+          }}
+          title="Clique para enviar a guia TISS referente a este procedimento. Você será redirecionado para a tela de upload de guias."
+        >
+          <Upload className="h-4 w-4 mr-1" />
+          Enviar Guia
+        </Button>
+      );
+    }
   }
 ];
 
@@ -148,6 +333,8 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
   const [procedures, setProcedures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showGlosas, setShowGlosas] = useState(false);
+  const [showOnlyPendentes, setShowOnlyPendentes] = useState(false);
+  const navigate = useNavigate();
 
   // Totais calculados a partir dos procedimentos
   const totals = procedures.reduce((acc, p) => {
@@ -166,26 +353,48 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
       try {
         const token = localStorage.getItem('token');
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/demonstrativos/${demonstrative.id}/procedimentos`,
+          `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/demonstrativos/${demonstrative.id}/detalhes`,
           {
             headers: { Authorization: `Bearer ${token}` }
           }
         );
-        // Mapear campos para nomes esperados
-        const mapped = (res.data || []).map((p, idx) => ({
-          id: idx,
-          guia: p.guia ?? p.guide ?? '',
-          data: p.data ?? p.date ?? '',
-          paciente: p.paciente ?? p.patient ?? '',
-          codigo: p.codigo ?? p.code ?? '',
-          descricao: p.descricao ?? p.description ?? '',
-          participacao: p.papel ?? p.role ?? p.funcao ?? '',
-          quantidade: p.quantidade ?? p.quantity ?? 1,
-          apresentado: p.financial?.presented_value ?? p.apresentado ?? 0,
-          liberado: p.financial?.approved_value ?? p.liberado ?? 0,
-          glosa: p.financial?.glosa ?? p.glosa ?? 0,
-          financial: p.financial ?? undefined
-        }));
+        // Mapear campos para nomes esperados, incluindo papel
+        const mapped = (res.data || []).map((p, idx) => {
+          let participacao = '';
+          if (typeof p.papel === 'string') {
+            participacao = p.papel;
+          } else if (p.participacao) {
+            participacao = p.participacao;
+          } else if (p.participacoes) {
+            participacao = Array.isArray(p.participacoes) ? p.participacoes.join('; ') : p.participacoes;
+          }
+          // Se não houver participação, marcar como 'Upload guia'
+          if (!participacao || participacao === '--') {
+            participacao = 'Upload guia';
+          }
+          // Cálculo dos campos
+          const cbhpm = typeof p.cbhpm === 'string' ? parseBRL(cleanBRL(p.cbhpm)) : (p.cbhpm ?? 0);
+          const liberado = Number(p.financial?.approved_value ?? p.liberado) || 0;
+          const diferenca = liberado - cbhpm;
+          const delta_percent = cbhpm ? ((liberado - cbhpm) / cbhpm) * 100 : 0;
+          return {
+            id: idx,
+            guia: p.guia ?? p.guide ?? '',
+            data: p.data ?? p.date ?? '',
+            paciente: p.paciente ?? p.patient ?? '',
+            codigo: p.codigo ?? p.code ?? '',
+            descricao: p.descricao ?? p.description ?? '',
+            participacao,
+            quantidade: p.quantidade ?? p.quantity ?? 1,
+            apresentado: p.financial?.presented_value ?? p.apresentado ?? 0,
+            liberado,
+            glosa: p.financial?.glosa ?? p.glosa ?? 0,
+            cbhpm,
+            diferenca,
+            delta_percent,
+            financial: p.financial ?? undefined
+          };
+        });
         setProcedures(mapped);
       } catch (error) {
         console.error('Erro ao carregar procedimentos:', error);
@@ -194,12 +403,13 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
         setLoading(false);
       }
     };
-
     if (demonstrative.id) {
       setLoading(true);
       fetchProcedures();
     }
   }, [demonstrative.id]);
+
+  console.log('DEBUG: Renderizando DemonstrativeDetailDialog', demonstrative);
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -220,7 +430,8 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
   // Insights CBHPM
   const cbhpmComparisons = procedures.map(p => {
     const proc = findProcedureByCodigo(p.codigo);
-    const cbhpm = proc ? calculateTotalCBHPM(proc, p.participacao) : null;
+    const papelCBHPM = mapPapelToCBHPM(p.participacao);
+    const cbhpm = proc ? calculateTotalCBHPM(proc, papelCBHPM) : null;
     const liberado = Number(p.financial?.approved_value ?? p.liberado) || 0;
     return {
       codigo: p.codigo,
@@ -244,136 +455,216 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
           <span>Detalhes</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-6xl md:min-w-[1100px] p-4">
-        <DialogHeader>
-          <DialogTitle className="text-3xl font-extrabold mb-2 tracking-tight">Demonstrativo - {demonstrative.periodo}</DialogTitle>
-          <DialogDescription className="mb-6 text-lg text-gray-500">
-            Detalhes do demonstrativo de pagamento, incluindo totais, procedimentos e insights comparativos com a CBHPM.
-          </DialogDescription>
-        </DialogHeader>
-        {/* Insights CBHPM - cards pequenos */}
-        <div className="w-full flex flex-col gap-4 mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <DialogContent
+        className="max-w-2xl w-full sm:min-w-[320px] md:min-w-[600px] lg:min-w-[800px] xl:min-w-[1000px] p-0 max-h-[90vh] h-[90vh] overflow-visible shadow-2xl bg-white dark:bg-neutral-900 demonstrativo-dialog-content"
+        style={{ boxSizing: 'border-box', maxWidth: '95vw' }}
+      >
+        <div className="flex flex-col h-full min-h-0 gap-2 text-[0.95rem] p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="text-2xl md:text-3xl font-extrabold mb-1 tracking-tight">Demonstrativo - {demonstrative.periodo}</DialogTitle>
+            <DialogDescription className="mb-2 text-base md:text-lg text-gray-500">
+              Detalhes do demonstrativo de pagamento, incluindo totais, procedimentos e insights comparativos com a CBHPM.
+            </DialogDescription>
+          </DialogHeader>
+          {/* Insights CBHPM - cards pequenos */}
+          <div className="grid gap-6 md:grid-cols-4 grid-cols-1 mb-6">
             <InfoCard
-              icon={<DollarSign className="h-6 w-6 text-red-400" />}
-              title="Total abaixo da CBHPM"
+              icon={<DollarSign className="h-6 w-6 text-green-500" />}
+              title="Total Liberado"
               value={formatCurrency(Math.abs(totalAbaixoCBHPM))}
+              description="Soma do valor pago abaixo da CBHPM"
               variant="danger"
             />
             <InfoCard
-              icon={<FileBarChart className="h-6 w-6 text-yellow-400" />}
+              icon={<FileBarChart className="h-6 w-6 text-amber-500" />}
               title="% abaixo da tabela"
               value={`${percentAbaixoCBHPM}%`}
+              description="% de procedimentos abaixo da CBHPM"
               variant="warning"
             />
             <InfoCard
-              icon={<DollarSign className="h-6 w-6 text-blue-400" />}
+              icon={<DollarSign className="h-6 w-6 text-blue-500" />}
               title="Maior diferença individual"
               value={maiorPrejuizoProc && maiorPrejuizoProc.diferenca !== null ? formatCurrency(Math.abs(maiorPrejuizoProc.diferenca)) : '--'}
+              description={maiorPrejuizoProc ? `${maiorPrejuizoProc.codigo} - ${maiorPrejuizoProc.descricao}` : ''}
               variant="info"
-            >
-              {maiorPrejuizoProc && (
-                <div className="text-xs text-blue-800 mt-0.5 text-ellipsis overflow-hidden whitespace-nowrap max-w-[120px]">{maiorPrejuizoProc.codigo} - {maiorPrejuizoProc.descricao}</div>
-              )}
-            </InfoCard>
+            />
           </div>
-        </div>
-        {/* Totais - cards pequenos */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <InfoCard
-            icon={<Calendar className="h-6 w-6 text-blue-400 mb-1" />}
-            title="Período"
-            value={demonstrative.periodo}
-            variant="info"
-          />
-          <InfoCard
-            icon={<DollarSign className="h-6 w-6 text-green-400 mb-1" />}
-            title="Total Liberado"
-            value={formatCurrency(totals.totalLiberado)}
-            variant="success"
-          />
-          <InfoCard
-            icon={<FileBarChart className="h-6 w-6 text-blue-400 mb-1" />}
-            title="Procedimentos"
-            value={totals.totalProcedimentos}
-            variant="info"
-          />
-          <InfoCard
-            icon={<DollarSign className="h-6 w-6 text-red-400 mb-1" />}
-            title="Total Glosa"
-            value={formatCurrency(totals.totalGlosa)}
-            variant="danger"
-          />
-        </div>
-        {/* Tabela de procedimentos - estilo lovable.dev */}
-        <div className="space-y-4">
-          <h3 className="text-xl font-bold mb-4">Detalhamento de Procedimentos</h3>
-          <div className="bg-white rounded-2xl shadow-inner border border-gray-100 p-2 overflow-x-auto" style={{ maxHeight: 420, overflowY: 'auto' }}>
-            {loading ? (
-              <div className="text-center py-8 text-gray-400">Carregando procedimentos...</div>
-            ) : procedures.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">Nenhum procedimento encontrado para este demonstrativo.</div>
-            ) : (
-              <DataGrid
-                rows={procedures.map((p, idx) => ({ id: idx, ...p }))}
-                columns={proceduresColumns}
-                pageSize={procedures.length}
-                hideFooterPagination
-                className="min-h-[320px] text-lg"
-                autoHeight={false}
-                sx={{
-                  '& .MuiDataGrid-columnHeaders': { position: 'sticky', top: 0, background: '#fff', zIndex: 1, fontWeight: 700, fontSize: '1.1rem', color: '#222' },
-                  '& .MuiDataGrid-cell': { fontSize: '1.05rem', padding: '16px 10px', color: '#222' },
-                  '& .MuiDataGrid-row': { minHeight: '54px' },
-                  '& .MuiDataGrid-footerContainer': { display: 'none' },
-                  '& .MuiDataGrid-columnSeparator': { display: 'none' },
-                  '& .MuiDataGrid-virtualScroller': { background: 'transparent' },
+          {/* Totais - cards pequenos */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <InfoCard
+              icon={<DollarSign className="h-6 w-6 text-green-500 mb-1" />}
+              title="Total Liberado"
+              value={formatCurrency(totals.totalLiberado)}
+              variant="neutral"
+            />
+            <InfoCard
+              icon={<FileBarChart className="h-6 w-6 text-blue-500 mb-1" />}
+              title="Procedimentos"
+              value={totals.totalProcedimentos}
+              variant="neutral"
+            />
+            <InfoCard
+              icon={<DollarSign className="h-6 w-6 text-red-500 mb-1" />}
+              title="Total Glosa"
+              value={formatCurrency(totals.totalGlosa)}
+              variant="neutral"
+            />
+          </div>
+          {/* Filtro rápido acima da tabela de procedimentos detalhados */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-4 mb-3">
+            <h3 className="text-lg md:text-xl font-bold mb-1">Detalhamento de Procedimentos</h3>
+            <div className="flex flex-row flex-wrap gap-2 sm:gap-2 justify-end items-center">
+              <Button
+                size="sm"
+                variant={showOnlyPendentes ? 'secondary' : 'outline'}
+                onClick={() => {
+                  setShowOnlyPendentes(v => {
+                    const novo = !v;
+                    toast.success(novo ? 'Mostrando apenas pendentes.' : 'Mostrando todos os procedimentos.');
+                    return novo;
+                  });
                 }}
-              />
-            )}
-          </div>
-        </div>
-        <div className="flex flex-col md:flex-row justify-end gap-2 mt-4">
-          <Button variant="outline" className="mr-2" onClick={handleExportPDF} disabled={procedures.length === 0}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar PDF
-          </Button>
-          <Button onClick={() => setShowGlosas(true)} disabled={glosas.length === 0}>
-            <ChevronRight className="h-4 w-4 mr-2" />
-            Analisar Glosas
-          </Button>
-        </div>
-        {showGlosas && (
-          <div className="mt-6">
-            <h4 className="text-lg font-semibold mb-2">Procedimentos com Glosa</h4>
-            <div className="bg-white rounded-lg shadow-inner border border-gray-100 p-2" style={{ maxHeight: 300, overflowY: 'auto' }}>
-              {glosas.length === 0 ? (
-                <div className="text-muted-foreground">Nenhuma glosa encontrada neste demonstrativo.</div>
-              ) : (
-                <DataGrid
-                  rows={glosas.map((p, idx) => ({ id: idx, ...p }))}
-                  columns={proceduresColumns}
-                  pageSize={glosas.length}
-                  hideFooterPagination
-                  className="min-h-[200px]"
-                  autoHeight={false}
-                />
-              )}
-            </div>
-            <div className="flex justify-end mt-4">
-              <Button variant="secondary" onClick={() => setShowGlosas(false)}>Fechar</Button>
+                title="Mostrar apenas procedimentos pendentes de upload de guia"
+              >
+                {showOnlyPendentes ? 'Mostrar Todos' : 'Mostrar Pendentes'}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="ml-2"
+                onClick={async () => {
+                  await handleExportPDF();
+                  toast.success('PDF exportado com sucesso.');
+                }}
+                title="Exportar demonstrativo detalhado em PDF"
+              >
+                <Download className="w-4 h-4 mr-1" /> Exportar PDF
+              </Button>
+              <Button
+                size="sm"
+                className="h-9 px-5 font-semibold"
+                onClick={() => setShowGlosas(true)}
+                disabled={glosas.length === 0}
+                style={{ background: '#2563eb', color: '#fff' }}
+              >
+                <ChevronRight className="h-4 w-4 mr-1" />
+                Analisar Glosas
+              </Button>
             </div>
           </div>
-        )}
+          {/* Tabela de procedimentos - estilo lovable.dev */}
+          <div className="flex-grow min-h-0 flex flex-col gap-1">
+            <div className="bg-white rounded-2xl shadow-inner border border-gray-100 p-1 flex-grow min-h-0 overflow-x-auto overflow-y-auto" style={{ maxHeight: '100%' }}>
+              <div className="min-w-[700px]">
+                {loading ? (
+                  <div className="flex items-center justify-center min-h-[180px]">
+                    <Loader2 className="animate-spin text-blue-500 w-8 h-8" aria-label="Carregando procedimentos..." />
+                    <span className="ml-3 text-blue-600 font-medium">Carregando procedimentos...</span>
+                  </div>
+                ) : (
+                  <DataGrid
+                    rows={procedures
+                      .map((p, idx) => ({ id: idx, ...p }))
+                      .filter(row => !showOnlyPendentes || String(row.participacao || '').trim().toLowerCase() === 'upload guia')
+                    }
+                    columns={proceduresColumns}
+                    pageSize={procedures.length}
+                    hideFooterPagination
+                    className="min-h-[200px] text-[0.92rem]"
+                    autoHeight={false}
+                    getRowClassName={(params) => {
+                      // Debug: log status e id
+                      const status = (() => {
+                        const proc = findProcedureByCodigo(params.row.codigo);
+                        const papelCBHPM = mapPapelToCBHPM(params.row.participacao);
+                        const cbhpm = proc ? calculateTotalCBHPM(proc, papelCBHPM) : null;
+                        const liberado = Number(params.row.liberado) || 0;
+                        const glosa = Number(params.row.glosa) || 0;
+                        if (glosa > 0) return 'glosado';
+                        if (cbhpm !== null && liberado < cbhpm) return 'divergente';
+                        if (cbhpm !== null && liberado >= cbhpm) return 'conforme';
+                        return '';
+                      })();
+                      console.log('DEBUG ROW', params.row.id, status);
+                      if (status === 'glosado') return 'row-glosado';
+                      if (status === 'divergente') return 'row-divergente';
+                      if (status === 'conforme') return 'row-conforme';
+                      return '';
+                    }}
+                    getRowProps={(params) => {
+                      // Força cor de fundo inline para garantir diferenciação visual
+                      const status = (() => {
+                        const proc = findProcedureByCodigo(params.row.codigo);
+                        const papelCBHPM = mapPapelToCBHPM(params.row.participacao);
+                        const cbhpm = proc ? calculateTotalCBHPM(proc, papelCBHPM) : null;
+                        const liberado = Number(params.row.liberado) || 0;
+                        const glosa = Number(params.row.glosa) || 0;
+                        if (glosa > 0) return 'glosado';
+                        if (cbhpm !== null && liberado < cbhpm) return 'divergente';
+                        if (cbhpm !== null && liberado >= cbhpm) return 'conforme';
+                        return '';
+                      })();
+                      let style = {};
+                      if (status === 'glosado') style = { background: '#fee2e2' };
+                      if (status === 'divergente') style = { background: '#fef9c3' };
+                      if (status === 'conforme') style = { background: '#dcfce7' };
+                      return { style };
+                    }}
+                    sx={{
+                      '& .MuiDataGrid-columnHeaders': { position: 'sticky', top: 0, background: '#fff', zIndex: 1, fontWeight: 700, fontSize: '1rem', color: '#222', minHeight: 36 },
+                      '& .MuiDataGrid-cell': { fontSize: '0.92rem', padding: '8px 6px', color: '#222', fontFamily: 'inherit' },
+                      '& .MuiDataGrid-row': { minHeight: 36, maxHeight: 40 },
+                      '& .MuiDataGrid-footerContainer': { display: 'none' },
+                      '& .MuiDataGrid-columnSeparator': { display: 'none' },
+                      '& .MuiDataGrid-virtualScroller': { background: 'transparent' },
+                      '& .MuiDataGrid-cell[data-field*="liberado"], & .MuiDataGrid-cell[data-field*="apresentado"], & .MuiDataGrid-cell[data-field*="glosa"], & .MuiDataGrid-cell[data-field*="diferenca"], & .MuiDataGrid-cell[data-field*="delta_percent"]': { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', textAlign: 'right' },
+                      '& .MuiDataGrid-cell[data-field="data"], & .MuiDataGrid-cell[data-field="guia"]': { textAlign: 'left' },
+                      '@media (max-width: 900px)': {
+                        '& .MuiDataGrid-cell, & .MuiDataGrid-columnHeader': { fontSize: '0.85rem', padding: '6px 4px' },
+                      },
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+          {showGlosas && (
+            <div className="mt-6">
+              <h4 className="text-lg font-semibold mb-2">Procedimentos com Glosa</h4>
+              <div className="bg-white rounded-lg shadow-inner border border-gray-100 p-2" style={{ maxHeight: 300, overflowY: 'auto' }}>
+                {glosas.length === 0 ? (
+                  <div className="text-muted-foreground">Nenhuma glosa encontrada neste demonstrativo.</div>
+                ) : (
+                  <DataGrid
+                    rows={glosas.map((p, idx) => ({ id: idx, ...p }))}
+                    columns={proceduresColumns}
+                    pageSize={glosas.length}
+                    hideFooterPagination
+                    className="min-h-[200px]"
+                    autoHeight={false}
+                  />
+                )}
+              </div>
+              <div className="flex justify-end mt-4">
+                <Button variant="secondary" onClick={() => setShowGlosas(false)}>Fechar</Button>
+              </div>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
 };
 
 const DemonstrativesPage = () => {
+  console.log('DEBUG: Renderizando DemonstrativesPage');
   const [demonstratives, setDemonstratives] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("list");
   const [deleting, setDeleting] = useState(false);
+  const [pendingAudits, setPendingAudits] = useState(0);
+  const [pendingAuditsLoading, setPendingAuditsLoading] = useState(false);
+  const [pendingAuditsError, setPendingAuditsError] = useState<string | null>(null);
   
   const fileUpload = useFileUpload();
   const {
@@ -390,6 +681,50 @@ const DemonstrativesPage = () => {
   useEffect(() => {
     fetchDemonstratives();
   }, []);
+
+  useEffect(() => {
+    async function fetchPendingAudits() {
+      if (!demonstratives.length) {
+        setPendingAudits(0);
+        setPendingAuditsLoading(false);
+        setPendingAuditsError(null);
+        return;
+      }
+      setPendingAuditsLoading(true);
+      setPendingAuditsError(null);
+      const token = localStorage.getItem('token');
+      let totalPendentes = 0;
+      try {
+        await Promise.all(
+          demonstratives.map(async (d) => {
+            const res = await axios.get(
+              `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/demonstrativos/${d.id}/detalhes`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            const detalhes = res.data;
+            console.log('DEBUG detalhes demonstrativo', d.id, detalhes);
+            const pendentes = detalhes.filter((p: any) => {
+              // Replicar lógica do modal: se não houver papel/participacao/participacoes, é pendente
+              let participacao = '';
+              if (typeof p.papel === 'string') participacao = p.papel;
+              else if (p.participacao) participacao = p.participacao;
+              else if (p.participacoes) participacao = Array.isArray(p.participacoes) ? p.participacoes.join('; ') : p.participacoes;
+              if (!participacao || participacao === '--') participacao = 'Upload guia';
+              return String(participacao).trim().toLowerCase() === 'upload guia';
+            });
+            console.log('DEBUG pendentes encontrados', pendentes.length, pendentes);
+            totalPendentes += pendentes.length;
+          })
+        );
+        setPendingAudits(totalPendentes);
+      } catch (err: any) {
+        setPendingAuditsError('Erro ao carregar auditorias pendentes');
+      } finally {
+        setPendingAuditsLoading(false);
+      }
+    }
+    fetchPendingAudits();
+  }, [demonstratives]);
 
   const fetchDemonstratives = async () => {
     try {
@@ -417,24 +752,6 @@ const DemonstrativesPage = () => {
       setDemonstratives([]);
     }
   };
-
-  function parseBRL(str) {
-    if (!str) return 0;
-    let cleaned = String(str).replace('R$', '').replace(/\s/g, '');
-    // Remove todos os pontos (milhar)
-    cleaned = cleaned.replace(/\./g, '');
-    // Se houver mais de uma vírgula, remove todas menos a última (milhar)
-    const parts = cleaned.split(',');
-    if (parts.length > 2) {
-      cleaned = parts.slice(0, -1).join('') + ',' + parts[parts.length - 1];
-    }
-    // Troca a última vírgula por ponto (decimal)
-    const lastComma = cleaned.lastIndexOf(',');
-    if (lastComma !== -1) {
-      cleaned = cleaned.substring(0, lastComma) + '.' + cleaned.substring(lastComma + 1);
-    }
-    return Number(cleaned) || 0;
-  }
 
   const handleDeleteDemonstrativo = async (id: number) => {
     if (!window.confirm("Tem certeza que deseja excluir este demonstrativo?")) return;
@@ -492,6 +809,22 @@ const DemonstrativesPage = () => {
     { field: 'total_presented', headerName: 'Apresentado', width: 150, valueFormatter: (params) => formatCurrency(params.value) },
     { field: 'total_approved', headerName: 'Liberado', width: 150, valueFormatter: (params) => formatCurrency(params.value) },
     { field: 'total_glosa', headerName: 'Glosa', width: 150, valueFormatter: (params) => formatCurrency(params.value) },
+    {
+      field: 'delta_value',
+      headerName: 'Delta R$',
+      width: 130,
+      description: 'Diferença entre o valor liberado e o apresentado',
+      valueGetter: (params) => {
+        const liberado = Number(params.row.total_approved) || 0;
+        const apresentado = Number(params.row.total_presented) || 0;
+        return liberado - apresentado;
+      },
+      renderCell: ({ value }) => (
+        <span className={value < 0 ? "text-red-600 font-medium" : value > 0 ? "text-green-600 font-medium" : "text-gray-700"}>
+          {formatCurrency(value)}
+        </span>
+      )
+    },
     { 
       field: 'actions', 
       headerName: 'Ações', 
@@ -499,7 +832,10 @@ const DemonstrativesPage = () => {
       renderCell: ({ row }) => (
         <div className="flex gap-2">
           <DemonstrativeDetailDialog demonstrative={row} />
-          <Button variant="destructive" size="sm" onClick={() => handleDeleteDemonstrativo(row.id)} title="Excluir demonstrativo">
+          <Button variant="destructive" size="sm" className="ml-2" onClick={async () => {
+            await handleDeleteDemonstrativo(row.id);
+            toast.success('Demonstrativo excluído com sucesso');
+          }} title="Excluir demonstrativo">
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -515,8 +851,6 @@ const DemonstrativesPage = () => {
       <PageHeader
         title="Demonstrativos"
         icon={<FileBarChart size={28} />}
-        description="Gerencie seus demonstrativos de pagamento"
-        size="md"
         actions={userProfile ? (
           <UserMenu
             name={userProfile.name || 'Usuário'}
@@ -526,29 +860,46 @@ const DemonstrativesPage = () => {
             onLogout={signOut}
           />
         ) : null}
-        // breadcrumbs={<span>Início / Demonstrativos</span>}
       />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <InfoCard
-            icon={<DollarSign className="h-6 w-6 text-green-500" />}
-            title="Total Liberado"
-            value={formatCurrency(summaryStats.totalProcessado)}
-            variant="success"
-          />
-          <InfoCard
-            icon={<DollarSign className="h-6 w-6 text-red-500" />}
-            title="Total Glosas"
-            value={formatCurrency(summaryStats.totalGlosa)}
-            variant="danger"
-          />
-          <InfoCard
-            icon={<FileBarChart className="h-6 w-6 text-blue-500" />}
-            title="Procedimentos"
-            value={summaryStats.totalProcedimentos}
-            variant="info"
-          />
-        </div>
+      <div className="space-y-6">
+        {/* Painel de Insights Clínico-Financeiros - Global */}
+        <section aria-label="Painel de Insights Clínico-Financeiros" className="mb-6">
+          <div className="grid gap-6 md:grid-cols-4 grid-cols-1 mb-6">
+            <InfoCard
+              icon={<ArrowUpRight className="h-6 w-6 text-green-500" />}
+              title="Total Recebido"
+              value={formatCurrency(summaryStats.totalProcessado)}
+              description="+8% comparado ao mês anterior"
+              variant="success"
+            />
+            <InfoCard
+              icon={<AlertCircle className="h-6 w-6 text-red-500" />}
+              title="Total Glosado"
+              value={formatCurrency(summaryStats.totalGlosa)}
+              description="12% do valor total apresentado"
+              variant="danger"
+            />
+            <InfoCard
+              icon={<FileText className="h-6 w-6 text-blue-500" />}
+              title="Procedimentos"
+              value={summaryStats.totalProcedimentos}
+              description="Analisados nos últimos 30 dias"
+              variant="info"
+            />
+            <InfoCard
+              icon={<ClipboardList className="h-6 w-6 text-amber-500" />}
+              title="Auditorias Pendentes"
+              value={pendingAudits}
+              description="Uploads aguardando sua revisão"
+              variant="warning"
+            />
+          </div>
+          {/*
+            Os indicadores de "Total abaixo da CBHPM", "% abaixo da tabela" e "Maior diferença individual"
+            só podem ser exibidos no detalhamento, pois dependem dos dados de procedimentos.
+          */}
+        </section>
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="list">Lista</TabsTrigger>
@@ -566,7 +917,17 @@ const DemonstrativesPage = () => {
               <CardContent>
                 <DataGrid
                   rows={demonstratives}
-                  columns={demonstrativesColumns}
+                  columns={demonstrativesColumns.map(col => {
+                    // Adiciona tooltip nos headers técnicos
+                    if (["Liberado", "Glosa", "Delta R$"].includes(col.headerName)) {
+                      return {
+                        ...col,
+                        headerName: col.headerName,
+                        headerTooltip: col.headerName === "Liberado" ? "Valor efetivamente liberado pelo convênio." : col.headerName === "Glosa" ? "Valor glosado pelo convênio." : "Diferença entre liberado e apresentado."
+                      };
+                    }
+                    return col;
+                  })}
                   pageSize={10}
                   className="min-h-[400px]"
                 />

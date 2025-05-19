@@ -1,36 +1,6 @@
-# 🧠 MedCheck Backend — Guia Rápido
+# 🧠 MedCheck SaaS — Guia Essencial
 
-[![CI](https://github.com/SEU_USUARIO/SEU_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/SEU_USUARIO/SEU_REPO/actions)
-
----
-
-## ⚠️ Premissas e Regras de Ouro
-
-**Atenção! Este projeto está em produção. Nunca:**
-- Apague ou reescreva funções inteiras sem ordem explícita.
-- Alterne o nome de funções principais como `parse_guia_pdf`, `associate_participations_to_procedures` ou `load_reference_matrix`.
-- Modifique parâmetros de servidor no backend sem validação.
-- Gere múltiplos arquivos auxiliares sem necessidade.
-
-**Você deve sempre:**
-- Explicar sua intenção antes de aplicar qualquer refatoração.
-- Operar como um engenheiro de software profissional com foco em precisão médica e segurança jurídica.
-- Priorizar legibilidade, documentação e compatibilidade com os dados dos PDFs reais.
-
-**Sobre `parse_guia_pdf()`:**
-- Ela é a função central do projeto.
-- Toda modificação precisa preservar:
-  - Filtro por CRM obrigatório
-  - Associação de procedimentos com participações
-  - Beneficiário, Prestador, Papel Exercido
-
-**Formato de saída esperado:**
-- Cada procedimento retornado deve conter:
-  - guia, data_execucao, codigo, descricao, quantidade, beneficiario, prestador, papel_exercido, participacoes[]
-
-**Em caso de dúvida, pergunte no chat do projeto antes de agir.**
-
-**Validador de demonstrativos e guias médicas com foco em precisão, segurança, LGPD e automação AI-first.**
+[![CI](https://github.com/assislucian/medcheck-app/actions/workflows/ci.yml/badge.svg)](https://github.com/assislucian/medcheck-app/actions)
 
 ---
 
@@ -38,56 +8,153 @@
 
 ```bash
 # Clone o repositório
- git clone https://github.com/SEU_USUARIO/SEU_REPO.git
- cd backend_test
+git clone https://github.com/assislucian/medcheck-app.git
+cd medcheck-app
 
-# Crie e ative o ambiente virtual
-python3 -m venv venv
-source venv/bin/activate
-
-# Instale as dependências
+# Backend
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
+
+# Frontend
+cd frontend
+npm ci
 ```
 
-## ⚙️ Variáveis de Ambiente Obrigatórias
-Crie um arquivo `.env` na raiz com:
+---
+
+## ⚙️ Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto com base em `.env.example`:
+
 ```
-JWT_SECRET=chave-secreta-forte
-DATABASE_URL=sqlite:///medicos.db  # ou sua string Postgres
-FRONTEND_ORIGINS=http://localhost:5173,https://app.medcheck.com.br
-ENV=dev  # ou prod
+DATABASE_URL=sqlite:///./medicos.db
+SECRET_KEY=changeme
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+VITE_API_URL=http://localhost:8000
+JWT_SECRET=dev-secret-change-me  # Troque em produção por um valor forte e secreto
 ```
-Veja detalhes em `docs/technical.md`.
+
+---
 
 ## 🏃 Como Rodar
+
+### Backend
 ```bash
-uvicorn src.api:app --reload
+uvicorn src.main:app --reload
 ```
 Acesse: http://localhost:8000/docs
 
+### Frontend
+```bash
+cd frontend
+npm run dev
+```
+Acesse: http://localhost:8080
+
+---
+
 ## 🧪 Testes
+
+### Backend
 ```bash
 pytest
 ```
 
-## 🛡️ CI/CD
-- Pipeline GitHub Actions: roda testes backend/frontend, lint e build a cada push/PR.
-- Badge de status no topo deste README.
-
-## 🤖 AI & Contribuição
-- Siga as regras de `.cursorrules` e `.notes/` para máxima eficiência com Cursor AI.
-- Sempre documente funções e preserve tipagem/segurança.
-
-## 📚 Links Úteis
-- [docs/technical.md](docs/technical.md): stack, padrões, variáveis.
-- [docs/status.md](docs/status.md): progresso e features.
-- [DEPLOY_PLAN.md](DEPLOY_PLAN.md): checklist de deploy seguro.
-- [.notes/](.notes/): visão geral, tarefas, histórico.
-
-## ❓ FAQ
-- **Como configuro o banco?** Use `DATABASE_URL` para Postgres ou SQLite.
-- **Como limito CORS?** Defina `FRONTEND_ORIGINS` com os domínios permitidos.
-- **Como rodar em produção?** Defina `ENV=prod` e todas as variáveis obrigatórias.
+### Frontend
+```bash
+cd frontend
+npm run build
+```
 
 ---
-**Em caso de dúvida, consulte `.notes/meeting_notes.md` ou abra uma issue.**
+
+## 🛡️ CI/CD
+- Pipeline GitHub Actions: testa backend (pytest) e build do frontend a cada push/PR.
+- Badge de status no topo deste README.
+
+---
+
+## 📚 Links Úteis
+- `.env.example`: variáveis obrigatórias
+- [docs/technical.md](docs/technical.md): stack, padrões, variáveis
+- [DEPLOY_PLAN.md](DEPLOY_PLAN.md): checklist de deploy seguro
+
+---
+
+## Autenticação (Login)
+
+Para obter um token JWT, faça um POST para `/token` com os seguintes campos (form-urlencoded):
+
+- `username`: CRM do médico
+- `password`: senha
+- `scope`: UF do médico (ex: RN)
+
+Exemplo usando `curl`:
+
+```
+curl -X POST http://localhost:8000/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=6091&password=SENHA_DO_MEDICO&scope=RN"
+```
+
+A resposta será:
+```json
+{
+  "access_token": "...",
+  "token_type": "bearer"
+}
+```
+
+---
+
+## Ambiente de Desenvolvimento Profissional
+
+1. **Crie seu `.env` a partir do exemplo:**
+   ```bash
+   cp .env.example .env
+   # Edite o valor de JWT_SECRET para produção
+   ```
+
+2. **Instale as dependências de produção:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Para desenvolvimento, instale também as dependências extras:**
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+
+4. **Formatação e lint:**
+   - Formate o código com Black:
+     ```bash
+     black src/
+     ```
+   - Organize imports:
+     ```bash
+     isort src/
+     ```
+   - Cheque lint:
+     ```bash
+     flake8 src/
+     ```
+
+5. **Rodando os testes:**
+   ```bash
+   pytest
+   ```
+
+6. **Executando o backend:**
+   ```bash
+   uvicorn src.main:app --reload
+   ```
+
+7. **Boas práticas:**
+   - Nunca versionar `.env`.
+   - Sempre usar segredos fortes em produção.
+   - Use pre-commit hooks para garantir qualidade de código (opcional).
+
+---
+**Dúvidas? Consulte `.notes/` ou abra uma issue.**

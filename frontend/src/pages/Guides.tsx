@@ -7,7 +7,7 @@ import {
 } from "../components/ui/card";
 import { DataGrid } from "../components/ui/data-grid";
 import { Button } from "../components/ui/button";
-import { FileText, Upload, Eye, Trash2, HelpCircle, Users, UserCheck } from "lucide-react";
+import { FileText, Upload, Eye, Trash2, HelpCircle, ClipboardList, User, AlertCircle } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import { useState, useEffect } from "react";
 import {
@@ -32,8 +32,20 @@ import { Card } from "../components/ui/card";
 import PageHeader from "../components/layout/PageHeader";
 import { useAuth } from "../contexts/auth/AuthContext";
 import { UserMenu } from "../components/navbar/UserMenu";
+import { FiltersToolbar } from "../components/guides/FiltersToolbar";
 import InfoCard from "../components/ui/InfoCard";
+import { GuidesTable } from "../components/guides/GuidesTable";
 // import Fuse from 'fuse.js';
+
+// Mapeamento de cores para cada tipo de papel (igual Demonstratives)
+const papelColors = {
+  'cirurgiao':   { bg: 'rgba(59,130,246,0.18)', text: '#1e3a8a' }, // azul
+  'anestesista': { bg: 'rgba(139,92,246,0.18)', text: '#6d28d9' }, // roxo
+  'primeiro_auxiliar': { bg: 'rgba(16,185,129,0.18)', text: '#065f46' }, // verde
+  'segundo_auxiliar': { bg: 'rgba(251,191,36,0.18)', text: '#92400e' }, // laranja
+  'outros': { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' }, // fallback
+};
+const defaultPapelColor = { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' };
 
 function getCurrentCrm() {
   try {
@@ -107,6 +119,21 @@ function normalizePapel(papel: string) {
     .trim();
 }
 
+// Função utilitária para converter data ISO para DD/MM/YYYY
+function formatDateToBR(dateStr: string) {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-");
+  if (!year || !month || !day) return dateStr;
+  return `${day}/${month}/${year}`;
+}
+
+function formatDateToISO(dateStr: string) {
+  if (!dateStr) return "";
+  const [day, month, year] = dateStr.split("/");
+  if (!year || !month || !day) return dateStr;
+  return `${year}-${month}-${day}`;
+}
+
 const GuidesPage = () => {
   const [activeTab, setActiveTab] = useState<"list" | "upload">("list");
   const [extractedGuides, setExtractedGuides] = useState<GuideProcedure[]>([]);
@@ -123,14 +150,14 @@ const GuidesPage = () => {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [activities, setActivities] = useState(getRecentActivities());
 
-  const fileUpload = useFileUpload();
+  const fileUpload = useFileUpload() || {};
   const {
-    files,
-    isUploading,
-    removeFile,
-    resetFiles,
-    handleFileChangeByType,
-    processUploadedFiles,
+    files = [],
+    isUploading = false,
+    removeFile = () => {},
+    resetFiles = () => {},
+    handleFileChangeByType = () => {},
+    processUploadedFiles = () => {},
   } = fileUpload;
 
   const { userProfile, signOut } = useAuth();
@@ -208,14 +235,13 @@ const GuidesPage = () => {
 
   // Monta linhas macro
   const macroRows = Object.entries(grouped).map(([numero_guia, procs]) => {
+    const numeroGuiaStr = String(numero_guia).trim();
     const datas = procs.map((p) => p.data).sort();
     const dataMaisRecente = datas[datas.length - 1] || "";
     const beneficiario = procs[0]?.beneficiario || "";
     const prestador = procs[0]?.prestador || "";
-
     // Soma o campo qtd
     const qtdProcedimentos = procs.reduce((sum, p) => sum + (p.qtd || 0), 0);
-
     // Status mais comum
     const statusCount = procs.reduce((acc, p) => {
       acc[p.status] = (acc[p.status] || 0) + 1;
@@ -224,9 +250,8 @@ const GuidesPage = () => {
     const statusComum =
       Object.entries(statusCount)
         .sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
-
     return {
-      numero_guia,
+      numero_guia: numeroGuiaStr,
       data: dataMaisRecente,
       beneficiario,
       prestador,
@@ -313,10 +338,14 @@ const GuidesPage = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setExpandedRow(expandedRow === row.numero_guia ? null : row.numero_guia)}
-          aria-label={expandedRow === row.numero_guia ? "Colapsar detalhes" : "Expandir detalhes"}
+          onClick={() => {
+            const id = String(row.numero_guia).trim();
+            console.log('EXPAND BTN', { expandedRow, id });
+            setExpandedRow(expandedRow === id ? null : id);
+          }}
+          aria-label={expandedRow === String(row.numero_guia).trim() ? "Colapsar detalhes" : "Expandir detalhes"}
         >
-          {expandedRow === row.numero_guia ? <Eye className="w-4 h-4 text-primary" /> : <Eye className="w-4 h-4" />}
+          {expandedRow === String(row.numero_guia).trim() ? <Eye className="w-4 h-4 text-primary" /> : <Eye className="w-4 h-4" />}
         </Button>
       ),
     },
@@ -331,7 +360,21 @@ const GuidesPage = () => {
           : value === "Pendente"
           ? "warning"
           : "default";
-      return <Badge variant={variant}>{value || "-"}</Badge>;
+      return <Badge 
+        variant={variant}
+        style={{
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          minWidth: 80,
+          maxWidth: 120,
+          textAlign: 'center',
+          display: 'inline-block',
+        }}
+        title={value || "-"}
+      >
+        {value || "-"}
+      </Badge>;
     }, },
   ];
 
@@ -441,26 +484,29 @@ const GuidesPage = () => {
   const totalProcedimentos = filteredMacroRows.reduce((sum, row) => sum + (row.detalhes?.reduce((s: number, p: any) => s + (p.qtd || 0), 0) || 0), 0);
   const papelCounts = filteredMacroRows.reduce((acc, row) => {
     row.detalhes?.forEach((p: any) => {
-      acc[p.papel] = (acc[p.papel] || 0) + (p.qtd || 0);
+      acc[papelKey(p.papel)] = (acc[papelKey(p.papel)] || 0) + (p.qtd || 0);
     });
     return acc;
   }, {} as Record<string, number>);
-  const papelMaisFrequente = Object.entries(papelCounts).sort((a, b) => b[1] - a[1])[0] || ["-", 0];
-
-  // Mapeamento de cores para cada tipo de papel
-  const papelColors: Record<string, { bg: string; text: string }> = {
-    'cirurgiao':   { bg: 'rgba(59,130,246,0.18)', text: '#1e3a8a' }, // azul
-    'anestesista': { bg: 'rgba(139,92,246,0.18)', text: '#6d28d9' }, // roxo
-    'primeiro auxiliar': { bg: 'rgba(16,185,129,0.18)', text: '#065f46' }, // verde
-    'segundo auxiliar': { bg: 'rgba(251,191,36,0.18)', text: '#92400e' }, // laranja
-  };
-  const defaultPapelColor = { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' }; // fallback suave
+  function papelKey(papel: string) {
+    const norm = normalizePapel(papel);
+    if (norm.includes('cirurgiao')) return 'cirurgiao';
+    if (norm.includes('primeiro')) return 'primeiro_auxiliar';
+    if (norm.includes('segundo')) return 'segundo_auxiliar';
+    return 'outros';
+  }
+  function percent(val: number) {
+    if (!totalProcedimentos) return '0%';
+    return `${Math.round((val / totalProcedimentos) * 100)}%`;
+  }
+  // Pacientes únicos
+  const pacientesUnicos = new Set(filteredMacroRows.flatMap(row => row.detalhes?.map((p: any) => p.beneficiario) || []));
 
   return (
     <AuthenticatedLayout title="Guias" description="Gerencie e consulte suas guias médicas processadas">
       <PageHeader
         title={
-          <span className="flex items-center">
+          <span className="flex items-center gap-2 text-xl md:text-2xl font-semibold text-gray-900">
             Guias Médicas
             <TooltipProvider>
               <Tooltip>
@@ -475,8 +521,6 @@ const GuidesPage = () => {
           </span>
         }
         icon={<FileText size={28} />}
-        description="Gerencie e consulte suas guias médicas processadas"
-        size="md"
         actions={userProfile ? (
           <UserMenu
             name={userProfile.name || 'Usuário'}
@@ -487,154 +531,65 @@ const GuidesPage = () => {
           />
         ) : null}
       />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+      <div className="space-y-6">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-2">
           <InfoCard
-            icon={<FileText className="h-6 w-6 text-blue-500" />}
-            title="Guias"
-            value={totalGuias}
+            icon={<User className="h-6 w-6 text-gray-700" />}
+            title={<span className="text-xs font-semibold text-gray-700">Pacientes Atendidos</span>}
+            value={<span className="text-2xl md:text-3xl font-bold text-gray-900">{pacientesUnicos.size}</span>}
+            description={<span className="text-xs text-gray-500">Total de pacientes únicos neste período</span>}
             variant="info"
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
           />
           <InfoCard
-            icon={<Users className="h-6 w-6 text-green-500" />}
-            title="Procedimentos"
-            value={totalProcedimentos}
+            icon={<ClipboardList className="h-6 w-6 text-violet-700" />}
+            title={<span className="text-xs font-semibold text-gray-700">Procedimentos</span>}
+            value={<span className="text-2xl md:text-3xl font-bold text-violet-700">{totalProcedimentos}</span>}
+            description={<span className="text-xs text-gray-500">Extraídos das guias</span>}
+            variant="secondary"
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+          />
+        </div>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+          <InfoCard
+            icon={<User className="h-6 w-6 text-blue-700" />}
+            title={<span className="text-xs font-semibold text-gray-700">Cirurgião</span>}
+            value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{papelCounts['cirurgiao'] || 0}</span>}
+            description={<span className="text-xs text-gray-500">Atuou como cirurgião em <span className="font-bold text-blue-700">{percent(papelCounts['cirurgiao'] || 0)}</span> dos procedimentos</span>}
             variant="success"
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
           />
           <InfoCard
-            icon={<UserCheck className="h-6 w-6 text-purple-500" />}
-            title="Papel mais frequente"
-            value={`${papelMaisFrequente[0]} (${papelMaisFrequente[1]})`}
-            variant="neutral"
+            icon={<User className="h-6 w-6 text-emerald-700" />}
+            title={<span className="text-xs font-semibold text-gray-700">1º Auxiliar</span>}
+            value={<span className="text-2xl md:text-3xl font-bold text-emerald-700">{papelCounts['primeiro_auxiliar'] || 0}</span>}
+            description={<span className="text-xs text-gray-500">Atuou como 1º auxiliar em <span className="font-bold text-emerald-700">{percent(papelCounts['primeiro_auxiliar'] || 0)}</span> dos procedimentos</span>}
+            variant="success"
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+          />
+          <InfoCard
+            icon={<User className="h-6 w-6 text-yellow-700" />}
+            title={<span className="text-xs font-semibold text-gray-700">2º Auxiliar</span>}
+            value={<span className="text-2xl md:text-3xl font-bold text-yellow-700">{papelCounts['segundo_auxiliar'] || 0}</span>}
+            description={<span className="text-xs text-gray-500">Atuou como 2º auxiliar em <span className="font-bold text-yellow-700">{percent(papelCounts['segundo_auxiliar'] || 0)}</span> dos procedimentos</span>}
+            variant="success"
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
           />
         </div>
-        <div className="bg-muted rounded-lg p-3 mb-2">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-semibold text-muted-foreground">Minhas Atividades Recentes</span>
-            <Button variant="ghost" size="sm" onClick={() => { clearActivities(); setActivities([]); }}>Limpar</Button>
-          </div>
-          <ul className="text-xs space-y-1">
-            {activities.slice(0, 5).map((log: any, idx: number) => {
-              if (typeof log === "string") {
-                return <li key={idx} className="flex items-center gap-2">{log}</li>;
-              }
-              return (
-                <li key={idx} className="flex items-center gap-2">
-                  <span className="font-medium">{log.action}</span>
-                  {log.target?.numero_guia && <span>Guia: <b>{log.target.numero_guia}</b></span>}
-                  {log.target?.beneficiario && <span>- {log.target.beneficiario}</span>}
-                  {log.result && <span className="text-green-700">({log.result})</span>}
-                  <span className="truncate">{log.details}</span>
-                  <span className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</span>
-                </li>
-              );
-            })}
-            {activities.length === 0 && <li className="text-muted-foreground">Nenhuma atividade registrada</li>}
-          </ul>
-        </div>
-        <div className="flex flex-wrap gap-2 items-center justify-between">
-          <div className="flex gap-2 items-center">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <input
-                    type="text"
-                    placeholder="Filtrar por número, beneficiário"
-                    value={search}
-                    onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                    className="border rounded px-2 py-1 text-sm"
-                    style={{ minWidth: 220 }}
-                    disabled={activeTab !== "list"}
-                    aria-label="Filtrar por número ou beneficiário"
-                  />
-                </TooltipTrigger>
-                <TooltipContent>Digite parte do número da guia ou nome do beneficiário para filtrar</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <input
-                    type="date"
-                    placeholder="Data"
-                    value={data}
-                    onChange={(e) => { setData(e.target.value); setPage(1); }}
-                    className="border rounded px-2 py-1 text-sm"
-                    style={{ minWidth: 140 }}
-                    disabled={activeTab !== "list"}
-                    aria-label="Filtrar por data de execução"
-                  />
-                </TooltipTrigger>
-                <TooltipContent>Filtre por data de execução do procedimento</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <select
-                    value={status}
-                    onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-                    className="border rounded px-2 py-1 text-sm"
-                    disabled={activeTab !== "list"}
-                    aria-label="Filtrar por status"
-                  >
-                    <option value="">Todos Status</option>
-                    <option value="Fechada">Fechada</option>
-                    <option value="Gerado pela execução">Gerado pela execução</option>
-                  </select>
-                </TooltipTrigger>
-                <TooltipContent>Filtre por status do procedimento</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="flex gap-2 items-center">
-            <span className="text-xs text-muted-foreground">{`Total: ${filteredMacroRows.length}`}</span>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => exportToCSV(filteredMacroRows)}
-                    disabled={filteredMacroRows.length === 0}
-                    aria-label="Exportar CSV"
-                  >
-                    Exportar CSV
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Exporta a lista filtrada de guias para planilha CSV</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => exportProceduresToCSV(grouped)}
-                    disabled={Object.values(grouped).flat().length === 0}
-                    aria-label="Exportar Procedimentos CSV"
-                  >
-                    Exportar Procedimentos CSV
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Exporta todos os procedimentos detalhados das guias filtradas para planilha CSV</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <Button
-              variant={activeTab === "upload" ? "outline" : "secondary"}
-              size="sm"
-              onClick={() => setActiveTab("upload")}
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Nova Guia
-            </Button>
-          </div>
-        </div>
-
-        {/* AVISO DE RESPONSABILIDADE LGPD */}
-        <div className="mb-4 p-3 rounded bg-yellow-50 border border-yellow-200 text-yellow-900 text-sm">
-          <strong>Aviso de Privacidade:</strong> Ao inserir dados de pacientes (ex: upload de guias), você declara que possui consentimento ou base legal para tratar dados sensíveis de terceiros, conforme a LGPD. O uso indevido pode gerar responsabilidade legal.
+        <div>
+          <FiltersToolbar
+            search={search}
+            onSearch={val => { setSearch(val); setPage(1); }}
+            date={formatDateToISO(data)}
+            onDateChange={val => { setData(formatDateToBR(val)); setPage(1); }}
+            status={status || "ALL"}
+            onStatusChange={val => { setStatus(val); setPage(1); }}
+            pendingCount={filteredMacroRows.filter(row => row.status === "Pendente").length}
+            onClear={() => { setSearch(""); setData(""); setStatus("ALL"); setPage(1); }}
+            onExportCsv={() => exportToCSV(filteredMacroRows)}
+            onExportProcedures={() => exportProceduresToCSV(grouped)}
+            onNewGuide={() => setActiveTab("upload")}
+          />
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "list" | "upload")} className="w-full">
@@ -646,7 +601,7 @@ const GuidesPage = () => {
           <TabsContent value="list">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="text-lg font-bold md:text-xl flex items-center gap-2">
                   <FileText className="w-5 h-5 text-primary" />
                   Guias Médicas
                 </CardTitle>
@@ -658,57 +613,54 @@ const GuidesPage = () => {
                 {loading ? (
                   <LoaderTable />
                 ) : (
-                  <DataGrid
+                  <GuidesTable
                     rows={filteredMacroRows}
                     columns={macroColumns}
-                    pageSize={10}
-                    className="min-h-[500px]"
-                    renderExpandedRow={(row) =>
-                      expandedRow === row.numero_guia ? (
-                        <tr>
-                          <td colSpan={macroColumns.length} className="bg-[#F7F9FC] p-0">
-                            <Card className="w-full max-w-full overflow-hidden px-2">
-                              <div className="overflow-x-auto w-full" style={{ maxWidth: 'calc(100vw - 220px)' }}>
-                                <table className="w-full text-sm min-w-[600px]">
-                                  <thead>
-                                    <tr>
-                                      {['Data', 'Código', 'Descrição', 'Participação', 'Qtd', 'Prestador'].map(h => (
-                                        <th
-                                          key={h}
-                                          className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-ink-low dark:text-slate-400"
-                                        >
-                                          {h}
-                                        </th>
-                                      ))}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {row.detalhes.map((proc: any) => (
-                                      <tr key={proc.codigo} className="odd:bg-gray-50 dark:odd:bg-surface-dark/50">
-                                        <td className="py-2 px-3 whitespace-nowrap">{proc.data}</td>
-                                        <td className="py-2 px-3 whitespace-nowrap font-mono">{proc.codigo}</td>
-                                        <td className="py-2 px-3 whitespace-nowrap max-w-[180px] truncate">{proc.descricao}</td>
-                                        <td className="py-2 px-3 whitespace-nowrap">
-                                          <Badge
-                                            variant="participacao"
-                                            color={(papelColors[normalizePapel(proc.papel)] || defaultPapelColor).bg}
-                                            textColor={(papelColors[normalizePapel(proc.papel)] || defaultPapelColor).text}
-                                          >
-                                            {proc.papel}
-                                          </Badge>
-                                        </td>
-                                        <td className="py-2 px-3 whitespace-nowrap text-center">{proc.qtd}</td>
-                                        <td className="py-2 px-3 whitespace-nowrap max-w-[180px] truncate">{proc.prestador}</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            </Card>
-                          </td>
-                        </tr>
-                      ) : null
-                    }
+                    selectedRows={selectedRows}
+                    onSelectRow={handleSelectRow}
+                    onSelectAll={handleSelectAll}
+                    onExpand={id => setExpandedRow(expandedRow === id ? null : id)}
+                    expandedRow={expandedRow}
+                    renderExpandedRow={(row) => (
+                      <div className="w-full max-w-full overflow-hidden px-2 py-2">
+                        <div className="overflow-x-auto w-full" style={{ maxWidth: 'calc(100vw - 220px)' }}>
+                          <table className="w-full text-sm min-w-[600px]">
+                            <thead>
+                              <tr>
+                                {['Data', 'Código', 'Descrição', 'Participação', 'Qtd', 'Prestador'].map(h => (
+                                  <th
+                                    key={h}
+                                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-ink-low dark:text-slate-400"
+                                  >
+                                    {h}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {row.detalhes.map((proc: any) => (
+                                <tr key={proc.codigo} className="odd:bg-muted/30 hover:bg-accent/10 transition-colors h-10">
+                                  <td className="py-2 px-3 whitespace-nowrap">{proc.data}</td>
+                                  <td className="py-2 px-3 whitespace-nowrap font-mono">{proc.codigo}</td>
+                                  <td className="py-2 px-3 whitespace-nowrap max-w-[180px] truncate" title={proc.descricao}>{proc.descricao}</td>
+                                  <td className="py-2 px-3 whitespace-nowrap">
+                                    <Badge
+                                      variant="participacao"
+                                      color={(papelColors[normalizePapel(proc.papel)] || defaultPapelColor).bg}
+                                      textColor={(papelColors[normalizePapel(proc.papel)] || defaultPapelColor).text}
+                                    >
+                                      {proc.papel}
+                                    </Badge>
+                                  </td>
+                                  <td className="py-2 px-3 whitespace-nowrap text-center">{proc.qtd}</td>
+                                  <td className="py-2 px-3 whitespace-nowrap max-w-[180px] truncate" title={proc.prestador}>{proc.prestador}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
                   />
                 )}
                 {selectedGuia && (
@@ -755,7 +707,7 @@ const GuidesPage = () => {
                       <select
                         value={pageSize}
                         onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
-                        className="border rounded px-2 py-1 text-xs"
+                        className="border rounded px-2 py-1 text-xs w-full sm:w-auto"
                       >
                         {[10, 20, 50, 100].map((sz) => (
                           <option key={sz} value={sz}>{sz} por página</option>
@@ -793,12 +745,14 @@ const GuidesPage = () => {
                     variant="outline"
                     onClick={resetFiles}
                     disabled={!files.length || isUploading || loading}
+                    className="h-9 px-4 font-medium text-gray-700 hover:bg-gray-50 border-gray-200"
                   >
                     Limpar
                   </Button>
                   <Button
                     onClick={handleUploadGuias}
                     disabled={!files.length || isUploading || loading}
+                    className="h-9 px-5 font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow transition-all duration-200"
                   >
                     {isUploading || loading
                       ? "Processando..."
@@ -811,7 +765,7 @@ const GuidesPage = () => {
         </Tabs>
 
         {loading && (
-          <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center min-h-screen">
             <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg p-8 flex flex-col items-center gap-4">
               <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -821,6 +775,10 @@ const GuidesPage = () => {
             </div>
           </div>
         )}
+      </div>
+      {/* Aviso de Privacidade - rodapé simples, por extenso */}
+      <div className="w-full text-center text-xs text-gray-500 my-6" role="note" aria-label="Aviso de Privacidade">
+        Ao inserir dados de pacientes, você declara ter consentimento ou base legal para o tratamento, conforme a <a href="/privacy" className="underline hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>. O uso indevido pode gerar responsabilidade legal.
       </div>
     </AuthenticatedLayout>
   );

@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,8 +47,10 @@ const PaymentsTab = () => {
           </div>
           
           <div className="mt-4">
-            <Button variant="outline" asChild className="w-full">
-              <Link to="/guides">Ver todas as guias</Link>
+            <Button variant="outline" size="sm" asChild className="w-full flex items-center gap-1">
+              <Link to="/guides">
+                Ver todas as guias
+              </Link>
             </Button>
           </div>
         </CardContent>
@@ -111,8 +112,10 @@ const PaymentsTab = () => {
           </div>
           
           <div className="mt-4">
-            <Button variant="outline" asChild className="w-full">
-              <Link to="/compare">Ver comparativo detalhado</Link>
+            <Button variant="outline" size="sm" asChild className="w-full flex items-center gap-1">
+              <Link to="/compare">
+                Ver comparativo detalhado
+              </Link>
             </Button>
           </div>
         </CardContent>

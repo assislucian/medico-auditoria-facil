@@ -1,0 +1,125 @@
+{
+  "glosas": [
+    {
+      "guia": "00012347",
+      "codigo": "87654321",
+      "descricao": "Procedimento Y",
+      "valor_glosa": 100.00,
+      "motivo": "Procedimento não autorizado"
+    }
+  ],
+  "resumo": {
+    "total_procedimentos": 2,
+    "total_liberado": 580.00,
+    "total_tabela": 585.00,
+    "total_diferenca": -5.00,
+    "percentual_diferenca": -0.85,
+    "total_glosas": 100.00
+  }
+}
+{
+  "detalhes": [
+    {
+      "guia": "00012345",
+      "data": "2024-10-15",
+      "paciente": "João da Silva",
+      "codigo": "10101012",
+      "descricao": "Consulta",
+      "participacao": "Cirurgião",
+      "qtd": 1,
+      "valor_cbhpm": 85.00,
+      "valor_liberado": 80.00,
+      "diferenca": -5.00,
+      "valor_apresentado": 85.00,
+      "valor_glosa": 0.00
+    },
+    {
+      "guia": "00012346",
+      "data": "2024-10-16",
+      "paciente": "Maria Oliveira",
+      "codigo": "12345678",
+      "descricao": "Cirurgia X",
+      "participacao": "Cirurgião",
+      "qtd": 1,
+      "valor_cbhpm": 500.00,
+      "valor_liberado": 450.00,
+      "diferenca": -50.00,
+      "valor_apresentado": 500.00,
+      "valor_glosa": 50.00
+    }
+  ]
+}
+{
+  "resumo": {
+    "periodo": "abril de 2024",
+    "total_procedimentos": 10,
+    "total_apresentado": 2764.39,
+    "total_liberado": 2764.39,
+    "total_glosa": 0.00,
+    "total_cbhpm": null,
+    "percentual_abaixo_tabela": 100,
+    "maior_diferenca": {
+      "codigo": "30602157",
+      "descricao": "Mastectomia Radical",
+      "valor": 596.32
+    }
+  },
+  "detalhes": [
+    {
+      "guia": "8197160",
+      "data": "21/02/2024",
+      "paciente": "JOSE ANTONIO DA SILV",
+      "codigo": "30101913",
+      "descricao": "Tu Partes Moles Exérese",
+      "participacao": "Cirurgião",
+      "qtd": 1,
+      "valor_cbhpm": null,
+      "valor_liberado": 22.95,
+      "diferenca": null,
+      "valor_apresentado": 22.95,
+      "valor_glosa": 0.00
+    },
+    {
+      "guia": "8197160",
+      "data": "21/02/2024",
+      "paciente": "JOSE ANTONIO DA SILV",
+      "codigo": "30101450",
+      "descricao": "Exérese E Sutura De Lesões Ci",
+      "participacao": "Cirurgião",
+      "qtd": 1,
+      "valor_cbhpm": null,
+      "valor_liberado": 48.96,
+      "diferenca": null,
+      "valor_apresentado": 48.96,
+      "valor_glosa": 0.00
+    },
+    {
+      "guia": "8197160",
+      "data": "21/02/2024",
+      "paciente": "JOSE ANTONIO DA SILV",
+      "codigo": "30101913",
+      "descricao": "Tu Partes Moles Exérese",
+      "participacao": "Cirurgião",
+      "qtd": 1,
+      "valor_cbhpm": null,
+      "valor_liberado": 22.95,
+      "diferenca": null,
+      "valor_apresentado": 22.95,
+      "valor_glosa": 0.00
+    },
+    {
+      "guia": "8197160",
+      "data": "21/02/2024",
+      "paciente": "JOSE ANTONIO DA SILV",
+      "codigo": "30101913",
+      "descricao": "Tu Partes Moles Exérese",
+      "participacao": "Cirurgião",
+      "qtd": 1,
+      "valor_cbhpm": null,
+      "valor_liberado": 32.13,
+      "diferenca": null,
+      "valor_apresentado": 32.13,
+      "valor_glosa": 0.00
+    }
+  ]
+}

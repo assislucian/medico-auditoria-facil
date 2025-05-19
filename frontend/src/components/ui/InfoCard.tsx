@@ -26,6 +26,10 @@ const elevationStyles = {
   elevated: "shadow-lg border",
 };
 
+/**
+ * InfoCard - Card de informação com ícone, título, valor, descrição e children customizáveis.
+ * @param {InfoCardProps} props
+ */
 export function InfoCard({
   icon,
   title,
@@ -40,24 +44,24 @@ export function InfoCard({
     <div
       tabIndex={0}
       className={clsx(
-        "rounded-2xl p-4 flex flex-col gap-1 min-w-0 transition-all duration-150 outline-none",
+        "rounded-xl p-2 flex flex-col gap-0.5 min-w-0 transition-all duration-150 outline-none",
         variantStyles[variant],
         elevationStyles[elevation],
-        "hover:shadow-lg hover:scale-[1.025] focus:shadow-lg focus:scale-[1.025]",
-        "hover:bg-opacity-80 focus:bg-opacity-90",
+        "hover:shadow-md hover:scale-[1.015] focus:shadow-lg focus:scale-[1.015]",
         "focus-visible:ring-2 focus-visible:ring-brand/60",
         "cursor-pointer",
         className
       )}
       aria-label={title}
+      role={variant === "danger" || variant === "warning" ? "alert" : undefined}
     >
-      <div className="flex items-center gap-3 mb-1">
-        {icon && <span className="shrink-0">{icon}</span>}
-        <span className="font-semibold text-base md:text-lg truncate flex-1">{title}</span>
+      <div className="flex items-center gap-2 mb-0.5">
+        {icon && <span className="shrink-0 text-lg md:text-xl">{icon}</span>}
+        <span className="font-semibold text-sm md:text-base truncate flex-1">{title}</span>
       </div>
-      {value && <div className="text-3xl md:text-4xl font-extrabold text-ink mb-1 truncate">{value}</div>}
-      {description && <div className="text-sm md:text-base text-muted-foreground mb-1 truncate">{description}</div>}
-      {children && <div className="mt-1">{children}</div>}
+      {value && <div className="text-xl md:text-2xl font-extrabold text-ink mb-0.5 truncate">{value}</div>}
+      {description && <div className="text-xs md:text-sm text-muted-foreground mb-0.5 truncate">{description}</div>}
+      {children && <div className="mt-0.5 [&_button]:text-base">{children}</div>}
     </div>
   );
 }

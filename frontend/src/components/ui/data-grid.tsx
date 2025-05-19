@@ -1,6 +1,7 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
-import { Button } from "./button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 interface DataGridProps {
   rows: any[];
@@ -37,36 +38,61 @@ export function DataGrid({
   };
   
   return (
-    <div className={"overflow-x-auto w-full " + className} role="region" aria-label="Tabela de dados">
+    <div className={className}>
       <Table>
         <TableHeader>
           <TableRow>
-            {columns.map((column) => (
-              <TableHead
-                key={column.field}
-                style={{
-                  width: column.width,
-                  flex: column.flex
-                }}
-                className="bg-muted/40 sticky top-0 z-10"
-              >
-                {column.headerName}
-              </TableHead>
-            ))}
+            {columns.map((column) => {
+              let headerContent = column.headerName;
+              if (["CBHPM", "Liberado", "Diferença", "Delta %"].includes(column.headerName)) {
+                let tooltipText = '';
+                if (column.headerName === "CBHPM") tooltipText = "Valor de referência da tabela CBHPM vigente.";
+                if (column.headerName === "Liberado") tooltipText = "Valor efetivamente liberado pelo convênio.";
+                if (column.headerName === "Diferença") tooltipText = "Diferença entre CBHPM e valor liberado.";
+                if (column.headerName === "Delta %") tooltipText = "Percentual de diferença em relação ao CBHPM.";
+                headerContent = (
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex items-center gap-1 cursor-help">
+                          {column.headerName}
+                          <span className="text-xs text-blue-500 align-middle">ⓘ</span>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs text-sm">
+                        {tooltipText}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              }
+              return (
+                <TableHead
+                  key={column.field}
+                  style={{ width: column.width, flex: column.flex }}
+                  className="text-center align-middle text-base font-semibold bg-neutral-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 py-3 px-4 tracking-tight text-gray-700 dark:text-gray-200"
+                >
+                  {headerContent}
+                </TableHead>
+              );
+            })}
           </TableRow>
         </TableHeader>
         <TableBody>
           {safeRows.slice(0, pageSize).map((row, rowIndex) => [
             <TableRow
               key={row?.id || rowIndex}
-              tabIndex={0}
-              className="transition-all hover:bg-muted/10 focus:bg-muted/20 focus-visible:ring-2 focus-visible:ring-brand/60 outline-none"
-              role="row"
+              className={rowIndex % 2 === 0 ? 'bg-white dark:bg-neutral-900' : 'bg-neutral-50 dark:bg-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-900/30 transition-colors'}
             >
               {columns.map((column) => {
                 const cellValue = getCellValue(row, column.field);
+                // Alinhamento condicional: numérico à direita, texto à esquerda
+                const isNumeric = ["number", "currency", "percent"].includes(column.type) || /total|valor|quantidade|qtd|delta|percent|glosa|liberado|apresentado|cbhpm|diferença|procedimentos/i.test(column.field);
                 return (
-                  <TableCell key={`${row?.id || rowIndex}-${column.field}`} role="cell">
+                  <TableCell
+                    key={`${row?.id || rowIndex}-${column.field}`}
+                    className={(isNumeric ? "text-right" : "text-left") + " align-middle py-3 px-4 text-base font-normal text-gray-800 dark:text-gray-100"}
+                  >
                     {column.renderCell ? (
                       column.renderCell({ value: cellValue, row })
                     ) : column.valueFormatter ? (
@@ -82,7 +108,7 @@ export function DataGrid({
           ])}
           {safeRows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-center py-4" role="cell">
+              <TableCell colSpan={columns.length} className="text-center py-4">
                 Nenhum registro encontrado
               </TableCell>
             </TableRow>
@@ -108,6 +134,17 @@ export function DataGrid({
           <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
+      <style jsx>{`
+        @media (max-width: 900px) {
+          th, td {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+            font-size: 0.92rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

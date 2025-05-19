@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,8 +11,9 @@ export function DashboardHeader() {
           Acompanhe suas auditorias e análises mais recentes
         </p>
       </div>
-      <Button asChild>
-        <Link to="/new-audit" className="flex items-center gap-2">
+      {/* Botão padronizado conforme demonstrativos */}
+      <Button asChild size="sm" className="flex items-center gap-2">
+        <Link to="/new-audit">
           <FileUp className="h-4 w-4" />
           Nova Auditoria
         </Link>

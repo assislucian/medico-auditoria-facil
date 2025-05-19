@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ProceduresGrid } from "./grids/ProceduresGrid";
 import { Procedure } from "@/types/medical";
@@ -71,16 +70,16 @@ const ProceduresTab = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-medium">Procedimentos Médicos</h2>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
-            <Filter className="w-4 h-4 mr-2" />
+          <Button variant="outline" size="sm" className="flex items-center gap-1">
+            <Filter className="w-4 h-4 mr-1" />
             Filtrar
           </Button>
-          <Button variant="outline" size="sm">
-            <BarChart2 className="w-4 h-4 mr-2" />
+          <Button variant="outline" size="sm" className="flex items-center gap-1">
+            <BarChart2 className="w-4 h-4 mr-1" />
             Análise
           </Button>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
+          <Button variant="outline" size="sm" className="flex items-center gap-1">
+            <Download className="w-4 h-4 mr-1" />
             Exportar
           </Button>
         </div>

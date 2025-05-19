@@ -140,3 +140,14 @@
   padding: 0;
   text-align: left;
 }
+
+/* Garantir borda e radius perfeitos no DialogContent do demonstrativo */
+.demonstrativo-dialog-content {
+  border-radius: 1.25rem !important;
+  border: 1.5px solid #e5e7eb !important;
+  background: #fff;
+}
+.dark .demonstrativo-dialog-content {
+  border: 1.5px solid #262626 !important;
+  background: #18181b;
+}

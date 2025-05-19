@@ -1,6 +1,6 @@
 import pdfplumber
 from pathlib import Path
-from src.main import parse_demonstrativo, parse_guide_pdf
+from src.services.parse import parse_demonstrativo, parse_guide_pdf
 
 # 1. Texto bruto do demonstrativo
 print("\n=== TEXTO BRUTO DEMONSTRATIVO ===")

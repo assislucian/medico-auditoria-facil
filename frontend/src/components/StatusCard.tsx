@@ -51,7 +51,7 @@ export function StatusCard({
         {trend && (
           <p className="text-xs flex items-center mt-1">
             <span className={cn(
-                "mr-1",
+              "mr-1",
               trend.isPositive ? "text-success" : "text-danger"
             )}>
               {trend.isPositive ? "+" : "-"}{Math.abs(trend.value)}%
