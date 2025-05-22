@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { z } from 'zod';
 import { LoadingSpinner } from './ui/loading-spinner';
+import { Input } from './ui/input';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -105,12 +106,13 @@ const RegisterForm = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="uf" className="block text-sm font-medium mb-1">UF</label>
-            <select
+            <Input
+              as="select"
               id="uf"
               value={uf}
               onChange={e => setUf(e.target.value)}
-              className="input input-bordered w-full"
               disabled={isLoading}
+              className="w-full"
             >
               <option value="">Selecione</option>
               <option value="AC">AC</option>
@@ -140,58 +142,58 @@ const RegisterForm = () => {
               <option value="SP">SP</option>
               <option value="SE">SE</option>
               <option value="TO">TO</option>
-            </select>
+            </Input>
             {errors.uf && <div className="text-xs text-red-600 mt-1">{errors.uf}</div>}
           </div>
           <div>
             <label htmlFor="crm" className="block text-sm font-medium mb-1">CRM</label>
-            <input
+            <Input
               id="crm"
               type="text"
               value={crm}
               onChange={e => setCrm(e.target.value)}
-              className="input input-bordered w-full"
               autoComplete="username"
               disabled={isLoading}
+              className="w-full"
             />
             {errors.crm && <div className="text-xs text-red-600 mt-1">{errors.crm}</div>}
           </div>
           <div>
             <label htmlFor="nome" className="block text-sm font-medium mb-1">Nome completo</label>
-            <input
+            <Input
               id="nome"
               type="text"
               value={nome}
               onChange={e => setNome(e.target.value)}
-              className="input input-bordered w-full"
               autoComplete="name"
               disabled={isLoading}
+              className="w-full"
             />
             {errors.nome && <div className="text-xs text-red-600 mt-1">{errors.nome}</div>}
           </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium mb-1">Senha</label>
-            <input
+            <Input
               id="password"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="input input-bordered w-full"
               autoComplete="new-password"
               disabled={isLoading}
+              className="w-full"
             />
             {errors.password && <div className="text-xs text-red-600 mt-1">{errors.password}</div>}
           </div>
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">Confirme a senha</label>
-            <input
+            <Input
               id="confirmPassword"
               type="password"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              className="input input-bordered w-full"
               autoComplete="new-password"
               disabled={isLoading}
+              className="w-full"
             />
             {errors.confirmPassword && <div className="text-xs text-red-600 mt-1">{errors.confirmPassword}</div>}
           </div>

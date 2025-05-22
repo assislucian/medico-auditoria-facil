@@ -80,12 +80,12 @@ export function HeroSection() {
               />
               
               {/* Floating card effect */}
-              <div className="absolute -bottom-6 -right-6 bg-white dark:bg-neutral-800 rounded-lg p-4 shadow-lg border border-neutral-200 dark:border-neutral-700 transform rotate-3 hidden md:block">
+              <div className="absolute -bottom-6 -right-6 bg-card dark:bg-card-dark rounded-lg p-4 shadow-lg border border-border dark:border-border-dark transform rotate-3 hidden md:block">
                 <div className="text-3xl font-bold text-primary-500">+80%</div>
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">Economia de tempo</div>
               </div>
               
-              <div className="absolute -top-6 -left-6 bg-white dark:bg-neutral-800 rounded-lg p-4 shadow-lg border border-neutral-200 dark:border-neutral-700 transform -rotate-3 hidden md:block">
+              <div className="absolute -top-6 -left-6 bg-card dark:bg-card-dark rounded-lg p-4 shadow-lg border border-border dark:border-border-dark transform -rotate-3 hidden md:block">
                 <div className="text-3xl font-bold text-primary-500">99%</div>
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">Taxa de precisão</div>
               </div>
@@ -100,7 +100,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.7 }}
         >
-          <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 shadow-lg max-w-3xl">
+          <div className="bg-card/80 dark:bg-card-dark/80 backdrop-blur-sm border border-border dark:border-border-dark rounded-xl p-6 shadow-lg max-w-3xl">
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <div className="md:w-1/4 flex justify-center">
                 <img 

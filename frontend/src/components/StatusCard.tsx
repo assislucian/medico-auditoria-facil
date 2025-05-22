@@ -36,7 +36,7 @@ export function StatusCard({
   };
 
   return (
-    <div className="rounded-xl bg-white dark:bg-neutral-800 shadow-sm hover:shadow-md transition p-6 flex items-center gap-4">
+    <div className="rounded-xl bg-card shadow-sm hover:shadow-md transition p-6 flex items-center gap-4">
       <span className={cn(
         "h-10 w-10 flex items-center justify-center rounded-full bg-brand-light text-brand",
         variant === 'success' && 'bg-success/10 text-success',

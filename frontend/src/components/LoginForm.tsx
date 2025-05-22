@@ -83,7 +83,7 @@ const LoginForm = () => {
               id="uf"
               value={uf}
               onChange={e => setUf(e.target.value)}
-              className="input input-bordered w-full"
+              className="input input-bordered w-full bg-card dark:bg-card-dark text-body dark:text-body-dark placeholder:text-muted-foreground dark:placeholder:text-muted-foreground border-border dark:border-border-dark"
               disabled={isLoading}
             >
               <option value="">Selecione</option>
@@ -124,7 +124,7 @@ const LoginForm = () => {
               type="text"
               value={crm}
               onChange={e => setCrm(e.target.value)}
-              className="input input-bordered w-full bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              className="input input-bordered w-full bg-card dark:bg-card-dark text-body dark:text-body-dark placeholder:text-muted-foreground dark:placeholder:text-muted-foreground border-border dark:border-border-dark"
               autoComplete="username"
               disabled={isLoading}
             />
@@ -137,7 +137,7 @@ const LoginForm = () => {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="input input-bordered w-full bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              className="input input-bordered w-full bg-card dark:bg-card-dark text-body dark:text-body-dark placeholder:text-muted-foreground dark:placeholder:text-muted-foreground border-border dark:border-border-dark"
               autoComplete="current-password"
               disabled={isLoading}
             />

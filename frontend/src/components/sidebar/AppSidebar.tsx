@@ -34,7 +34,7 @@ export function AppSidebar() {
   ];
 
   return (
-    <aside className="fixed inset-y-0 left-0 flex flex-col w-[272px] bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 px-6 py-6 h-screen z-40">
+    <aside className="fixed inset-y-0 left-0 flex flex-col w-[272px] bg-card dark:bg-card-dark border-r border-border dark:border-border-dark px-6 py-6 h-screen z-40">
       <Brand />
       {/* Espaço para UserMiniCard futuramente, se necessário */}
       <nav className="flex-1 mt-4 space-y-2 overflow-y-auto">

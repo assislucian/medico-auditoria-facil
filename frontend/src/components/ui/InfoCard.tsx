@@ -13,11 +13,11 @@ interface InfoCardProps {
 }
 
 const variantStyles = {
-  info:    "bg-blue-50/40 border-blue-100/30 text-blue-900 dark:bg-blue-900/30 dark:border-blue-800/40 dark:text-blue-100",
-  success: "bg-green-50/40 border-green-100/30 text-green-900 dark:bg-green-900/30 dark:border-green-800/40 dark:text-green-100",
-  warning: "bg-amber-50/40 border-amber-200/40 text-amber-900 dark:bg-amber-900/30 dark:border-amber-800/40 dark:text-amber-100",
-  danger:  "bg-red-50/40 border-red-100/30 text-red-900 dark:bg-red-900/30 dark:border-red-800/40 dark:text-red-100",
-  neutral: "bg-white/60 border-gray-100/40 text-gray-900 dark:bg-zinc-900/60 dark:border-zinc-800/40 dark:text-gray-100",
+  info:    "bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary",
+  success: "bg-success/15 text-success dark:bg-success/40 dark:text-success",
+  warning: "bg-warning/15 text-warning dark:bg-warning/40 dark:text-warning",
+  danger:  "bg-danger/15 text-danger dark:bg-danger/40 dark:text-danger",
+  neutral: "bg-card border-border text-body dark:bg-card-dark dark:border-border-dark dark:text-body-dark",
 };
 
 const elevationStyles = {

@@ -1,7 +1,6 @@
-
 import { ReactNode } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/auth/AuthContext';
 import { MainLayout } from './MainLayout';
 
 interface AuthenticatedLayoutProps {

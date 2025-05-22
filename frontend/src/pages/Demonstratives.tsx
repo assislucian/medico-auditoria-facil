@@ -91,14 +91,6 @@ const formatCurrency = (value: number | undefined | null) => {
   }).format(value);
 };
 
-// Mapeamento de cores para cada tipo de papel (copiado do GuidesPage)
-const papelColors = {
-  'cirurgiao':   { bg: 'rgba(59,130,246,0.18)', text: '#1e3a8a' }, // azul
-  'anestesista': { bg: 'rgba(139,92,246,0.18)', text: '#6d28d9' }, // roxo
-  'primeiro auxiliar': { bg: 'rgba(16,185,129,0.18)', text: '#065f46' }, // verde
-  'segundo auxiliar': { bg: 'rgba(251,191,36,0.18)', text: '#92400e' }, // laranja
-};
-const defaultPapelColor = { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' };
 function normalizePapel(papel) {
   return String(papel || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
 }
@@ -176,22 +168,6 @@ const proceduresColumns = [
               <TooltipTrigger asChild>
                 <Badge
                   variant="participacao"
-                  style={{
-                    background: 'rgba(251,191,36,0.18)',
-                    color: '#92400e',
-                    border: 'none',
-                    fontWeight: 600,
-                    fontSize: '0.93em',
-                    letterSpacing: 0.1,
-                    padding: '2px 10px',
-                    minWidth: 70,
-                    maxWidth: 110,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: 'inline-block',
-                    textAlign: 'center',
-                  }}
                   title="Upload da guia"
                 >
                   Upload guia
@@ -204,26 +180,9 @@ const proceduresColumns = [
           </TooltipProvider>
         );
       }
-      const color = papelColors[normalizePapel(papel)] || defaultPapelColor;
       return (
         <Badge
           variant="participacao"
-          style={{
-            background: color.bg,
-            color: color.text,
-            border: 'none',
-            fontWeight: 600,
-            fontSize: '0.98em',
-            letterSpacing: 0.1,
-            padding: '2px 10px',
-            minWidth: 70,
-            maxWidth: 110,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: 'inline-block',
-            textAlign: 'center',
-          }}
           title={papelDisplay(papel)}
         >
           {papelDisplay(papel)}
@@ -506,7 +465,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="max-w-2xl w-full sm:min-w-[320px] md:min-w-[600px] lg:min-w-[800px] xl:min-w-[1000px] p-0 max-h-[90vh] h-[90vh] overflow-visible shadow-2xl bg-white dark:bg-neutral-900 demonstrativo-dialog-content"
+        className="max-w-2xl w-full sm:min-w-[320px] md:min-w-[600px] lg:min-w-[800px] xl:min-w-[1000px] p-0 max-h-[90vh] h-[90vh] overflow-visible shadow-2xl bg-body dark:bg-body demonstrativo-dialog-content"
         style={{ boxSizing: 'border-box', maxWidth: '95vw' }}
       >
         <div className="flex flex-col h-full min-h-0 gap-2 text-[0.95rem] p-4 sm:p-6">
@@ -530,7 +489,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
                 : <span className="text-xs text-gray-400">Sem procedimentos com CBHPM neste demonstrativo</span>
               }
               variant={hasCBHPM ? "danger" : "neutral"}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
               icon={<ClipboardList className="h-6 w-6 text-amber-700" />}
@@ -538,7 +497,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
               value={<span className="text-2xl md:text-3xl font-bold text-amber-700">{`${percentAbaixoCBHPM}%`}</span>}
               description={<span className="text-xs text-gray-500">% de procedimentos abaixo da CBHPM</span>}
               variant="warning"
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
               icon={<FileText className="h-6 w-6 text-blue-700" />}
@@ -546,7 +505,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
               value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{maiorPrejuizoProc && maiorPrejuizoProc.diferenca !== null ? formatCurrency(Math.abs(maiorPrejuizoProc.diferenca)) : '--'}</span>}
               description={<span className="text-xs text-gray-500">{maiorPrejuizoProc ? `${maiorPrejuizoProc.codigo} - ${maiorPrejuizoProc.descricao}` : ''}</span>}
               variant="info"
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
           </div>
           {/* Totais - cards pequenos (PADRÃO GUIAS) */}
@@ -556,28 +515,28 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
               title={<span className="text-xs font-semibold text-gray-700">Total Liberado</span>}
               value={<span className="text-2xl md:text-3xl font-bold text-green-700">{formatCurrency(totals.totalLiberado)}</span>}
               variant="success"
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
               icon={<FileText className="h-6 w-6 text-blue-700 mb-1" />}
               title={<span className="text-xs font-semibold text-gray-700">Procedimentos</span>}
               value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{totals.totalProcedimentos}</span>}
               variant="info"
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
               icon={<AlertCircle className="h-6 w-6 text-red-600 mb-1" />}
               title={<span className="text-xs font-semibold text-gray-700">Total Glosa</span>}
               value={<span className="text-2xl md:text-3xl font-bold text-red-700">{formatCurrency(totals.totalGlosa)}</span>}
               variant="danger"
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
               icon={<DollarSign className="h-6 w-6 text-gray-700 mb-1" />}
               title={<span className="text-xs font-semibold text-gray-700">Total Apresentado</span>}
               value={<span className="text-2xl md:text-3xl font-bold text-gray-700">{formatCurrency(totals.totalApresentado)}</span>}
               variant="neutral"
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
           </div>
           {/* Filtro rápido acima da tabela de procedimentos detalhados */}
@@ -626,7 +585,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
           </div>
           {/* Tabela de procedimentos - estilo lovable.dev */}
           <div className="flex-grow min-h-0 flex flex-col gap-1">
-            <div className="bg-white rounded-2xl shadow-inner border border-gray-100 p-1 flex-grow min-h-0 overflow-x-auto overflow-y-auto" style={{ maxHeight: '100%' }}>
+            <div className="bg-body rounded-2xl shadow-inner border border-border p-1 flex-grow min-h-0 overflow-x-auto overflow-y-auto" style={{ maxHeight: '100%' }}>
               <div className="min-w-[700px]">
                 {loading ? (
                   <div className="flex items-center justify-center min-h-[180px]">
@@ -703,7 +662,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
           {showGlosas && (
             <div className="mt-6">
               <h4 className="text-lg font-semibold mb-2">Procedimentos com Glosa</h4>
-              <div className="bg-white rounded-lg shadow-inner border border-gray-100 p-2" style={{ maxHeight: 300, overflowY: 'auto' }}>
+              <div className="bg-body rounded-lg shadow-inner border border-border p-2" style={{ maxHeight: 300, overflowY: 'auto' }}>
                 {glosas.length === 0 ? (
                   <div className="text-muted-foreground">Nenhuma glosa encontrada neste demonstrativo.</div>
                 ) : (
@@ -942,7 +901,7 @@ const DemonstrativesPage = () => {
               value={<span className="text-2xl md:text-3xl font-bold text-green-700">{formatCurrency(summaryStats.totalProcessado)}</span>}
               description={<span className="text-xs text-gray-500">Recebido nos últimos 30 dias</span>}
               variant="success"
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
               icon={<AlertCircle className="h-6 w-6 text-red-600" />}
@@ -950,7 +909,7 @@ const DemonstrativesPage = () => {
               value={<span className="text-2xl md:text-3xl font-bold text-red-700">{formatCurrency(summaryStats.totalGlosa)}</span>}
               description={<span className="text-xs text-gray-500">Glosado nos últimos 30 dias</span>}
               variant="danger"
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
               icon={<FileText className="h-6 w-6 text-blue-700" />}
@@ -958,7 +917,7 @@ const DemonstrativesPage = () => {
               value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{summaryStats.totalProcedimentos}</span>}
               description={<span className="text-xs text-gray-500">Analisados nos últimos 30 dias</span>}
               variant="info"
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
               icon={<ClipboardList className="h-6 w-6 text-amber-700" />}
@@ -966,7 +925,7 @@ const DemonstrativesPage = () => {
               value={<span className="text-2xl md:text-3xl font-bold text-amber-700">{pendingAudits}</span>}
               description={<span className="text-xs text-gray-500">Uploads aguardando revisão</span>}
               variant="warning"
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
           </div>
         </section>

@@ -41,6 +41,13 @@
     --ring: 213 100% 42%;
     
     --radius: 0.5rem;
+    
+    --color-card: 255 255 255;      /* #FFFFFF */
+    --color-body: 26 26 26;         /* #1A1A1A */
+    --color-border: 229 231 235;    /* #E5E7EB */
+    --color-success: 22 163 74;     /* #16A34A */
+    --color-warning: 217 119 6;     /* #D97706 */
+    --color-danger: 220 38 38;      /* #DC2626 */
   }
 
   .dark {
@@ -80,6 +87,13 @@
     --sidebar-accent-foreground: 240 5% 96%;
     --sidebar-border: 240 4% 16%;
     --sidebar-ring: 217 91% 60%;
+    
+    --color-card: 29 29 31;         /* #1D1D1F */
+    --color-body: 245 247 250;      /* #F5F7FA */
+    --color-border: 55 65 81;       /* #374151 */
+    --color-success: 56 239 125;    /* #38EF7D */
+    --color-warning: 250 204 21;    /* #FACC15 */
+    --color-danger: 248 113 113;    /* #F87171 */
   }
 }
 

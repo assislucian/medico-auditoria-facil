@@ -70,7 +70,7 @@ export function DataGrid({
                 <TableHead
                   key={column.field}
                   style={{ width: column.width, flex: column.flex }}
-                  className="text-center align-middle text-base font-semibold bg-neutral-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 py-3 px-4 tracking-tight text-gray-700 dark:text-gray-200"
+                  className="text-center align-middle text-base font-semibold bg-neutral-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 py-3 px-4 tracking-tight text-gray-700 dark:text-gray-200 sm:px-2 sm:py-2 sm:text-[0.92rem]"
                 >
                   {headerContent}
                 </TableHead>
@@ -82,7 +82,7 @@ export function DataGrid({
           {safeRows.slice(0, pageSize).map((row, rowIndex) => [
             <TableRow
               key={row?.id || rowIndex}
-              className={rowIndex % 2 === 0 ? 'bg-white dark:bg-neutral-900' : 'bg-neutral-50 dark:bg-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-900/30 transition-colors'}
+              className={rowIndex % 2 === 0 ? 'bg-card dark:bg-card-dark' : 'bg-neutral-50 dark:bg-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-900/30 transition-colors'}
             >
               {columns.map((column) => {
                 const cellValue = getCellValue(row, column.field);
@@ -91,7 +91,7 @@ export function DataGrid({
                 return (
                   <TableCell
                     key={`${row?.id || rowIndex}-${column.field}`}
-                    className={(isNumeric ? "text-right" : "text-left") + " align-middle py-3 px-4 text-base font-normal text-gray-800 dark:text-gray-100"}
+                    className={(isNumeric ? "text-right" : "text-left") + " align-middle py-3 px-4 text-base font-normal text-gray-800 dark:text-gray-100 sm:px-2 sm:py-2 sm:text-[0.92rem]"}
                   >
                     {column.renderCell ? (
                       column.renderCell({ value: cellValue, row })
@@ -134,17 +134,6 @@ export function DataGrid({
           <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
-      <style jsx>{`
-        @media (max-width: 900px) {
-          th, td {
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-            font-size: 0.92rem !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

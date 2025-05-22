@@ -38,21 +38,21 @@ import { GuidesTable } from "../components/guides/GuidesTable";
 // import Fuse from 'fuse.js';
 
 // Mapeamento de cores para cada tipo de papel (igual Demonstratives)
-const papelColors = {
-  'cirurgiao':   { bg: 'rgba(59,130,246,0.18)', text: '#1e3a8a' }, // azul
-  'anestesista': { bg: 'rgba(139,92,246,0.18)', text: '#6d28d9' }, // roxo
-  'primeiro_auxiliar': { bg: 'rgba(16,185,129,0.18)', text: '#065f46' }, // verde
-  'segundo_auxiliar': { bg: 'rgba(251,191,36,0.18)', text: '#92400e' }, // laranja
-  'outros': { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' }, // fallback
-};
-const defaultPapelColor = { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' };
+// const papelColors = {
+//   'cirurgiao':   { bg: 'rgba(59,130,246,0.18)', text: '#1e3a8a' }, // azul
+//   'anestesista': { bg: 'rgba(139,92,246,0.18)', text: '#6d28d9' }, // roxo
+//   'primeiro_auxiliar': { bg: 'rgba(16,185,129,0.18)', text: '#065f46' }, // verde
+//   'segundo_auxiliar': { bg: 'rgba(251,191,36,0.18)', text: '#92400e' }, // laranja
+//   'outros': { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' }, // fallback
+// };
+// const defaultPapelColor = { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' };
 
 // PADRÃO DE CORES GLOBAL PARA KPIs
 // Glosa: variant="danger", text-red-700, bg-red-50
 // Sucesso: variant="success", text-green-700, bg-green-50
 // Informação: variant="info", text-blue-700, bg-blue-50
 // Alerta: variant="warning", text-amber-700, bg-amber-50
-// Neutro: variant="neutral", text-gray-700, bg-white
+// Neutro: variant="neutral", text-gray-700, bg-body
 
 function getCurrentCrm() {
   try {
@@ -555,7 +555,7 @@ const GuidesPage = () => {
             value={<span className="text-2xl md:text-3xl font-bold text-gray-900">{pacientesUnicos.size}</span>}
             description={<span className="text-xs text-gray-500">Total de pacientes únicos neste período</span>}
             variant="info"
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+            className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
           />
           <InfoCard
             icon={<ClipboardList className="h-6 w-6 text-violet-700" />}
@@ -563,7 +563,7 @@ const GuidesPage = () => {
             value={<span className="text-2xl md:text-3xl font-bold text-violet-700">{totalProcedimentos}</span>}
             description={<span className="text-xs text-gray-500">Extraídos das guias</span>}
             variant="secondary"
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+            className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
           />
         </div>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-6">
@@ -573,7 +573,7 @@ const GuidesPage = () => {
             value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{papelCounts['cirurgiao'] || 0}</span>}
             description={<span className="text-xs text-gray-500">Atuou como cirurgião em <span className="font-bold text-blue-700">{percent(papelCounts['cirurgiao'] || 0)}</span> dos procedimentos</span>}
             variant="success"
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+            className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
           />
           <InfoCard
             icon={<User className="h-6 w-6 text-emerald-700" />}
@@ -581,7 +581,7 @@ const GuidesPage = () => {
             value={<span className="text-2xl md:text-3xl font-bold text-emerald-700">{papelCounts['primeiro_auxiliar'] || 0}</span>}
             description={<span className="text-xs text-gray-500">Atuou como 1º auxiliar em <span className="font-bold text-emerald-700">{percent(papelCounts['primeiro_auxiliar'] || 0)}</span> dos procedimentos</span>}
             variant="success"
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+            className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
           />
           <InfoCard
             icon={<User className="h-6 w-6 text-yellow-700" />}
@@ -589,7 +589,7 @@ const GuidesPage = () => {
             value={<span className="text-2xl md:text-3xl font-bold text-yellow-700">{papelCounts['segundo_auxiliar'] || 0}</span>}
             description={<span className="text-xs text-gray-500">Atuou como 2º auxiliar em <span className="font-bold text-yellow-700">{percent(papelCounts['segundo_auxiliar'] || 0)}</span> dos procedimentos</span>}
             variant="success"
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+            className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
           />
         </div>
         <div>
@@ -660,13 +660,7 @@ const GuidesPage = () => {
                                   <td className="py-2 px-3 whitespace-nowrap font-mono">{proc.codigo}</td>
                                   <td className="py-2 px-3 whitespace-nowrap max-w-[180px] truncate" title={proc.descricao}>{proc.descricao}</td>
                                   <td className="py-2 px-3 whitespace-nowrap">
-                                    <Badge
-                                      variant="participacao"
-                                      color={(papelColors[normalizePapel(proc.papel)] || defaultPapelColor).bg}
-                                      textColor={(papelColors[normalizePapel(proc.papel)] || defaultPapelColor).text}
-                                    >
-                                      {proc.papel}
-                                    </Badge>
+                                    <Badge variant="participacao">{proc.papel}</Badge>
                                   </td>
                                   <td className="py-2 px-3 whitespace-nowrap text-center">{proc.qtd}</td>
                                   <td className="py-2 px-3 whitespace-nowrap max-w-[180px] truncate" title={proc.prestador}>{proc.prestador}</td>
@@ -761,7 +755,7 @@ const GuidesPage = () => {
                     variant="outline"
                     onClick={resetFiles}
                     disabled={!files.length || isUploading || loading}
-                    className="h-9 px-4 font-medium text-gray-700 hover:bg-gray-50 border-gray-200"
+                    className="h-9 px-4 font-medium text-gray-700 hover:bg-border/10 dark:hover:bg-border/20 border-border"
                   >
                     Limpar
                   </Button>
@@ -782,7 +776,7 @@ const GuidesPage = () => {
 
         {loading && (
           <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center min-h-screen">
-            <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg p-8 flex flex-col items-center gap-4">
+            <div className="bg-body dark:bg-body rounded-lg shadow-lg p-8 flex flex-col items-center gap-4">
               <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>

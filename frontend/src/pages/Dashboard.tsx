@@ -36,7 +36,7 @@ const DashboardPage = () => {
           value={<span className="text-2xl md:text-3xl font-bold text-green-700">{formatCurrency(12597)}</span>}
           description={<span className="text-xs text-gray-500">Recebido nos últimos 30 dias</span>}
           variant="success"
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+          className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
         />
         <InfoCard
           icon={<AlertCircle className="h-6 w-6 text-red-600" />}
@@ -44,7 +44,7 @@ const DashboardPage = () => {
           value={<span className="text-2xl md:text-3xl font-bold text-red-700">{formatCurrency(1438)}</span>}
           description={<span className="text-xs text-gray-500">Glosado nos últimos 30 dias</span>}
           variant="danger"
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+          className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
         />
         <InfoCard
           icon={<FileText className="h-6 w-6 text-blue-700" />}
@@ -52,7 +52,7 @@ const DashboardPage = () => {
           value={<span className="text-2xl md:text-3xl font-bold text-blue-700">284</span>}
           description={<span className="text-xs text-gray-500">Analisados nos últimos 30 dias</span>}
           variant="info"
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+          className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
         />
         <InfoCard
           icon={<ClipboardList className="h-6 w-6 text-amber-700" />}
@@ -60,7 +60,7 @@ const DashboardPage = () => {
           value={<span className="text-2xl md:text-3xl font-bold text-amber-700">8</span>}
           description={<span className="text-xs text-gray-500">Uploads aguardando sua revisão</span>}
           variant="warning"
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+          className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
         />
       </div>
       <InfoCard

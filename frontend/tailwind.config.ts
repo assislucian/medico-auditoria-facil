@@ -94,10 +94,12 @@ export default {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
+        card:   'rgb(var(--color-card) / <alpha-value>)',
+        body:   'rgb(var(--color-body) / <alpha-value>)',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
+        success:'rgb(var(--color-success) / <alpha-value>)',
+        warning:'rgb(var(--color-warning) / <alpha-value>)',
+        danger: 'rgb(var(--color-danger) / <alpha-value>)',
         brand: { DEFAULT: '#2563EB', light: '#EFF6FF' },
       },
       borderRadius: {
@@ -125,5 +127,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require('tailwindcss-animate')],
 } satisfies Config;

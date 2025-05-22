@@ -2,14 +2,16 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { ThemeProvider } from './hooks/use-theme'
+import { NotificationProvider } from './contexts/NotificationContext'
 // import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-// import { NotificationProvider } from './contexts/NotificationContext'
 // import { MuiThemeProvider } from './mui-theme'
 
 // Teste incremental: comece apenas com <App />
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider>
-    <App />
+    <NotificationProvider>
+      <App />
+    </NotificationProvider>
   </ThemeProvider>
 )
 
