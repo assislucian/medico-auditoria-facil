@@ -7,8 +7,7 @@ export const getProfileData = async (userId: string): Promise<Profile | null> =>
   try {
     console.log('Fetching profile data for user:', userId);
     
-    // Since the database tables haven't been created yet, we'll need to mock this response or 
-    // use alternate methods until tables are properly set up
+    // Since the database tables haven't been created yet, we'll need to mock this response
     
     // Mock profile data with required fields for TypeScript
     const mockProfile: Profile = {
