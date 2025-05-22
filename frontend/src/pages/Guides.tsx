@@ -21,7 +21,7 @@ import { useFileUpload } from "../hooks/useFileUpload";
 import { FileType } from "../types/upload";
 import FileList from "../components/upload/FileList";
 import { toast } from "sonner";
-import { getGuides, deleteGuide, uploadGuide, GuidesQueryParams } from "../services/guides";
+import { getGuides, deleteGuide, uploadGuide, uploadGuides, GuidesQueryParams } from "../services/guides";
 import DetalhesGuia from "../components/guides/DetalhesGuia";
 import { GuideProcedure } from "../types/medical";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "../components/ui/tooltip";
@@ -46,6 +46,13 @@ const papelColors = {
   'outros': { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' }, // fallback
 };
 const defaultPapelColor = { bg: 'rgba(99,102,241,0.13)', text: '#3730a3' };
+
+// PADRÃO DE CORES GLOBAL PARA KPIs
+// Glosa: variant="danger", text-red-700, bg-red-50
+// Sucesso: variant="success", text-green-700, bg-green-50
+// Informação: variant="info", text-blue-700, bg-blue-50
+// Alerta: variant="warning", text-amber-700, bg-amber-50
+// Neutro: variant="neutral", text-gray-700, bg-white
 
 function getCurrentCrm() {
   try {
@@ -189,29 +196,38 @@ const GuidesPage = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token") || "";
-      const guiaFile = files.find((f) => f.type === "guia");
-      if (!guiaFile) throw new Error("Nenhum arquivo de guia válido");
-      
-      // Faz o upload da guia
-      const uploadResult = await uploadGuide(guiaFile.file, token);
-      toast.success("Guias processadas com sucesso");
-      
+      const guiaFiles = files.filter((f) => f.type === "guia").map(f => f.file);
+      if (!guiaFiles.length) throw new Error("Nenhum arquivo de guia válido");
+      // Faz o upload das guias em lote
+      const uploadResult = await uploadGuides(guiaFiles, token);
+      if (uploadResult && Array.isArray(uploadResult.results)) {
+        uploadResult.results.forEach((result: any) => {
+          if (result.success) {
+            toast.success(`Guia ${result.filename}: OK`);
+          } else {
+            toast.error(`Guia ${result.filename}: ${result.error || 'Erro'}`);
+          }
+        });
+      } else {
+        toast.error('Resposta inesperada do servidor.');
+      }
       // Recarrega os dados do servidor para ter a lista completa e atualizada
       const params: GuidesQueryParams = { page, pageSize, search, status, data };
       const res = await getGuides(token, params);
       setExtractedGuides(Array.isArray(res.procedures) ? res.procedures : []);
       setTotal(res.total || 0);
-      
       resetFiles();
       setActiveTab("list");
-      
       // Registra atividade
-      const uniqueGuias = new Set(uploadResult.map((p: any) => p.numero_guia));
-      logActivity("Upload de Guias", `Processada(s) ${uniqueGuias.size} guia(s) com ${uploadResult.length} procedimento(s)`, {
-        target: { numero_guia: Array.from(uniqueGuias) },
-        result: `${uploadResult.length} procedimentos processados`
-      });
-      setActivities(getRecentActivities());
+      if (uploadResult && Array.isArray(uploadResult.results)) {
+        const uniqueGuias = new Set();
+        uploadResult.results.forEach((r: any) => uniqueGuias.add(r.filename));
+        logActivity("Upload de Guias", `Processada(s) ${uniqueGuias.size} guia(s)`, {
+          target: { arquivos: Array.from(uniqueGuias) },
+          result: `${uploadResult.results.length} arquivos processados`
+        });
+        setActivities(getRecentActivities());
+      }
     } catch (err: any) {
       toast.error("Erro ao processar os arquivos", { description: err?.response?.data?.detail || err?.message });
     } finally {

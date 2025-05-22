@@ -29,34 +29,38 @@ const DashboardPage = () => {
           />
         ) : null}
       />
-      <div className="grid gap-6 md:grid-cols-4 grid-cols-1 mb-6">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <InfoCard
-          icon={<ArrowUpRight className="h-6 w-6 text-green-500" />}
-          title="Total Recebido"
-          value={formatCurrency(12597)}
-          description="+8% comparado ao mês anterior"
+          icon={<ArrowUpRight className="h-6 w-6 text-green-600" />}
+          title={<span className="text-xs font-semibold text-gray-700">Total Recebido</span>}
+          value={<span className="text-2xl md:text-3xl font-bold text-green-700">{formatCurrency(12597)}</span>}
+          description={<span className="text-xs text-gray-500">Recebido nos últimos 30 dias</span>}
           variant="success"
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
         />
         <InfoCard
-          icon={<AlertCircle className="h-6 w-6 text-red-500" />}
-          title="Total Glosado"
-          value={formatCurrency(1438)}
-          description="12% do valor total apresentado"
+          icon={<AlertCircle className="h-6 w-6 text-red-600" />}
+          title={<span className="text-xs font-semibold text-gray-700">Total Glosado</span>}
+          value={<span className="text-2xl md:text-3xl font-bold text-red-700">{formatCurrency(1438)}</span>}
+          description={<span className="text-xs text-gray-500">Glosado nos últimos 30 dias</span>}
           variant="danger"
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
         />
         <InfoCard
-          icon={<FileText className="h-6 w-6 text-blue-500" />}
-          title="Procedimentos"
-          value={284}
-          description="Analisados nos últimos 30 dias"
+          icon={<FileText className="h-6 w-6 text-blue-700" />}
+          title={<span className="text-xs font-semibold text-gray-700">Procedimentos</span>}
+          value={<span className="text-2xl md:text-3xl font-bold text-blue-700">284</span>}
+          description={<span className="text-xs text-gray-500">Analisados nos últimos 30 dias</span>}
           variant="info"
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
         />
         <InfoCard
-          icon={<ClipboardList className="h-6 w-6 text-amber-500" />}
-          title="Auditorias Pendentes"
-          value={8}
-          description="Uploads aguardando sua revisão"
+          icon={<ClipboardList className="h-6 w-6 text-amber-700" />}
+          title={<span className="text-xs font-semibold text-gray-700">Auditorias Pendentes</span>}
+          value={<span className="text-2xl md:text-3xl font-bold text-amber-700">8</span>}
+          description={<span className="text-xs text-gray-500">Uploads aguardando sua revisão</span>}
           variant="warning"
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
         />
       </div>
       <InfoCard

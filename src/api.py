@@ -709,96 +709,116 @@ def download_cross_report(job_id: str, user: dict = Depends(get_current_user)):
     )
 
 
-# --- Endpoint de upload de demonstrativo ---
+# --- Endpoint de upload de demonstrativos ---
 @app.post("/api/v1/demonstrativos/upload")
-def upload_demonstrativo(
-    file: UploadFile = File(...),
+def upload_demonstrativos(
+    files: List[UploadFile] = File(...),
     periodo: str = Form(None),
     lote: str = Form(None),
     user: dict = Depends(get_current_user),
 ):
+    """
+    Recebe múltiplos PDFs de demonstrativos, processa cada um individualmente,
+    salva no banco e retorna uma lista de resultados por arquivo.
+    Exige autenticação e filtra automaticamente por CRM do usuário logado.
+    """
     db = SessionLocal()
+    results = []
     try:
-        # Processar o PDF para extrair agregados antes de salvar
-        job_id = str(uuid4())
-        filename = f"{job_id}_{file.filename}"
-        file_path = os.path.join(UPLOAD_DIR, filename)
-        with open(file_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
-        try:
-            from src.parsers.demonstrativo_parser import DemonstrativoParser
-
-            parser = DemonstrativoParser(file_path)
-            summary = parser.get_summary()
-            total_procedimentos = summary["total_procedures"]
-            apresentado = summary["total_presented"]
-            liberado = summary["total_approved"]
-            glosa = summary["total_glosa"]
-            periodo = periodo or summary["period"]
-        except Exception as e:
-            total_procedimentos = 0
-            apresentado = 0.0
-            liberado = 0.0
-            glosa = 0.0
-        # Sanitizar campos livres
-        if "period" in summary:
-            summary["period"] = sanitize_text(summary["period"])
-        if "total_presented" in summary:
-            summary["total_presented"] = sanitize_text(str(summary["total_presented"]))
-        if "total_approved" in summary:
-            summary["total_approved"] = sanitize_text(str(summary["total_approved"]))
-        if "total_glosa" in summary:
-            summary["total_glosa"] = sanitize_text(str(summary["total_glosa"]))
-        # Log detalhado do upload
-        logger.info(
-            f"[UPLOAD] CRM={user['crm']} | periodo={periodo} | lote={lote or filename} | filename={filename}"
-        )
-        # Validação obrigatória do período
-        if not periodo:
-            logger.error(
-                f"[UPLOAD] Falha: demonstrativo sem período extraído! Arquivo: {filename}"
-            )
-            raise HTTPException(
-                status_code=400,
-                detail="Não foi possível extrair o período do demonstrativo. Verifique o PDF.",
-            )
-        # Trava de duplicidade: não permitir demonstrativo duplicado para mesmo CRM, período e lote (ou filename se lote não informado)
-        unique_lote = lote or filename
-        exists = (
-            db.query(Demonstrativo)
-            .filter_by(crm=user["crm"], periodo=periodo, lote=unique_lote)
-            .first()
-        )
-        if exists:
-            logger.warning(
-                f"[UPLOAD] Duplicidade detectada: CRM={user['crm']} | periodo={periodo} | lote={unique_lote}"
-            )
-            raise HTTPException(
-                status_code=400,
-                detail="Já existe demonstrativo para este período e lote.",
-            )
-        demonstrativo = Demonstrativo(
-            crm=user["crm"],
-            periodo=periodo,
-            lote=unique_lote,
-            filename=filename,
-            total_procedimentos=total_procedimentos,
-            apresentado=f"R$ {apresentado:,.2f}".replace(".", ","),
-            liberado=f"R$ {liberado:,.2f}".replace(".", ","),
-            glosa=f"R$ {glosa:,.2f}".replace(".", ","),
-        )
-        db.add(demonstrativo)
-        db.commit()
-        return {
-            "message": "Upload e processamento realizado com sucesso!",
-            "id": demonstrativo.id,
-            "periodo": demonstrativo.periodo,
-            "lote": demonstrativo.lote,
-            "total_procedimentos": demonstrativo.total_procedimentos,
-            "apresentado": demonstrativo.apresentado,
-            "liberado": demonstrativo.liberado,
-            "glosa": demonstrativo.glosa,
-        }
+        for file in files:
+            try:
+                job_id = str(uuid4())
+                filename = f"{job_id}_{file.filename}"
+                file_path = os.path.join(UPLOAD_DIR, filename)
+                with open(file_path, "wb") as f:
+                    shutil.copyfileobj(file.file, f)
+                try:
+                    from src.parsers.demonstrativo_parser import DemonstrativoParser
+                    parser = DemonstrativoParser(file_path)
+                    summary = parser.get_summary()
+                    total_procedimentos = summary["total_procedures"]
+                    apresentado = summary["total_presented"]
+                    liberado = summary["total_approved"]
+                    glosa = summary["total_glosa"]
+                    periodo_extracted = periodo or summary["period"]
+                except Exception as e:
+                    total_procedimentos = 0
+                    apresentado = 0.0
+                    liberado = 0.0
+                    glosa = 0.0
+                    periodo_extracted = periodo
+                # Sanitizar campos livres
+                if "period" in summary:
+                    summary["period"] = sanitize_text(summary["period"])
+                if "total_presented" in summary:
+                    summary["total_presented"] = sanitize_text(str(summary["total_presented"]))
+                if "total_approved" in summary:
+                    summary["total_approved"] = sanitize_text(str(summary["total_approved"]))
+                if "total_glosa" in summary:
+                    summary["total_glosa"] = sanitize_text(str(summary["total_glosa"]))
+                # Log detalhado do upload
+                logger.info(
+                    f"[UPLOAD] CRM={user['crm']} | periodo={periodo_extracted} | lote={lote or filename} | filename={filename}"
+                )
+                # Validação obrigatória do período
+                if not periodo_extracted:
+                    logger.error(
+                        f"[UPLOAD] Falha: demonstrativo sem período extraído! Arquivo: {filename}"
+                    )
+                    results.append({
+                        "filename": file.filename,
+                        "success": False,
+                        "error": "Não foi possível extrair o período do demonstrativo. Verifique o PDF."
+                    })
+                    continue
+                # Trava de duplicidade: não permitir demonstrativo duplicado para mesmo CRM, período e lote (ou filename se lote não informado)
+                unique_lote = lote or filename
+                exists = (
+                    db.query(Demonstrativo)
+                    .filter_by(crm=user["crm"], periodo=periodo_extracted, lote=unique_lote)
+                    .first()
+                )
+                if exists:
+                    logger.warning(
+                        f"[UPLOAD] Duplicidade detectada: CRM={user['crm']} | periodo={periodo_extracted} | lote={unique_lote}"
+                    )
+                    results.append({
+                        "filename": file.filename,
+                        "success": False,
+                        "error": "Já existe demonstrativo para este período e lote."
+                    })
+                    continue
+                demonstrativo = Demonstrativo(
+                    crm=user["crm"],
+                    periodo=periodo_extracted,
+                    lote=unique_lote,
+                    filename=filename,
+                    total_procedimentos=total_procedimentos,
+                    apresentado=f"R$ {apresentado:,.2f}".replace(".", ","),
+                    liberado=f"R$ {liberado:,.2f}".replace(".", ","),
+                    glosa=f"R$ {glosa:,.2f}".replace(".", ","),
+                )
+                db.add(demonstrativo)
+                db.commit()
+                results.append({
+                    "filename": file.filename,
+                    "success": True,
+                    "id": demonstrativo.id,
+                    "periodo": demonstrativo.periodo,
+                    "lote": demonstrativo.lote,
+                    "total_procedimentos": demonstrativo.total_procedimentos,
+                    "apresentado": demonstrativo.apresentado,
+                    "liberado": demonstrativo.liberado,
+                    "glosa": demonstrativo.glosa,
+                })
+            except Exception as e:
+                logger.error(f"[UPLOAD] Erro ao processar arquivo {file.filename}: {e}")
+                results.append({
+                    "filename": file.filename,
+                    "success": False,
+                    "error": str(e)
+                })
+        return {"results": results}
     finally:
         db.close()
 
@@ -924,205 +944,138 @@ def get_demonstrativo_procedures(demo_id: int, user: dict = Depends(get_current_
 
 # --- Endpoint de upload de guia TISS ---
 @app.post("/api/v1/guias/upload")
-def upload_guia(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+def upload_guias(files: List[UploadFile] = File(...), user: dict = Depends(get_current_user)):
     """
-    Recebe um PDF de guia TISS, extrai os dados, salva no banco e retorna em JSON.
+    Recebe múltiplos PDFs de guias TISS, processa cada um individualmente,
+    salva no banco e retorna uma lista de resultados por arquivo.
     Exige autenticação e filtra automaticamente por CRM do usuário logado.
     """
-    import json
-    import os
-    import shutil
     import tempfile
-
     from src.parsers.guia_parser import parse_guia_pdf
-
-    # Valida tipo de arquivo
-    if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Apenas arquivos PDF são aceitos.")
-
-    # Salva arquivo temporário
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        shutil.copyfileobj(file.file, tmp)
-        tmp_path = tmp.name
-
-    try:
-        # Extrai procedimentos usando o CRM do usuário autenticado
-        crm = str(user.get("crm", ""))
-        logger.info(f"Processando guia para CRM {crm}")
-
-        # Utiliza a nova função parse_guia_pdf com filtro por CRM
-        procedures = parse_guia_pdf(tmp_path, crm_filter=crm)
-
-        if not procedures:
-            logger.warning(
-                f"Nenhum procedimento encontrado para o CRM {crm} nesta guia"
-            )
-            return {
-                "message": "Guia processada, mas nenhum procedimento encontrado para o seu CRM",
-                "crm": crm,
-                "procedures": [],
-            }
-
-        # Sanitizar campos livres
-        for proc in procedures:
-            proc["beneficiario"] = sanitize_text(proc.get("beneficiario", ""))
-            proc["descricao"] = sanitize_text(proc.get("descricao", ""))
-            proc["prestador"] = sanitize_text(proc.get("prestador", ""))
-            for part in proc.get("participacoes", []):
-                part["nome"] = sanitize_text(part.get("nome", ""))
-
-        # Salva no banco evitando duplicados
-        db = SessionLocal()
-        guias_adicionadas = 0
-
-        try:
-            for proc in procedures:
-                # Converte para o formato esperado pelo banco
-                guia_data = {
-                    "numero_guia": proc.get("guia"),
-                    "data": proc.get("data_execucao", "").replace("-", "/"),
-                    "paciente": proc.get("beneficiario", ""),
-                    "codigo": proc.get("codigo", ""),
-                    "descricao": proc.get("descricao", ""),
-                    "papel": proc.get("papel_exercido", ""),
-                    "crm": crm,
-                    "qtd": proc.get("quantidade", 1),
-                    "status": "Gerado pela execução",
-                    "prestador": proc.get("prestador", ""),
-                    "nome_medico": next(
-                        (
-                            p.get("nome", "")
-                            for p in proc.get("participacoes", [])
-                            if p.get("crm") == crm
-                        ),
-                        "",
-                    ),
-                    "dt_inicio": next(
-                        (
-                            p.get("inicio", "")
-                            for p in proc.get("participacoes", [])
-                            if p.get("crm") == crm
-                        ),
-                        "",
-                    ),
-                    "dt_fim": next(
-                        (
-                            p.get("fim", "")
-                            for p in proc.get("participacoes", [])
-                            if p.get("crm") == crm
-                        ),
-                        "",
-                    ),
-                    "status_part": next(
-                        (
-                            p.get("status", "")
-                            for p in proc.get("participacoes", [])
-                            if p.get("crm") == crm
-                        ),
-                        "",
-                    ),
-                }
-
-                # Verifica se já existe esta guia + código + papel para este usuário
-                existing = (
-                    db.query(Guia)
-                    .filter_by(
-                        numero_guia=guia_data["numero_guia"],
-                        codigo=guia_data["codigo"],
-                        papel=guia_data["papel"],
-                        user_id=crm,
-                    )
-                    .first()
-                )
-
-                # Se não existir, adiciona
-                if not existing:
-                    guia = Guia(
-                        numero_guia=guia_data["numero_guia"],
-                        data=guia_data["data"],
-                        paciente=guia_data["paciente"],
-                        codigo=guia_data["codigo"],
-                        descricao=guia_data["descricao"],
-                        papel=guia_data["papel"],
-                        crm=guia_data["crm"],
-                        qtd=guia_data["qtd"],
-                        status=guia_data["status"],
-                        prestador=guia_data["prestador"],
-                        user_id=crm,
-                        nome_medico=guia_data["nome_medico"],
-                        dt_inicio=guia_data["dt_inicio"],
-                        dt_fim=guia_data["dt_fim"],
-                        status_part=guia_data["status_part"],
-                    )
-                    db.add(guia)
-                    guias_adicionadas += 1
-
-            db.commit()
-
-            # Adapta para o formato esperado pelo frontend
-            formatted_procedures = [
-                {
-                    "numero_guia": p.get("guia"),
-                    "data": p.get("data_execucao", "").replace("-", "/"),
-                    "beneficiario": p.get("beneficiario", ""),
-                    "codigo": p.get("codigo", ""),
-                    "descricao": p.get("descricao", ""),
-                    "papel": p.get("papel_exercido", ""),
-                    "crm": crm,
-                    "qtd": p.get("quantidade", 1),
-                    "status": "Gerado pela execução",
-                    "prestador": p.get("prestador", ""),
-                    "nome_medico": next(
-                        (
-                            part.get("nome", "")
-                            for part in p.get("participacoes", [])
-                            if part.get("crm") == crm
-                        ),
-                        "",
-                    ),
-                    "dt_inicio": next(
-                        (
-                            part.get("inicio", "")
-                            for part in p.get("participacoes", [])
-                            if part.get("crm") == crm
-                        ),
-                        "",
-                    ),
-                    "dt_fim": next(
-                        (
-                            part.get("fim", "")
-                            for part in p.get("participacoes", [])
-                            if part.get("crm") == crm
-                        ),
-                        "",
-                    ),
-                    "status_part": next(
-                        (
-                            part.get("status", "")
-                            for part in p.get("participacoes", [])
-                            if part.get("crm") == crm
-                        ),
-                        "",
-                    ),
-                }
-                for p in procedures
-            ]
-
-            logger.info(
-                f"Guia processada: {len(procedures)} procedimentos encontrados, {guias_adicionadas} novos adicionados"
-            )
-            return {
-                "message": f"Guia processada: {len(procedures)} procedimentos encontrados, {guias_adicionadas} novos adicionados",
-                "crm": crm,
-                "procedures": formatted_procedures,
-            }
-        finally:
-            db.close()
-    except Exception as e:
-        logger.error(f"Erro ao processar guia: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=f"Erro ao processar guia: {e}")
-    finally:
-        os.unlink(tmp_path)
+    results = []
+    for file in files:
+        if not file.filename.lower().endswith(".pdf"):
+            results.append({
+                "filename": file.filename,
+                "success": False,
+                "error": "Apenas arquivos PDF são aceitos."
+            })
+            continue
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            try:
+                shutil.copyfileobj(file.file, tmp)
+                tmp_path = tmp.name
+                crm = str(user.get("crm", ""))
+                logger.info(f"Processando guia para CRM {crm}")
+                procedures = parse_guia_pdf(tmp_path, crm_filter=crm)
+                if not procedures:
+                    logger.warning(f"Nenhum procedimento encontrado para o CRM {crm} nesta guia")
+                    results.append({
+                        "filename": file.filename,
+                        "success": True,
+                        "message": "Guia processada, mas nenhum procedimento encontrado para o seu CRM",
+                        "crm": crm,
+                        "procedures": []
+                    })
+                    continue
+                # Sanitizar campos livres
+                for proc in procedures:
+                    proc["beneficiario"] = sanitize_text(proc.get("beneficiario", ""))
+                    proc["descricao"] = sanitize_text(proc.get("descricao", ""))
+                    proc["prestador"] = sanitize_text(proc.get("prestador", ""))
+                    for part in proc.get("participacoes", []):
+                        part["nome"] = sanitize_text(part.get("nome", ""))
+                db = SessionLocal()
+                guias_adicionadas = 0
+                try:
+                    for proc in procedures:
+                        guia_data = {
+                            "numero_guia": proc.get("guia"),
+                            "data": proc.get("data_execucao", "").replace("-", "/"),
+                            "paciente": proc.get("beneficiario", ""),
+                            "codigo": proc.get("codigo", ""),
+                            "descricao": proc.get("descricao", ""),
+                            "papel": proc.get("papel_exercido", ""),
+                            "crm": crm,
+                            "qtd": proc.get("quantidade", 1),
+                            "status": "Gerado pela execução",
+                            "prestador": proc.get("prestador", ""),
+                            "nome_medico": next((p.get("nome", "") for p in proc.get("participacoes", []) if p.get("crm") == crm), ""),
+                            "dt_inicio": next((p.get("inicio", "") for p in proc.get("participacoes", []) if p.get("crm") == crm), ""),
+                            "dt_fim": next((p.get("fim", "") for p in proc.get("participacoes", []) if p.get("crm") == crm), ""),
+                            "status_part": next((p.get("status", "") for p in proc.get("participacoes", []) if p.get("crm") == crm), ""),
+                        }
+                        existing = (
+                            db.query(Guia)
+                            .filter_by(
+                                numero_guia=guia_data["numero_guia"],
+                                codigo=guia_data["codigo"],
+                                papel=guia_data["papel"],
+                                user_id=crm,
+                            )
+                            .first()
+                        )
+                        if not existing:
+                            guia = Guia(
+                                numero_guia=guia_data["numero_guia"],
+                                data=guia_data["data"],
+                                paciente=guia_data["paciente"],
+                                codigo=guia_data["codigo"],
+                                descricao=guia_data["descricao"],
+                                papel=guia_data["papel"],
+                                crm=guia_data["crm"],
+                                qtd=guia_data["qtd"],
+                                status=guia_data["status"],
+                                prestador=guia_data["prestador"],
+                                user_id=crm,
+                                nome_medico=guia_data["nome_medico"],
+                                dt_inicio=guia_data["dt_inicio"],
+                                dt_fim=guia_data["dt_fim"],
+                                status_part=guia_data["status_part"],
+                            )
+                            db.add(guia)
+                            guias_adicionadas += 1
+                    db.commit()
+                    formatted_procedures = [
+                        {
+                            "numero_guia": p.get("guia"),
+                            "data": p.get("data_execucao", "").replace("-", "/"),
+                            "beneficiario": p.get("beneficiario", ""),
+                            "codigo": p.get("codigo", ""),
+                            "descricao": p.get("descricao", ""),
+                            "papel": p.get("papel_exercido", ""),
+                            "crm": crm,
+                            "qtd": p.get("quantidade", 1),
+                            "status": "Gerado pela execução",
+                            "prestador": p.get("prestador", ""),
+                            "nome_medico": next((part.get("nome", "") for part in p.get("participacoes", []) if part.get("crm") == crm), ""),
+                            "dt_inicio": next((part.get("inicio", "") for part in p.get("participacoes", []) if part.get("crm") == crm), ""),
+                            "dt_fim": next((part.get("fim", "") for part in p.get("participacoes", []) if part.get("crm") == crm), ""),
+                            "status_part": next((part.get("status", "") for part in p.get("participacoes", []) if part.get("crm") == crm), ""),
+                        }
+                        for p in procedures
+                    ]
+                    logger.info(f"Guia processada: {len(procedures)} procedimentos encontrados, {guias_adicionadas} novos adicionados")
+                    results.append({
+                        "filename": file.filename,
+                        "success": True,
+                        "message": f"Guia processada: {len(procedures)} procedimentos encontrados, {guias_adicionadas} novos adicionados",
+                        "crm": crm,
+                        "procedures": formatted_procedures,
+                        "novos_adicionados": guias_adicionadas
+                    })
+                finally:
+                    db.close()
+            except Exception as e:
+                logger.error(f"Erro ao processar guia {file.filename}: {e}", exc_info=True)
+                results.append({
+                    "filename": file.filename,
+                    "success": False,
+                    "error": str(e)
+                })
+            finally:
+                os.unlink(tmp_path)
+    return {"results": results}
 
 
 # --- Endpoint para salvar guias ---

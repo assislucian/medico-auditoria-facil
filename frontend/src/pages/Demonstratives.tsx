@@ -146,6 +146,14 @@ function cleanBRL(str) {
   return str.replace(/[^0-9.,-]/g, '');
 }
 
+// Função utilitária para parse seguro de BRL para número
+function parseBRLToNumber(val) {
+  if (typeof val === 'number') return val;
+  if (!val) return 0;
+  let cleaned = String(val).replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
+  return Number(cleaned) || 0;
+}
+
 const proceduresColumns = [
   { field: 'guia', headerName: 'Guia', minWidth: 90, flex: 0 },
   { field: 'data', headerName: 'Data', minWidth: 90, flex: 0 },
@@ -229,7 +237,8 @@ const proceduresColumns = [
     headerName: 'CBHPM',
     minWidth: 110, flex: 0,
     valueGetter: (params) => params.row.cbhpm,
-    valueFormatter: (params) => params.value !== null ? formatCurrency(params.value) : '--'
+    valueFormatter: (params) => params.value && params.value > 0 ? formatCurrency(params.value) : '--',
+    renderCell: ({ value }) => (value && value > 0 ? <span>{formatCurrency(value)}</span> : <span>--</span>)
   },
   {
     field: 'liberado',
@@ -242,8 +251,9 @@ const proceduresColumns = [
     field: 'diferenca',
     headerName: 'Diferença',
     minWidth: 110, flex: 0,
-    valueGetter: (params) => params.row.diferenca ?? 0,
-    renderCell: ({ value }) => {
+    valueGetter: (params) => (params.row.cbhpm && params.row.cbhpm > 0) ? params.row.liberado - params.row.cbhpm : null,
+    renderCell: ({ value, row }) => {
+      if (!row.cbhpm || row.cbhpm <= 0) return <span>--</span>;
       let color = '#64748b'; // cinza
       let Icon = null;
       if (value < 0) {
@@ -266,8 +276,9 @@ const proceduresColumns = [
     headerName: 'Delta %',
     minWidth: 90, flex: 0,
     description: 'Percentual da diferença entre liberado e CBHPM',
-    valueGetter: (params) => params.row.delta_percent ?? 0,
-    renderCell: ({ value }) => {
+    valueGetter: (params) => (params.row.cbhpm && params.row.cbhpm > 0) ? ((params.row.liberado - params.row.cbhpm) / params.row.cbhpm) * 100 : null,
+    renderCell: ({ value, row }) => {
+      if (!row.cbhpm || row.cbhpm <= 0) return <span>--</span>;
       let color = '#64748b'; // cinza
       if (value < 0) color = '#a21caf'; // roxo
       if (value > 0) color = '#059669'; // verde
@@ -289,7 +300,7 @@ const proceduresColumns = [
     field: 'glosa',
     headerName: 'Glosa',
     minWidth: 110, flex: 0,
-    valueGetter: (params) => params.row.glosa,
+    valueGetter: (params) => Math.max(0, params.row.glosa),
     renderCell: ({ value }) => (
       <span className={value > 0 ? "text-red-600 font-medium" : ""}>
         {formatCurrency(value)}
@@ -438,14 +449,53 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
       descricao: p.descricao,
       cbhpm,
       liberado,
-      diferenca: cbhpm !== null ? liberado - cbhpm : null
+      diferenca: cbhpm !== null ? liberado - cbhpm : null,
+      participacao: p.participacao // garantir campo
     };
   });
-  const totalAbaixoCBHPM = cbhpmComparisons.reduce((sum, c) => sum + (c.diferenca !== null && c.diferenca < 0 ? c.diferenca : 0), 0);
-  const qtdAbaixoCBHPM = cbhpmComparisons.filter(c => c.diferenca !== null && c.diferenca < 0).length;
-  const percentAbaixoCBHPM = procedures.length > 0 ? Math.round((qtdAbaixoCBHPM / procedures.length) * 100) : 0;
-  const maiorPrejuizo = cbhpmComparisons.reduce((min, c) => (c.diferenca !== null && c.diferenca < min ? c.diferenca : min), 0);
-  const maiorPrejuizoProc = cbhpmComparisons.find(c => c.diferenca === maiorPrejuizo);
+  // DEBUG: logar cada item de cbhpmComparisons com motivo
+  cbhpmComparisons.forEach((c, i) => {
+    const cbhpmNum = parseBRLToNumber(c.cbhpm);
+    const isPend = !c.participacao || String(c.participacao).trim().toLowerCase() === 'upload guia';
+    const entrou = (
+      typeof cbhpmNum === 'number' &&
+      cbhpmNum > 0 &&
+      typeof c.diferenca === 'number' &&
+      c.diferenca < 0 &&
+      !isPend
+    );
+    console.log(`[DEBUG] Item ${i}:`, {
+      codigo: c.codigo,
+      cbhpm: c.cbhpm,
+      cbhpmNum,
+      liberado: c.liberado,
+      diferenca: c.diferenca,
+      participacao: c.participacao,
+      entrou,
+      motivo: entrou ? 'OK' : isPend ? 'PENDENTE' : cbhpmNum <= 0 ? 'CBHPM <= 0' : c.diferenca === null ? 'DIFERENCA NULL' : c.diferenca >= 0 ? 'DIFERENCA >= 0' : 'OUTRO'
+    });
+  });
+  // Filtro para procedimentos válidos (CBHPM > 0 e participação válida)
+  const procedimentosValidos = cbhpmComparisons.filter(c => {
+    const cbhpmNum = parseBRLToNumber(c.cbhpm);
+    const isPend = !c.participacao || String(c.participacao).trim().toLowerCase() === 'upload guia';
+    return (
+      typeof cbhpmNum === 'number' &&
+      cbhpmNum > 0 &&
+      !isPend
+    );
+  });
+  // Filtro para procedimentos abaixo da CBHPM
+  const abaixoCBHPM = procedimentosValidos.filter(c => typeof c.diferenca === 'number' && c.diferenca < 0);
+  const hasCBHPM = abaixoCBHPM.length > 0;
+  const totalAbaixoCBHPM = hasCBHPM
+    ? abaixoCBHPM.reduce((sum, c) => sum + c.diferenca, 0)
+    : null;
+  // % abaixo da tabela (corrigido)
+  const percentAbaixoCBHPM = procedimentosValidos.length > 0 ? Math.round((abaixoCBHPM.length / procedimentosValidos.length) * 100) : 0;
+  // Maior diferença individual (corrigido)
+  const maiorPrejuizo = abaixoCBHPM.reduce((min, c) => (c.diferenca !== null && c.diferenca < min ? c.diferenca : min), 0);
+  const maiorPrejuizoProc = abaixoCBHPM.find(c => c.diferenca === maiorPrejuizo);
 
   return (
     <Dialog>
@@ -466,49 +516,68 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
               Detalhes do demonstrativo de pagamento, incluindo totais, procedimentos e insights comparativos com a CBHPM.
             </DialogDescription>
           </DialogHeader>
-          {/* Insights CBHPM - cards pequenos */}
-          <div className="grid gap-6 md:grid-cols-4 grid-cols-1 mb-6">
+          {/* Insights CBHPM - cards pequenos (PADRÃO GUIAS) */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-2">
             <InfoCard
-              icon={<DollarSign className="h-6 w-6 text-green-500" />}
-              title="Total Liberado"
-              value={formatCurrency(Math.abs(totalAbaixoCBHPM))}
-              description="Soma do valor pago abaixo da CBHPM"
-              variant="danger"
+              icon={<AlertCircle className="h-6 w-6 text-red-600" />}
+              title={<span className="text-xs font-semibold text-gray-700">Total Abaixo CBHPM</span>}
+              value={hasCBHPM
+                ? <span className="text-2xl md:text-3xl font-bold text-red-700">{formatCurrency(Math.abs(totalAbaixoCBHPM))}</span>
+                : <span className="text-2xl md:text-3xl font-bold text-gray-400">—</span>
+              }
+              description={hasCBHPM
+                ? <span className="text-xs text-gray-500">Soma do valor pago abaixo da CBHPM</span>
+                : <span className="text-xs text-gray-400">Sem procedimentos com CBHPM neste demonstrativo</span>
+              }
+              variant={hasCBHPM ? "danger" : "neutral"}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<FileBarChart className="h-6 w-6 text-amber-500" />}
-              title="% abaixo da tabela"
-              value={`${percentAbaixoCBHPM}%`}
-              description="% de procedimentos abaixo da CBHPM"
+              icon={<ClipboardList className="h-6 w-6 text-amber-700" />}
+              title={<span className="text-xs font-semibold text-gray-700">% abaixo da tabela</span>}
+              value={<span className="text-2xl md:text-3xl font-bold text-amber-700">{`${percentAbaixoCBHPM}%`}</span>}
+              description={<span className="text-xs text-gray-500">% de procedimentos abaixo da CBHPM</span>}
               variant="warning"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<DollarSign className="h-6 w-6 text-blue-500" />}
-              title="Maior diferença individual"
-              value={maiorPrejuizoProc && maiorPrejuizoProc.diferenca !== null ? formatCurrency(Math.abs(maiorPrejuizoProc.diferenca)) : '--'}
-              description={maiorPrejuizoProc ? `${maiorPrejuizoProc.codigo} - ${maiorPrejuizoProc.descricao}` : ''}
+              icon={<FileText className="h-6 w-6 text-blue-700" />}
+              title={<span className="text-xs font-semibold text-gray-700">Maior diferença individual</span>}
+              value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{maiorPrejuizoProc && maiorPrejuizoProc.diferenca !== null ? formatCurrency(Math.abs(maiorPrejuizoProc.diferenca)) : '--'}</span>}
+              description={<span className="text-xs text-gray-500">{maiorPrejuizoProc ? `${maiorPrejuizoProc.codigo} - ${maiorPrejuizoProc.descricao}` : ''}</span>}
               variant="info"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
             />
           </div>
-          {/* Totais - cards pequenos */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {/* Totais - cards pequenos (PADRÃO GUIAS) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
             <InfoCard
-              icon={<DollarSign className="h-6 w-6 text-green-500 mb-1" />}
-              title="Total Liberado"
-              value={formatCurrency(totals.totalLiberado)}
-              variant="neutral"
+              icon={<ArrowUpRight className="h-6 w-6 text-green-600 mb-1" />}
+              title={<span className="text-xs font-semibold text-gray-700">Total Liberado</span>}
+              value={<span className="text-2xl md:text-3xl font-bold text-green-700">{formatCurrency(totals.totalLiberado)}</span>}
+              variant="success"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<FileBarChart className="h-6 w-6 text-blue-500 mb-1" />}
-              title="Procedimentos"
-              value={totals.totalProcedimentos}
-              variant="neutral"
+              icon={<FileText className="h-6 w-6 text-blue-700 mb-1" />}
+              title={<span className="text-xs font-semibold text-gray-700">Procedimentos</span>}
+              value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{totals.totalProcedimentos}</span>}
+              variant="info"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<DollarSign className="h-6 w-6 text-red-500 mb-1" />}
-              title="Total Glosa"
-              value={formatCurrency(totals.totalGlosa)}
+              icon={<AlertCircle className="h-6 w-6 text-red-600 mb-1" />}
+              title={<span className="text-xs font-semibold text-gray-700">Total Glosa</span>}
+              value={<span className="text-2xl md:text-3xl font-bold text-red-700">{formatCurrency(totals.totalGlosa)}</span>}
+              variant="danger"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
+            />
+            <InfoCard
+              icon={<DollarSign className="h-6 w-6 text-gray-700 mb-1" />}
+              title={<span className="text-xs font-semibold text-gray-700">Total Apresentado</span>}
+              value={<span className="text-2xl md:text-3xl font-bold text-gray-700">{formatCurrency(totals.totalApresentado)}</span>}
               variant="neutral"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
             />
           </div>
           {/* Filtro rápido acima da tabela de procedimentos detalhados */}
@@ -518,6 +587,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
               <Button
                 size="sm"
                 variant={showOnlyPendentes ? 'secondary' : 'outline'}
+                className="h-9 px-4 font-medium"
                 onClick={() => {
                   setShowOnlyPendentes(v => {
                     const novo = !v;
@@ -531,24 +601,25 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
               </Button>
               <Button
                 size="sm"
-                variant="ghost"
-                className="ml-2"
+                variant="outline"
+                className="h-9 px-4 font-medium ml-2"
                 onClick={async () => {
                   await handleExportPDF();
                   toast.success('PDF exportado com sucesso.');
                 }}
                 title="Exportar demonstrativo detalhado em PDF"
               >
-                <Download className="w-4 h-4 mr-1" /> Exportar PDF
+                <Download className="w-4 h-4 mr-2" /> Exportar PDF
               </Button>
               <Button
                 size="sm"
-                className="h-9 px-5 font-semibold"
+                variant="primary"
+                className="h-9 px-5 font-semibold flex items-center"
                 onClick={() => setShowGlosas(true)}
                 disabled={glosas.length === 0}
-                style={{ background: '#2563eb', color: '#fff' }}
+                aria-label="Analisar Glosas"
               >
-                <ChevronRight className="h-4 w-4 mr-1" />
+                <ChevronRight className="h-4 w-4 mr-2" />
                 Analisar Glosas
               </Button>
             </div>
@@ -647,7 +718,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
                 )}
               </div>
               <div className="flex justify-end mt-4">
-                <Button variant="secondary" onClick={() => setShowGlosas(false)}>Fechar</Button>
+                <Button variant="secondary" size="sm" onClick={() => setShowGlosas(false)} className="h-9 px-4 font-medium">Fechar</Button>
               </div>
             </div>
           )}
@@ -832,7 +903,7 @@ const DemonstrativesPage = () => {
       renderCell: ({ row }) => (
         <div className="flex gap-2">
           <DemonstrativeDetailDialog demonstrative={row} />
-          <Button variant="destructive" size="sm" className="ml-2" onClick={async () => {
+          <Button variant="destructive" size="sm" className="ml-2 h-9 px-4 font-medium" onClick={async () => {
             await handleDeleteDemonstrativo(row.id);
             toast.success('Demonstrativo excluído com sucesso');
           }} title="Excluir demonstrativo">
@@ -864,42 +935,41 @@ const DemonstrativesPage = () => {
       <div className="space-y-6">
         {/* Painel de Insights Clínico-Financeiros - Global */}
         <section aria-label="Painel de Insights Clínico-Financeiros" className="mb-6">
-          <div className="grid gap-6 md:grid-cols-4 grid-cols-1 mb-6">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-2">
             <InfoCard
-              icon={<ArrowUpRight className="h-6 w-6 text-green-500" />}
-              title="Total Recebido"
-              value={formatCurrency(summaryStats.totalProcessado)}
-              description="+8% comparado ao mês anterior"
+              icon={<ArrowUpRight className="h-6 w-6 text-green-600" />}
+              title={<span className="text-xs font-semibold text-gray-700">Total Recebido</span>}
+              value={<span className="text-2xl md:text-3xl font-bold text-green-700">{formatCurrency(summaryStats.totalProcessado)}</span>}
+              description={<span className="text-xs text-gray-500">Recebido nos últimos 30 dias</span>}
               variant="success"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<AlertCircle className="h-6 w-6 text-red-500" />}
-              title="Total Glosado"
-              value={formatCurrency(summaryStats.totalGlosa)}
-              description="12% do valor total apresentado"
+              icon={<AlertCircle className="h-6 w-6 text-red-600" />}
+              title={<span className="text-xs font-semibold text-gray-700">Total Glosado</span>}
+              value={<span className="text-2xl md:text-3xl font-bold text-red-700">{formatCurrency(summaryStats.totalGlosa)}</span>}
+              description={<span className="text-xs text-gray-500">Glosado nos últimos 30 dias</span>}
               variant="danger"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<FileText className="h-6 w-6 text-blue-500" />}
-              title="Procedimentos"
-              value={summaryStats.totalProcedimentos}
-              description="Analisados nos últimos 30 dias"
+              icon={<FileText className="h-6 w-6 text-blue-700" />}
+              title={<span className="text-xs font-semibold text-gray-700">Procedimentos</span>}
+              value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{summaryStats.totalProcedimentos}</span>}
+              description={<span className="text-xs text-gray-500">Analisados nos últimos 30 dias</span>}
               variant="info"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<ClipboardList className="h-6 w-6 text-amber-500" />}
-              title="Auditorias Pendentes"
-              value={pendingAudits}
-              description="Uploads aguardando sua revisão"
+              icon={<ClipboardList className="h-6 w-6 text-amber-700" />}
+              title={<span className="text-xs font-semibold text-gray-700">Auditorias Pendentes</span>}
+              value={<span className="text-2xl md:text-3xl font-bold text-amber-700">{pendingAudits}</span>}
+              description={<span className="text-xs text-gray-500">Uploads aguardando revisão</span>}
               variant="warning"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200"
             />
           </div>
-          {/*
-            Os indicadores de "Total abaixo da CBHPM", "% abaixo da tabela" e "Maior diferença individual"
-            só podem ser exibidos no detalhamento, pois dependem dos dados de procedimentos.
-          */}
         </section>
-
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="list">Lista</TabsTrigger>
@@ -958,6 +1028,9 @@ const DemonstrativesPage = () => {
                   <Button
                     onClick={handleUploadDemonstrativos}
                     disabled={isUploading || !files.length}
+                    size="sm"
+                    variant="primary"
+                    className="h-9 px-5 font-semibold flex items-center"
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     {isUploading ? 'Processando...' : 'Processar'}

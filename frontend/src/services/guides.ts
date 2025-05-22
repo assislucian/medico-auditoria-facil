@@ -34,18 +34,18 @@ export async function deleteGuide(numeroGuia: string, token: string): Promise<vo
   });
 }
 
-export async function uploadGuide(file: File, token: string): Promise<GuideProcedure[]> {
+export async function uploadGuides(files: File[], token: string): Promise<any> {
   const formData = new FormData();
-  formData.append("file", file, file.name);
-  const res = await axios.post<{ message: string; crm: string; procedures: GuideProcedure[] }>(
+  files.forEach(file => formData.append('files', file, file.name));
+  const res = await axios.post(
     `${apiUrl}/api/v1/guias/upload`,
     formData,
     {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
+        'Content-Type': 'multipart/form-data',
       },
     }
   );
-  return res.data.procedures;
+  return res.data; // results: [{ filename, success, ... }]
 } 

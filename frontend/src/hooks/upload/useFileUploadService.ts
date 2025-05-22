@@ -47,10 +47,11 @@ export function useFileUploadService() {
       setProgress(0);
       setProcessingStage('extracting');
       setProcessingMsg('Enviando arquivos...');
-      const guiaFile = files.find(f => f.type === 'guia' && f.status === 'valid');
-      if (guiaFile) {
+      // Upload de guias (mantém compatibilidade)
+      const guiaFiles = files.filter(f => f.type === 'guia' && f.status === 'valid');
+      if (guiaFiles.length) {
         const formData = new FormData();
-        formData.append('file', guiaFile.file, guiaFile.name);
+        guiaFiles.forEach(f => formData.append('files', f.file, f.name));
         const token = localStorage.getItem('token');
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         const res = await axios.post(`${apiUrl}/api/v1/guias/upload`, formData, {
@@ -62,27 +63,38 @@ export function useFileUploadService() {
         setProgress(100);
         setProcessingStage('complete');
         setProcessingMsg('Processamento concluído!');
-        toast.success('Guia processada com sucesso!');
+        toast.success('Guias processadas!');
         return { success: true, data: res.data };
       }
-      // fallback: demonstrativo
-      const demoFile = files.find(f => f.type === 'demonstrativo' && f.status === 'valid');
-      if (demoFile) {
-      const formData = new FormData();
-      formData.append('file', demoFile.file, demoFile.name);
-      const token = localStorage.getItem('token');
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const res = await axios.post(`${apiUrl}/api/v1/demonstrativos/upload`, formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
+      // Upload de demonstrativos (em lote)
+      const demoFiles = files.filter(f => f.type === 'demonstrativo' && f.status === 'valid');
+      if (demoFiles.length) {
+        const formData = new FormData();
+        demoFiles.forEach(f => formData.append('files', f.file, f.name));
+        const token = localStorage.getItem('token');
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const res = await axios.post(`${apiUrl}/api/v1/demonstrativos/upload`, formData, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        setProgress(100);
+        setProcessingStage('complete');
+        setProcessingMsg('Processamento concluído!');
+        // Feedback por arquivo
+        if (res.data && Array.isArray(res.data.results)) {
+          res.data.results.forEach((result: any) => {
+            if (result.success) {
+              toast.success(`Demonstrativo ${result.filename}: OK`);
+            } else {
+              toast.error(`Demonstrativo ${result.filename}: ${result.error || 'Erro'}`);
+            }
+          });
+        } else {
+          toast.error('Resposta inesperada do servidor.');
         }
-      });
-      setProgress(100);
-      setProcessingStage('complete');
-      setProcessingMsg('Processamento concluído!');
-      toast.success('Demonstrativo processado com sucesso!');
-        return { success: true, analysisId: res.data.id, data: res.data };
+        return { success: true, data: res.data };
       }
       toast.error('Nenhum arquivo válido para upload.');
       return { success: false };
