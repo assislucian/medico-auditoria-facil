@@ -6,7 +6,6 @@ export interface Profile {
   crm?: string;
   specialty?: string;
   bio?: string;
-  hospital?: string;
   telefone?: string;
   notification_preferences?: Record<string, any>;
   reference_tables_preferences?: Record<string, any>;
