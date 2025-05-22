@@ -10,13 +10,16 @@ export const getProfileData = async (userId: string): Promise<Profile | null> =>
     // Since the database tables haven't been created yet, we'll need to mock this response or 
     // use alternate methods until tables are properly set up
     
-    // Simulate a profile fetch
+    // Mock profile data with required fields for TypeScript
     const mockProfile: Profile = {
       id: userId,
       name: 'Test User',
       email: 'test@example.com',
       crm: '12345',
-      created_at: new Date().toISOString()
+      hospital: 'Hospital Teste',
+      created_at: new Date().toISOString(),
+      trial_status: 'active',
+      trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
     };
     
     return mockProfile;

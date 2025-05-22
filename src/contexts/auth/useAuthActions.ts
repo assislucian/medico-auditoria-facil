@@ -44,7 +44,10 @@ export const useAuthActions = (userId: string | undefined) => {
       name: 'Test User',
       email: 'user@example.com',
       crm: '12345',
-      created_at: new Date().toISOString()
+      hospital: 'Hospital Teste',
+      created_at: new Date().toISOString(),
+      trial_status: 'active',
+      trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     };
     
     return mockProfile;

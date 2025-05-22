@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 /**
@@ -9,19 +8,27 @@ import { toast } from "sonner";
 export const useProfileAvatar = () => {
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  
+  // Alias 'uploading' as 'loading' for API consistency
+  const loading = uploading;
 
   /**
    * Uploads an avatar file to Supabase storage
    */
   const uploadAvatar = async (file: File): Promise<string | null> => {
     try {
+      setUploading(true);
       // Implementation for uploading avatar
       // This is just a placeholder that returns a mock URL
       await new Promise(resolve => setTimeout(resolve, 500)); // Simulate upload delay
-      return URL.createObjectURL(file);
+      const url = URL.createObjectURL(file);
+      setAvatarUrl(url);
+      return url;
     } catch (error) {
       console.error('Error uploading avatar:', error);
       return null;
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -50,6 +57,7 @@ export const useProfileAvatar = () => {
 
   return {
     uploading,
+    loading,
     avatarUrl,
     uploadAvatar,
     handleAvatarChange
