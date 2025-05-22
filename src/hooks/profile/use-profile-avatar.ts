@@ -1,3 +1,4 @@
+
 /**
  * use-profile-avatar.ts
  * 
@@ -7,16 +8,14 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Json } from '@/integrations/supabase/types';
 import { toast } from "sonner";
-import { getProfile, updateProfile } from "@/utils/supabase";
 
 /**
  * Hook que fornece funcionalidades para gerenciar o avatar do perfil do usuário
  * @returns Objeto com estados e funções para manipulação de avatar
  */
 export const useProfileAvatar = () => {
-  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   /**
@@ -68,10 +67,36 @@ export const useProfileAvatar = () => {
       return null;
     }
   };
+  
+  /**
+   * Manipula a mudança de arquivo do input de avatar
+   * @param event Evento de mudança do input
+   * @returns URL do avatar ou null em caso de erro
+   */
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return null;
+
+    try {
+      setUploading(true);
+      const url = await uploadAvatar(file);
+      if (url) {
+        toast.success("Foto atualizada com sucesso");
+        setAvatarUrl(url);
+        return url;
+      }
+    } catch (error) {
+      toast.error("Erro ao atualizar foto");
+    } finally {
+      setUploading(false);
+    }
+    return null;
+  };
 
   return {
-    loading,
+    uploading,
     avatarUrl,
-    uploadAvatar
+    uploadAvatar,
+    handleAvatarChange
   };
 };
