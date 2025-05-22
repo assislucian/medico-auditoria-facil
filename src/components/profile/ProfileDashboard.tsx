@@ -33,7 +33,7 @@ export const ProfileDashboard = () => {
             if (profile.notification_preferences && 
                 typeof profile.notification_preferences === 'object' && 
                 'avatar_url' in profile.notification_preferences) {
-              avatarUrl = profile.notification_preferences.avatar_url || "";
+              avatarUrl = profile.notification_preferences.avatar_url as string || "";
             }
             
             setProfileData({
