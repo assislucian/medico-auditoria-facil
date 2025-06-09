@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import LoginPage from "./pages/Login";
@@ -25,6 +24,7 @@ import ContactPage from "./pages/Contact";
 import PrivacyPage from "./pages/Privacy";
 import TermsPage from "./pages/Terms";
 import PublicHelpPage from "./pages/PublicHelp";
+import { PrivateRoute } from "./components/PrivateRoute";
 import PricingPage from "./pages/Pricing";
 
 function App() {
@@ -41,17 +41,37 @@ function App() {
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/help" element={<PublicHelpPage />} />
                 
-                {/* Todas as rotas agora são públicas para testes */}
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/help/private" element={<HelpPage />} />
-                <Route path="/support" element={<SupportPage />} />
-                <Route path="/guides" element={<GuidesPage />} />
-                <Route path="/demonstratives" element={<DemonstrativesPage />} />
-                <Route path="/unpaid-procedures" element={<UnpaidProceduresPage />} />
-                <Route path="/compare" element={<CompareContracheque />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/history" element={<HistoryPage />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <PrivateRoute>
+                      <DashboardPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/help/private"
+                  element={
+                    <PrivateRoute>
+                      <HelpPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/support"
+                  element={
+                    <PrivateRoute>
+                      <SupportPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route path="/guides" element={<PrivateRoute><GuidesPage /></PrivateRoute>} />
+                <Route path="/demonstratives" element={<PrivateRoute><DemonstrativesPage /></PrivateRoute>} />
+                <Route path="/unpaid-procedures" element={<PrivateRoute><UnpaidProceduresPage /></PrivateRoute>} />
+                <Route path="/compare" element={<PrivateRoute><CompareContracheque /></PrivateRoute>} />
+                <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+                <Route path="/history" element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
+                <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
                 
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/pricing" element={<PricingPage />} />

@@ -1,5 +1,6 @@
 
 import { ReactNode } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { MainLayout } from './MainLayout';
 
@@ -17,17 +18,17 @@ export function AuthenticatedLayout({
   children,
   title,
   description,
-  requireAuth = false, // Mudando para false por padrão
+  requireAuth = true,
   showSidebar = true,
   isLoading = false,
   loadingMessage,
 }: AuthenticatedLayoutProps) {
   const { session, loading } = useAuth();
   
-  // Removendo a verificação de autenticação para permitir acesso livre
-  // if (requireAuth && !loading && !session) {
-  //   return <Navigate to="/login" replace />;
-  // }
+  // Se a autenticação é necessária e o usuário não está autenticado, redirecione para o login
+  if (requireAuth && !loading && !session) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <MainLayout

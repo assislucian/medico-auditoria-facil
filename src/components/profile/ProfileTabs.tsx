@@ -4,17 +4,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProfile } from "@/hooks/use-profile";
 import { ProfileForm } from "./form/ProfileForm";
 import { NotificationsTab } from "./tabs/NotificationsTab";
-import { Scroll, Bell } from "lucide-react";
+import { SecurityTab } from "./tabs/SecurityTab";
+import { Scroll, Bell, Lock } from "lucide-react";
 
 export const ProfileTabs = () => {
   const { loading, updateNotificationPreferences } = useProfile();
 
   return (
     <Tabs defaultValue="info" className="w-full">
-      <TabsList className="grid w-full md:grid-cols-2 h-auto">
+      <TabsList className="grid w-full md:grid-cols-3 h-auto">
         <TabsTrigger value="info" className="flex items-center gap-2">
           <Scroll className="h-4 w-4" />
           <span>Informações</span>
+        </TabsTrigger>
+        <TabsTrigger value="security" className="flex items-center gap-2">
+          <Lock className="h-4 w-4" />
+          <span>Segurança</span>
         </TabsTrigger>
         <TabsTrigger value="notifications" className="flex items-center gap-2">
           <Bell className="h-4 w-4" />
@@ -37,6 +42,10 @@ export const ProfileTabs = () => {
             <ProfileForm loading={loading} />
           </CardContent>
         </Card>
+      </TabsContent>
+      
+      <TabsContent value="security" className="mt-4">
+        <SecurityTab />
       </TabsContent>
 
       <TabsContent value="notifications" className="mt-4">

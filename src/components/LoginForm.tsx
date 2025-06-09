@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { loginSchema } from '@/components/auth/validation';
-import { supabase } from '@/integrations/supabase/client';
 import ErrorAlert from '@/components/auth/ErrorAlert';
 import EmailField from '@/components/auth/EmailField';
 import PasswordField from '@/components/auth/PasswordField';
@@ -70,25 +69,9 @@ const LoginForm = () => {
       console.log('Login bem-sucedido, buscando perfil do usuário');
       
       try {
-        const profilePromise = supabase
-          .from('profiles')
-          .select('trial_status')
-          .eq('id', result.data.user.id)
-          .single();
-          
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 3000)
-        );
+        // Mock profile retrieval while database tables aren't properly set up
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        const profileResult = await Promise.race([profilePromise, timeoutPromise]) as any;
-        
-        if (profileResult.error) {
-          console.error('Erro ao buscar perfil:', profileResult.error);
-          toast.success('Login realizado com sucesso!');
-          navigate(redirectUrl);
-          return;
-        }
-
         toast.success('Login realizado com sucesso!');
         navigate(redirectUrl);
       } catch (profileError) {
