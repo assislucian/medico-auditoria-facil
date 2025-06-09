@@ -62,8 +62,13 @@ const mockProcedures: Procedure[] = [
   }
 ];
 
-const ProceduresTab = () => {
-  const [procedures] = useState<Procedure[]>(mockProcedures);
+interface ProceduresTabProps {
+  procedures?: Procedure[];
+}
+
+const ProceduresTab = ({ procedures }: ProceduresTabProps) => {
+  const [localProcedures] = useState<Procedure[]>(mockProcedures);
+  const data = procedures && procedures.length > 0 ? procedures : localProcedures;
   
   return (
     <div className="space-y-6">
@@ -102,7 +107,7 @@ const ProceduresTab = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <ProceduresGrid procedures={procedures} />
+              <ProceduresGrid procedures={data} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -110,7 +115,7 @@ const ProceduresTab = () => {
         <TabsContent value="pagos">
           <Card>
             <CardContent className="pt-6">
-              <ProceduresGrid procedures={procedures.filter(p => p.pago)} />
+              <ProceduresGrid procedures={data.filter(p => p.pago)} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -118,7 +123,7 @@ const ProceduresTab = () => {
         <TabsContent value="glosados">
           <Card>
             <CardContent className="pt-6">
-              <ProceduresGrid procedures={procedures.filter(p => !p.pago && p.diferenca < 0)} />
+              <ProceduresGrid procedures={data.filter(p => !p.pago && p.diferenca < 0)} />
             </CardContent>
           </Card>
         </TabsContent>

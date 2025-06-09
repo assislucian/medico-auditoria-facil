@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -79,7 +78,7 @@ export function GuideDetailDialog({ guide }: { guide: GuideData }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-1">
+        <Button variant="outline" size="sm" className="flex items-center gap-1 border border-border text-foreground hover:bg-surface-2 transition-colors">
           <Eye className="h-4 w-4" />
           <span>Detalhes</span>
         </Button>

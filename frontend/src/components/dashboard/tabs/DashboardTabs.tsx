@@ -1,10 +1,14 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProceduresTab from "./ProceduresTab";
 import PaymentsTab from "./PaymentsTab";
 import GlosasTab from "./GlosasTab";
+import { Procedure } from "@/types/medical";
 
-export function DashboardTabs() {
+interface DashboardTabsProps {
+  procedures?: Procedure[];
+}
+
+export function DashboardTabs({ procedures }: DashboardTabsProps) {
   return (
     <Tabs defaultValue="procedimentos">
       <TabsList>
@@ -14,7 +18,7 @@ export function DashboardTabs() {
       </TabsList>
       
       <TabsContent value="procedimentos" className="pt-4">
-        <ProceduresTab />
+        <ProceduresTab procedures={procedures} />
       </TabsContent>
       
       <TabsContent value="pagamentos">

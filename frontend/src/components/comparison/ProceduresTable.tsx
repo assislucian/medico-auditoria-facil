@@ -1,4 +1,3 @@
-
 import { Procedure } from '@/types/medical';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -55,7 +54,7 @@ export const ProceduresTable = ({ procedimentos, isDetailView }: ProceduresTable
             const baseCBHPM = cbhpmData ? calculateTotalCBHPM(cbhpmData) : item.valorCBHPM;
             
             return (
-              <TableRow key={item.id} className={!item.pago ? 'bg-red-500/5' : item.diferenca < 0 ? 'bg-amber-500/5' : ''}>
+              <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.codigo}</TableCell>
                 <TableCell>{item.guia}</TableCell>
                 <TableCell>
@@ -90,11 +89,11 @@ export const ProceduresTable = ({ procedimentos, isDetailView }: ProceduresTable
                           <div key={doctor.code} className="flex flex-col space-y-1 border-b last:border-0 pb-2">
                             <span className="font-medium">{doctor.name}</span>
                             <div className="flex justify-between text-sm text-muted-foreground">
-                              <Badge variant="outline" className={
-                                doctor.role === "Cirurgião" ? "bg-blue-500/10 text-blue-500" : 
-                                doctor.role === "Primeiro Auxiliar" ? "bg-green-500/10 text-green-500" : 
-                                doctor.role === "Anestesista" ? "bg-amber-500/10 text-amber-500" :
-                                "bg-purple-500/10 text-purple-500"
+                              <Badge variant={
+                                doctor.role === "Cirurgião" ? "info" : 
+                                doctor.role === "Primeiro Auxiliar" ? "success" : 
+                                doctor.role === "Anestesista" ? "warning" :
+                                "neutral"
                               }>
                                 {doctor.role}
                               </Badge>
@@ -114,7 +113,7 @@ export const ProceduresTable = ({ procedimentos, isDetailView }: ProceduresTable
                   {item.diferenca === 0 ? (
                     <span>-</span>
                   ) : (
-                    <span className={item.diferenca < 0 ? 'text-red-500 font-medium' : 'text-green-500 font-medium'}>
+                    <span className={item.diferenca < 0 ? 'text-danger font-medium' : 'text-success font-medium'}>
                       {item.diferenca < 0 ? '-' : '+'} R$ {Math.abs(item.diferenca).toFixed(2)}
                     </span>
                   )}
@@ -122,17 +121,17 @@ export const ProceduresTable = ({ procedimentos, isDetailView }: ProceduresTable
                 <TableCell className="text-center">
                   {item.pago ? (
                     item.diferenca < 0 ? (
-                      <Badge variant="outline" className="bg-amber-500/10 text-amber-500">
+                      <Badge variant="warning">
                         Pago Parcialmente
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="bg-green-500/10 text-green-500">
+                      <Badge variant="success">
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Pago Corretamente
                       </Badge>
                     )
                   ) : (
-                    <Badge variant="outline" className="bg-red-500/10 text-red-500">
+                    <Badge variant="danger">
                       <AlertCircle className="h-3 w-3 mr-1" />
                       Não Pago
                     </Badge>

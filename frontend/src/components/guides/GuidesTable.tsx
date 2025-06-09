@@ -82,7 +82,7 @@ export function GuidesTable({
                 <td className="w-3/12 truncate text-left px-4" title={row.beneficiario}>{row.beneficiario}</td>
                 <td className="w-1/12 text-center px-4">{row.qtdProcedimentos}</td>
                 <td className="w-2/12 text-center px-4">
-                  <Badge variant="secondary" className="whitespace-nowrap px-3 py-1" title={statusLabel[row.status] || row.status}>
+                  <Badge variant="success" className="whitespace-nowrap px-3 py-1" title={statusLabel[row.status] || row.status}>
                     {statusLabel[row.status] || row.status}
                   </Badge>
                 </td>

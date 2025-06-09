@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
     
-    --primary: 213 100% 42%;
+    --primary: 222 83% 53%; /* Azul MedCheck */
     --primary-foreground: 0 0% 100%;
     
     --secondary: 210 40% 96%;
@@ -48,6 +48,11 @@
     --color-success: 22 163 74;     /* #16A34A */
     --color-warning: 217 119 6;     /* #D97706 */
     --color-danger: 220 38 38;      /* #DC2626 */
+    --surface-0: 255 255 255;
+    --surface-1: 249 250 251;
+    --surface-2: 243 244 246;
+    --surface-3: 229 231 235;
+    --text-body: 17 24 39;
   }
 
   .dark {
@@ -60,8 +65,8 @@
     --popover: 240 10% 4%;
     --popover-foreground: 0 0% 98%;
     
-    --primary: 210 100% 52%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 222 83% 53%; /* Azul MedCheck também no dark */
+    --primary-foreground: 0 0% 100%;
     
     --secondary: 217 33% 18%;
     --secondary-foreground: 210 40% 98%;
@@ -94,12 +99,17 @@
     --color-success: 56 239 125;    /* #38EF7D */
     --color-warning: 250 204 21;    /* #FACC15 */
     --color-danger: 248 113 113;    /* #F87171 */
+    --surface-0: 15 17 23;
+    --surface-1: 20 23 29;
+    --surface-2: 26 29 36;
+    --surface-3: 32 36 44;
+    --text-body: 229 231 235;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border selection:bg-primary/20 selection:text-primary;
   }
   
   ::selection {

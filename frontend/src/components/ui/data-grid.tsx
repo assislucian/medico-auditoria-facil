@@ -70,7 +70,7 @@ export function DataGrid({
                 <TableHead
                   key={column.field}
                   style={{ width: column.width, flex: column.flex }}
-                  className="text-center align-middle text-base font-semibold bg-neutral-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 py-3 px-4 tracking-tight text-gray-700 dark:text-gray-200 sm:px-2 sm:py-2 sm:text-[0.92rem]"
+                  className="text-center align-middle text-base font-semibold bg-background border-b border-border text-foreground sm:px-2 sm:py-2 sm:text-[0.92rem]"
                 >
                   {headerContent}
                 </TableHead>
@@ -82,7 +82,7 @@ export function DataGrid({
           {safeRows.slice(0, pageSize).map((row, rowIndex) => [
             <TableRow
               key={row?.id || rowIndex}
-              className={rowIndex % 2 === 0 ? 'bg-card dark:bg-card-dark' : 'bg-neutral-50 dark:bg-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-900/30 transition-colors'}
+              className=""
             >
               {columns.map((column) => {
                 const cellValue = getCellValue(row, column.field);

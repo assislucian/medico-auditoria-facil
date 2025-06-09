@@ -147,50 +147,34 @@ function parseBRLToNumber(val) {
 }
 
 const proceduresColumns = [
-  { field: 'guia', headerName: 'Guia', minWidth: 90, flex: 0 },
-  { field: 'data', headerName: 'Data', minWidth: 90, flex: 0 },
-  { field: 'paciente', headerName: 'Paciente', minWidth: 140, flex: 1 },
-  { field: 'codigo', headerName: 'Código', minWidth: 90, flex: 0, renderCell: ({ value }) => <span title={value}>{value}</span> },
-  { field: 'descricao', headerName: 'Descrição', minWidth: 160, flex: 2, renderCell: ({ value }) => <span title={value}>{value}</span> },
-  {
-    field: 'participacao',
-    headerName: 'Participação',
-    minWidth: 90,
-    maxWidth: 110,
-    flex: 0,
-    renderCell: ({ value }) => {
-      const papel = value || '--';
-      const norm = String(papel).trim().toLowerCase();
-      if (norm === 'upload guia') {
-        return (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge
-                  variant="participacao"
-                  title="Upload da guia"
-                >
-                  Upload guia
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                Este procedimento está pendente de upload da guia TISS. Clique em 'Enviar Guia' para anexar o documento.
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        );
-      }
-      return (
-        <Badge
-          variant="participacao"
-          title={papelDisplay(papel)}
-        >
-          {papelDisplay(papel)}
-        </Badge>
-      );
-    }
+  { field: 'guia', headerName: 'Guia', width: 100 },
+  { field: 'data', headerName: 'Data', width: 100 },
+  { field: 'paciente', headerName: 'Paciente', width: 150 },
+  { field: 'codigo', headerName: 'Código', width: 100 },
+  { field: 'descricao', headerName: 'Descrição', flex: 1 },
+  { field: 'quantidade', headerName: 'Qtd', width: 60 },
+  { 
+    field: 'apresentado', 
+    headerName: 'Apresentado', 
+    width: 120,
+    valueFormatter: (params: any) => formatCurrency(params.value) 
   },
-  { field: 'quantidade', headerName: 'Qtd', minWidth: 60, flex: 0 },
+  { 
+    field: 'liberado', 
+    headerName: 'Liberado', 
+    width: 120,
+    valueFormatter: (params: any) => formatCurrency(params.value) 
+  },
+  { 
+    field: 'glosa', 
+    headerName: 'Glosa', 
+    width: 120,
+    renderCell: ({ value }) => (
+      <Badge variant={value > 0 ? 'danger' : 'neutral'} className="whitespace-nowrap px-3 py-1">
+        {formatCurrency(value)}
+      </Badge>
+    )
+  },
   {
     field: 'cbhpm',
     headerName: 'CBHPM',
@@ -200,33 +184,26 @@ const proceduresColumns = [
     renderCell: ({ value }) => (value && value > 0 ? <span>{formatCurrency(value)}</span> : <span>--</span>)
   },
   {
-    field: 'liberado',
-    headerName: 'Liberado',
-    minWidth: 110, flex: 0,
-    valueGetter: (params) => params.row.liberado,
-    valueFormatter: (params) => formatCurrency(params.value)
-  },
-  {
     field: 'diferenca',
     headerName: 'Diferença',
     minWidth: 110, flex: 0,
     valueGetter: (params) => (params.row.cbhpm && params.row.cbhpm > 0) ? params.row.liberado - params.row.cbhpm : null,
     renderCell: ({ value, row }) => {
       if (!row.cbhpm || row.cbhpm <= 0) return <span>--</span>;
-      let color = '#64748b'; // cinza
+      let variant = 'neutral';
       let Icon = null;
       if (value < 0) {
-        color = '#e11d48'; // vermelho
-        Icon = <ArrowDownRight className="inline w-4 h-4 ml-1 text-red-500" />;
+        variant = 'danger';
+        Icon = <ArrowDownRight className="inline w-4 h-4 ml-1 text-danger" />;
       } else if (value > 0) {
-        color = '#059669'; // verde
-        Icon = <ArrowUpRight className="inline w-4 h-4 ml-1 text-green-500" />;
+        variant = 'success';
+        Icon = <ArrowUpRight className="inline w-4 h-4 ml-1 text-success" />;
       }
       return (
-        <span style={{ color, fontWeight: 700, fontSize: '1.08em', display: 'flex', alignItems: 'center' }}>
+        <Badge variant={variant} className="whitespace-nowrap px-3 py-1 font-semibold flex items-center gap-1">
           {formatCurrency(value)}
           {Icon}
-        </span>
+        </Badge>
       );
     }
   },
@@ -238,33 +215,15 @@ const proceduresColumns = [
     valueGetter: (params) => (params.row.cbhpm && params.row.cbhpm > 0) ? ((params.row.liberado - params.row.cbhpm) / params.row.cbhpm) * 100 : null,
     renderCell: ({ value, row }) => {
       if (!row.cbhpm || row.cbhpm <= 0) return <span>--</span>;
-      let color = '#64748b'; // cinza
-      if (value < 0) color = '#a21caf'; // roxo
-      if (value > 0) color = '#059669'; // verde
+      let variant = 'neutral';
+      if (value < 0) variant = 'warning';
+      if (value > 0) variant = 'success';
       return (
-        <span style={{ color, fontWeight: 700, fontSize: '1.08em' }}>
+        <Badge variant={variant} className="whitespace-nowrap px-3 py-1 font-semibold">
           {value !== null && value !== undefined ? `${value.toFixed(2)}%` : '--'}
-        </span>
+        </Badge>
       );
     }
-  },
-  {
-    field: 'apresentado',
-    headerName: 'Apresentado',
-    minWidth: 110, flex: 0,
-    valueGetter: (params) => params.row.apresentado,
-    valueFormatter: (params) => formatCurrency(params.value)
-  },
-  {
-    field: 'glosa',
-    headerName: 'Glosa',
-    minWidth: 110, flex: 0,
-    valueGetter: (params) => Math.max(0, params.row.glosa),
-    renderCell: ({ value }) => (
-      <span className={value > 0 ? "text-red-600 font-medium" : ""}>
-        {formatCurrency(value)}
-      </span>
-    )
   },
   {
     field: 'acao',
@@ -478,65 +437,59 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
           {/* Insights CBHPM - cards pequenos (PADRÃO GUIAS) */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-2">
             <InfoCard
-              icon={<AlertCircle className="h-6 w-6 text-red-600" />}
-              title={<span className="text-xs font-semibold text-gray-700">Total Abaixo CBHPM</span>}
+              icon={<AlertCircle className="h-6 w-6" />}
+              title={<span className="text-xs font-semibold">Total Abaixo CBHPM</span>}
               value={hasCBHPM
-                ? <span className="text-2xl md:text-3xl font-bold text-red-700">{formatCurrency(Math.abs(totalAbaixoCBHPM))}</span>
+                ? <span className="text-2xl md:text-3xl font-bold">{formatCurrency(Math.abs(totalAbaixoCBHPM))}</span>
                 : <span className="text-2xl md:text-3xl font-bold text-gray-400">—</span>
               }
               description={hasCBHPM
-                ? <span className="text-xs text-gray-500">Soma do valor pago abaixo da CBHPM</span>
+                ? <span className="text-xs">Soma do valor pago abaixo da CBHPM</span>
                 : <span className="text-xs text-gray-400">Sem procedimentos com CBHPM neste demonstrativo</span>
               }
               variant={hasCBHPM ? "danger" : "neutral"}
-              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<ClipboardList className="h-6 w-6 text-amber-700" />}
-              title={<span className="text-xs font-semibold text-gray-700">% abaixo da tabela</span>}
-              value={<span className="text-2xl md:text-3xl font-bold text-amber-700">{`${percentAbaixoCBHPM}%`}</span>}
-              description={<span className="text-xs text-gray-500">% de procedimentos abaixo da CBHPM</span>}
+              icon={<ClipboardList className="h-6 w-6" />}
+              title={<span className="text-xs font-semibold">% abaixo da tabela</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{`${percentAbaixoCBHPM}%`}</span>}
+              description={<span className="text-xs">% de procedimentos abaixo da CBHPM</span>}
               variant="warning"
-              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<FileText className="h-6 w-6 text-blue-700" />}
-              title={<span className="text-xs font-semibold text-gray-700">Maior diferença individual</span>}
-              value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{maiorPrejuizoProc && maiorPrejuizoProc.diferenca !== null ? formatCurrency(Math.abs(maiorPrejuizoProc.diferenca)) : '--'}</span>}
-              description={<span className="text-xs text-gray-500">{maiorPrejuizoProc ? `${maiorPrejuizoProc.codigo} - ${maiorPrejuizoProc.descricao}` : ''}</span>}
+              icon={<FileText className="h-6 w-6" />}
+              title={<span className="text-xs font-semibold">Maior diferença individual</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{maiorPrejuizoProc && maiorPrejuizoProc.diferenca !== null ? formatCurrency(Math.abs(maiorPrejuizoProc.diferenca)) : '--'}</span>}
+              description={<span className="text-xs">{maiorPrejuizoProc ? `${maiorPrejuizoProc.codigo} - ${maiorPrejuizoProc.descricao}` : ''}</span>}
               variant="info"
-              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
           </div>
           {/* Totais - cards pequenos (PADRÃO GUIAS) */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
             <InfoCard
-              icon={<ArrowUpRight className="h-6 w-6 text-green-600 mb-1" />}
-              title={<span className="text-xs font-semibold text-gray-700">Total Liberado</span>}
-              value={<span className="text-2xl md:text-3xl font-bold text-green-700">{formatCurrency(totals.totalLiberado)}</span>}
+              icon={<ArrowUpRight className="h-6 w-6 mb-1" />}
+              title={<span className="text-xs font-semibold">Total Liberado</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{formatCurrency(totals.totalLiberado)}</span>}
               variant="success"
-              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
+              className="bg-surface-2 border-l-4 border-success"
             />
             <InfoCard
-              icon={<FileText className="h-6 w-6 text-blue-700 mb-1" />}
-              title={<span className="text-xs font-semibold text-gray-700">Procedimentos</span>}
-              value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{totals.totalProcedimentos}</span>}
+              icon={<FileText className="h-6 w-6 mb-1" />}
+              title={<span className="text-xs font-semibold">Procedimentos</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{totals.totalProcedimentos}</span>}
               variant="info"
-              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<AlertCircle className="h-6 w-6 text-red-600 mb-1" />}
-              title={<span className="text-xs font-semibold text-gray-700">Total Glosa</span>}
-              value={<span className="text-2xl md:text-3xl font-bold text-red-700">{formatCurrency(totals.totalGlosa)}</span>}
+              icon={<AlertCircle className="h-6 w-6 mb-1" />}
+              title={<span className="text-xs font-semibold">Total Glosa</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{formatCurrency(totals.totalGlosa)}</span>}
               variant="danger"
-              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<DollarSign className="h-6 w-6 text-gray-700 mb-1" />}
-              title={<span className="text-xs font-semibold text-gray-700">Total Apresentado</span>}
-              value={<span className="text-2xl md:text-3xl font-bold text-gray-700">{formatCurrency(totals.totalApresentado)}</span>}
+              icon={<DollarSign className="h-6 w-6 mb-1" />}
+              title={<span className="text-xs font-semibold">Total Apresentado</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{formatCurrency(totals.totalApresentado)}</span>}
               variant="neutral"
-              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
           </div>
           {/* Filtro rápido acima da tabela de procedimentos detalhados */}
@@ -546,7 +499,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
               <Button
                 size="sm"
                 variant={showOnlyPendentes ? 'secondary' : 'outline'}
-                className="h-9 px-4 font-medium"
+                className="h-9 px-4 font-medium bg-surface-2 border border-border text-foreground hover:bg-surface-3 transition-colors"
                 onClick={() => {
                   setShowOnlyPendentes(v => {
                     const novo = !v;
@@ -561,7 +514,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-9 px-4 font-medium ml-2"
+                className="h-9 px-4 font-medium bg-surface-2 border border-border text-foreground hover:bg-surface-3 transition-colors ml-2"
                 onClick={async () => {
                   await handleExportPDF();
                   toast.success('PDF exportado com sucesso.');
@@ -573,7 +526,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
               <Button
                 size="sm"
                 variant="primary"
-                className="h-9 px-5 font-semibold flex items-center"
+                className="h-9 px-5 font-semibold flex items-center bg-surface-2 border border-border text-foreground hover:bg-surface-3 transition-colors"
                 onClick={() => setShowGlosas(true)}
                 disabled={glosas.length === 0}
                 aria-label="Analisar Glosas"
@@ -603,57 +556,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
                     hideFooterPagination
                     className="min-h-[200px] text-[0.92rem]"
                     autoHeight={false}
-                    getRowClassName={(params) => {
-                      // Debug: log status e id
-                      const status = (() => {
-                        const proc = findProcedureByCodigo(params.row.codigo);
-                        const papelCBHPM = mapPapelToCBHPM(params.row.participacao);
-                        const cbhpm = proc ? calculateTotalCBHPM(proc, papelCBHPM) : null;
-                        const liberado = Number(params.row.liberado) || 0;
-                        const glosa = Number(params.row.glosa) || 0;
-                        if (glosa > 0) return 'glosado';
-                        if (cbhpm !== null && liberado < cbhpm) return 'divergente';
-                        if (cbhpm !== null && liberado >= cbhpm) return 'conforme';
-                        return '';
-                      })();
-                      console.log('DEBUG ROW', params.row.id, status);
-                      if (status === 'glosado') return 'row-glosado';
-                      if (status === 'divergente') return 'row-divergente';
-                      if (status === 'conforme') return 'row-conforme';
-                      return '';
-                    }}
-                    getRowProps={(params) => {
-                      // Força cor de fundo inline para garantir diferenciação visual
-                      const status = (() => {
-                        const proc = findProcedureByCodigo(params.row.codigo);
-                        const papelCBHPM = mapPapelToCBHPM(params.row.participacao);
-                        const cbhpm = proc ? calculateTotalCBHPM(proc, papelCBHPM) : null;
-                        const liberado = Number(params.row.liberado) || 0;
-                        const glosa = Number(params.row.glosa) || 0;
-                        if (glosa > 0) return 'glosado';
-                        if (cbhpm !== null && liberado < cbhpm) return 'divergente';
-                        if (cbhpm !== null && liberado >= cbhpm) return 'conforme';
-                        return '';
-                      })();
-                      let style = {};
-                      if (status === 'glosado') style = { background: '#fee2e2' };
-                      if (status === 'divergente') style = { background: '#fef9c3' };
-                      if (status === 'conforme') style = { background: '#dcfce7' };
-                      return { style };
-                    }}
-                    sx={{
-                      '& .MuiDataGrid-columnHeaders': { position: 'sticky', top: 0, background: '#fff', zIndex: 1, fontWeight: 700, fontSize: '1rem', color: '#222', minHeight: 36 },
-                      '& .MuiDataGrid-cell': { fontSize: '0.92rem', padding: '8px 6px', color: '#222', fontFamily: 'inherit' },
-                      '& .MuiDataGrid-row': { minHeight: 36, maxHeight: 40 },
-                      '& .MuiDataGrid-footerContainer': { display: 'none' },
-                      '& .MuiDataGrid-columnSeparator': { display: 'none' },
-                      '& .MuiDataGrid-virtualScroller': { background: 'transparent' },
-                      '& .MuiDataGrid-cell[data-field*="liberado"], & .MuiDataGrid-cell[data-field*="apresentado"], & .MuiDataGrid-cell[data-field*="glosa"], & .MuiDataGrid-cell[data-field*="diferenca"], & .MuiDataGrid-cell[data-field*="delta_percent"]': { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', textAlign: 'right' },
-                      '& .MuiDataGrid-cell[data-field="data"], & .MuiDataGrid-cell[data-field="guia"]': { textAlign: 'left' },
-                      '@media (max-width: 900px)': {
-                        '& .MuiDataGrid-cell, & .MuiDataGrid-columnHeader': { fontSize: '0.85rem', padding: '6px 4px' },
-                      },
-                    }}
+                    renderExpandedRow={undefined}
                   />
                 )}
               </div>
@@ -677,7 +580,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
                 )}
               </div>
               <div className="flex justify-end mt-4">
-                <Button variant="secondary" size="sm" onClick={() => setShowGlosas(false)} className="h-9 px-4 font-medium">Fechar</Button>
+                <Button variant="secondary" size="sm" onClick={() => setShowGlosas(false)} className="h-9 px-4 font-medium bg-surface-2 border border-border text-foreground hover:bg-surface-3 transition-colors">Fechar</Button>
               </div>
             </div>
           )}
@@ -850,7 +753,7 @@ const DemonstrativesPage = () => {
         return liberado - apresentado;
       },
       renderCell: ({ value }) => (
-        <span className={value < 0 ? "text-red-600 font-medium" : value > 0 ? "text-green-600 font-medium" : "text-gray-700"}>
+        <span className={value < 0 ? "text-danger font-medium" : value > 0 ? "text-success font-medium" : "text-muted-foreground"}>
           {formatCurrency(value)}
         </span>
       )
@@ -862,7 +765,7 @@ const DemonstrativesPage = () => {
       renderCell: ({ row }) => (
         <div className="flex gap-2">
           <DemonstrativeDetailDialog demonstrative={row} />
-          <Button variant="destructive" size="sm" className="ml-2 h-9 px-4 font-medium" onClick={async () => {
+          <Button variant="destructive" size="sm" className="ml-2 h-9 px-4 font-medium bg-surface-2 border border-border text-foreground hover:bg-surface-3 transition-colors" onClick={async () => {
             await handleDeleteDemonstrativo(row.id);
             toast.success('Demonstrativo excluído com sucesso');
           }} title="Excluir demonstrativo">
@@ -896,36 +799,32 @@ const DemonstrativesPage = () => {
         <section aria-label="Painel de Insights Clínico-Financeiros" className="mb-6">
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-2">
             <InfoCard
-              icon={<ArrowUpRight className="h-6 w-6 text-green-600" />}
-              title={<span className="text-xs font-semibold text-gray-700">Total Recebido</span>}
-              value={<span className="text-2xl md:text-3xl font-bold text-green-700">{formatCurrency(summaryStats.totalProcessado)}</span>}
-              description={<span className="text-xs text-gray-500">Recebido nos últimos 30 dias</span>}
+              icon={<ArrowUpRight className="h-6 w-6" />}
+              title={<span className="text-xs font-semibold">Total Recebido</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{formatCurrency(summaryStats.totalProcessado)}</span>}
+              description={<span className="text-xs">Recebido nos últimos 30 dias</span>}
               variant="success"
-              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<AlertCircle className="h-6 w-6 text-red-600" />}
-              title={<span className="text-xs font-semibold text-gray-700">Total Glosado</span>}
-              value={<span className="text-2xl md:text-3xl font-bold text-red-700">{formatCurrency(summaryStats.totalGlosa)}</span>}
-              description={<span className="text-xs text-gray-500">Glosado nos últimos 30 dias</span>}
+              icon={<AlertCircle className="h-6 w-6" />}
+              title={<span className="text-xs font-semibold">Total Glosado</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{formatCurrency(summaryStats.totalGlosa)}</span>}
+              description={<span className="text-xs">Glosado nos últimos 30 dias</span>}
               variant="danger"
-              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<FileText className="h-6 w-6 text-blue-700" />}
-              title={<span className="text-xs font-semibold text-gray-700">Procedimentos</span>}
-              value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{summaryStats.totalProcedimentos}</span>}
-              description={<span className="text-xs text-gray-500">Analisados nos últimos 30 dias</span>}
+              icon={<FileText className="h-6 w-6" />}
+              title={<span className="text-xs font-semibold">Procedimentos</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{summaryStats.totalProcedimentos}</span>}
+              description={<span className="text-xs">Analisados nos últimos 30 dias</span>}
               variant="info"
-              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
             <InfoCard
-              icon={<ClipboardList className="h-6 w-6 text-amber-700" />}
-              title={<span className="text-xs font-semibold text-gray-700">Auditorias Pendentes</span>}
-              value={<span className="text-2xl md:text-3xl font-bold text-amber-700">{pendingAudits}</span>}
-              description={<span className="text-xs text-gray-500">Uploads aguardando revisão</span>}
+              icon={<ClipboardList className="h-6 w-6" />}
+              title={<span className="text-xs font-semibold">Auditorias Pendentes</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{pendingAudits}</span>}
+              description={<span className="text-xs">Uploads aguardando revisão</span>}
               variant="warning"
-              className="rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
             />
           </div>
         </section>
@@ -989,7 +888,7 @@ const DemonstrativesPage = () => {
                     disabled={isUploading || !files.length}
                     size="sm"
                     variant="primary"
-                    className="h-9 px-5 font-semibold flex items-center"
+                    className="h-9 px-5 font-semibold flex items-center bg-surface-2 border border-border text-foreground hover:bg-surface-3 transition-colors"
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     {isUploading ? 'Processando...' : 'Processar'}

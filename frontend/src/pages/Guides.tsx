@@ -550,46 +550,41 @@ const GuidesPage = () => {
       <div className="space-y-6">
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-2">
           <InfoCard
-            icon={<User className="h-6 w-6 text-gray-700" />}
-            title={<span className="text-xs font-semibold text-gray-700">Pacientes Atendidos</span>}
-            value={<span className="text-2xl md:text-3xl font-bold text-gray-900">{pacientesUnicos.size}</span>}
-            description={<span className="text-xs text-gray-500">Total de pacientes únicos neste período</span>}
+            icon={<User className="h-6 w-6" />}
+            title={<span className="text-xs font-semibold">Pacientes Atendidos</span>}
+            value={<span className="text-2xl md:text-3xl font-bold">{pacientesUnicos.size}</span>}
+            description={<span className="text-xs">Total de pacientes únicos neste período</span>}
             variant="info"
-            className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
           />
           <InfoCard
-            icon={<ClipboardList className="h-6 w-6 text-violet-700" />}
-            title={<span className="text-xs font-semibold text-gray-700">Procedimentos</span>}
-            value={<span className="text-2xl md:text-3xl font-bold text-violet-700">{totalProcedimentos}</span>}
-            description={<span className="text-xs text-gray-500">Extraídos das guias</span>}
-            variant="secondary"
-            className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
+            icon={<ClipboardList className="h-6 w-6" />}
+            title={<span className="text-xs font-semibold">Procedimentos</span>}
+            value={<span className="text-2xl md:text-3xl font-bold">{totalProcedimentos}</span>}
+            description={<span className="text-xs">Extraídos das guias</span>}
+            variant="info"
           />
         </div>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-6">
           <InfoCard
-            icon={<User className="h-6 w-6 text-blue-700" />}
-            title={<span className="text-xs font-semibold text-gray-700">Cirurgião</span>}
-            value={<span className="text-2xl md:text-3xl font-bold text-blue-700">{papelCounts['cirurgiao'] || 0}</span>}
-            description={<span className="text-xs text-gray-500">Atuou como cirurgião em <span className="font-bold text-blue-700">{percent(papelCounts['cirurgiao'] || 0)}</span> dos procedimentos</span>}
+            icon={<User className="h-6 w-6" />}
+            title={<span className="text-xs font-semibold">Cirurgião</span>}
+            value={<span className="text-2xl md:text-3xl font-bold">{papelCounts['cirurgiao'] || 0}</span>}
+            description={<span className="text-xs">Atuou como cirurgião em <span className="font-bold">{percent(papelCounts['cirurgiao'] || 0)}</span> dos procedimentos</span>}
             variant="success"
-            className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
           />
           <InfoCard
-            icon={<User className="h-6 w-6 text-emerald-700" />}
-            title={<span className="text-xs font-semibold text-gray-700">1º Auxiliar</span>}
-            value={<span className="text-2xl md:text-3xl font-bold text-emerald-700">{papelCounts['primeiro_auxiliar'] || 0}</span>}
-            description={<span className="text-xs text-gray-500">Atuou como 1º auxiliar em <span className="font-bold text-emerald-700">{percent(papelCounts['primeiro_auxiliar'] || 0)}</span> dos procedimentos</span>}
+            icon={<User className="h-6 w-6" />}
+            title={<span className="text-xs font-semibold">1º Auxiliar</span>}
+            value={<span className="text-2xl md:text-3xl font-bold">{papelCounts['primeiro_auxiliar'] || 0}</span>}
+            description={<span className="text-xs">Atuou como 1º auxiliar em <span className="font-bold">{percent(papelCounts['primeiro_auxiliar'] || 0)}</span> dos procedimentos</span>}
             variant="success"
-            className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
           />
           <InfoCard
-            icon={<User className="h-6 w-6 text-yellow-700" />}
-            title={<span className="text-xs font-semibold text-gray-700">2º Auxiliar</span>}
-            value={<span className="text-2xl md:text-3xl font-bold text-yellow-700">{papelCounts['segundo_auxiliar'] || 0}</span>}
-            description={<span className="text-xs text-gray-500">Atuou como 2º auxiliar em <span className="font-bold text-yellow-700">{percent(papelCounts['segundo_auxiliar'] || 0)}</span> dos procedimentos</span>}
+            icon={<User className="h-6 w-6" />}
+            title={<span className="text-xs font-semibold">2º Auxiliar</span>}
+            value={<span className="text-2xl md:text-3xl font-bold">{papelCounts['segundo_auxiliar'] || 0}</span>}
+            description={<span className="text-xs">Atuou como 2º auxiliar em <span className="font-bold">{percent(papelCounts['segundo_auxiliar'] || 0)}</span> dos procedimentos</span>}
             variant="success"
-            className="bg-card rounded-xl shadow-sm border border-border p-5 hover:shadow-md transition-all duration-200"
           />
         </div>
         <div>
@@ -717,7 +712,7 @@ const GuidesPage = () => {
                       <select
                         value={pageSize}
                         onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
-                        className="border rounded px-2 py-1 text-xs w-full sm:w-auto"
+                        className="border border-border rounded bg-surface-1 text-foreground px-2 py-1 text-xs w-full sm:w-auto focus:ring-2 focus:ring-primary/40 focus:border-primary/60 transition-colors"
                       >
                         {[10, 20, 50, 100].map((sz) => (
                           <option key={sz} value={sz}>{sz} por página</option>

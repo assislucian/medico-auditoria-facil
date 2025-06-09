@@ -1,6 +1,5 @@
-
 import { Button } from '@/components/ui/button';
-import { FileUp, FileText, Trash2, Eye, AlertCircle } from 'lucide-react';
+import { FileUp, FileText, Trash2, Eye, AlertCircle, X } from 'lucide-react';
 import { useState } from 'react';
 import { FileType, FileStatus, FileWithStatus } from '@/types/upload';
 import {
@@ -84,7 +83,7 @@ const FileList = ({ files, onRemove, disabled }: FileListProps) => {
                     </Badge>
                   )}
                   {file.status === 'valid' && (
-                    <Badge variant="outline" className="text-[10px] py-0 h-4 border-green-200 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
+                    <Badge variant="success" className="text-[10px] py-0 h-4">
                       Válido
                     </Badge>
                   )}
@@ -120,16 +119,23 @@ const FileList = ({ files, onRemove, disabled }: FileListProps) => {
       </div>
 
       <Dialog open={!!previewFile} onOpenChange={() => closePreview()}>
-        <DialogContent className="max-w-3xl h-[80vh] p-0">
-          <DialogHeader className="p-4 border-b">
-            <DialogTitle>Visualização do documento</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-full w-full h-screen p-0">
           {previewFile && (
-            <iframe
-              src={previewFile}
-              className="w-full h-full"
-              title="Visualização do PDF"
-            />
+            <>
+              <button
+                onClick={closePreview}
+                className="absolute top-4 right-4 z-50 bg-background border border-border rounded-full shadow p-2 text-foreground hover:bg-destructive/90 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-destructive"
+                aria-label="Fechar visualização"
+                type="button"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <iframe
+                src={previewFile}
+                className="w-full h-full"
+                title="Visualização do PDF"
+              />
+            </>
           )}
         </DialogContent>
       </Dialog>

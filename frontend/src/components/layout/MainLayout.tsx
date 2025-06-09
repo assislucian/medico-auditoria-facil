@@ -29,9 +29,9 @@ export function MainLayout({
       </Helmet>
 
       <SidebarProvider>
-        <div className="min-h-screen w-full bg-neutral-50 dark:bg-neutral-900">
+        <div className="min-h-screen w-full bg-background">
           {showSideNav && <AppSidebar />}
-          <main className="ml-[272px] bg-neutral-50 min-h-screen px-8 py-6 overflow-y-auto">
+          <main className="ml-[272px] bg-background min-h-screen px-8 py-6 overflow-y-auto">
             <GlobalHeader actions={<SidebarTrigger />} />
             <div className="pt-2">
               {children}

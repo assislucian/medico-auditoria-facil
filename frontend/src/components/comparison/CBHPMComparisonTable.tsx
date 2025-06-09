@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { 
   Table, 
@@ -182,13 +181,13 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'conforme':
-        return <Badge variant="outline" className="bg-green-500/10 text-green-500">Conforme</Badge>;
+        return <Badge variant="success">Conforme</Badge>;
       case 'abaixo':
-        return <Badge variant="outline" className="bg-red-500/10 text-red-500">Abaixo</Badge>;
+        return <Badge variant="danger">Abaixo</Badge>;
       case 'acima':
-        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500">Acima</Badge>;
+        return <Badge variant="info">Acima</Badge>;
       default:
-        return <Badge variant="outline" className="bg-gray-500/10 text-gray-500">Não Pago</Badge>;
+        return <Badge variant="neutral">Não Pago</Badge>;
     }
   };
 
@@ -201,7 +200,7 @@ const CBHPMComparisonTable: React.FC<CBHPMComparisonTableProps> = ({ summary, de
       case 'Segundo Auxiliar':
         return <Badge className="bg-blue-500/10 text-blue-500">{role}</Badge>;
       default:
-        return <Badge className="bg-amber-500/10 text-amber-500">{role}</Badge>;
+        return <Badge variant="info">{role}</Badge>;
     }
   };
 

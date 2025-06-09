@@ -45,7 +45,7 @@ export function FiltersToolbar({
           type="date"
           value={date ?? ""}
           onChange={e => onDateChange(e.target.value)}
-          className="input w-36"
+          className="w-36 rounded-md border border-border bg-surface-1 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary/60 transition-colors"
         />
         <label htmlFor="status" className="sr-only">Filtrar por status</label>
         <Select value={status} onValueChange={onStatusChange}>
@@ -69,9 +69,9 @@ export function FiltersToolbar({
       </fieldset>
       {/* --- Ações --- */}
       <div className="flex flex-wrap justify-end gap-2">
-        <Button variant="secondary" onClick={onExportCsv}>Exportar CSV</Button>
-        <Button variant="secondary" onClick={onExportProcedures}>Exportar Proced.</Button>
-        <Button onClick={onNewGuide}>
+        <Button variant="secondary" className="bg-surface-2 border border-border text-foreground hover:bg-surface-3 transition-colors" onClick={onExportCsv}>Exportar CSV</Button>
+        <Button variant="secondary" className="bg-surface-2 border border-border text-foreground hover:bg-surface-3 transition-colors" onClick={onExportProcedures}>Exportar Proced.</Button>
+        <Button variant="primary" onClick={onNewGuide}>
           <FilePlus className="size-4 mr-1" /> Nova Guia
         </Button>
       </div>

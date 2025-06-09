@@ -17,7 +17,7 @@ export async function getGuides(token: string, params: GuidesQueryParams = {}): 
   if (params.page) query.append("page", String(params.page));
   if (params.pageSize) query.append("pageSize", String(params.pageSize));
   if (params.search) query.append("search", params.search);
-  if (params.status) query.append("status", params.status);
+  if (params.status && params.status !== "ALL") query.append("status", params.status);
   if (params.crm) query.append("crm", params.crm);
   if (params.data) query.append("data", params.data);
   const url = `${apiUrl}/api/v1/guias${query.toString() ? `?${query.toString()}` : ""}`;

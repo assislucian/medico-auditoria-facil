@@ -58,7 +58,7 @@ const unpaidColumns = [
     headerName: 'Motivo', 
     width: 200,
     renderCell: ({ value }: { value: string }) => (
-      <Badge variant="destructive" className="bg-red-500/10">
+      <Badge variant="danger">
         {value}
       </Badge>
     )

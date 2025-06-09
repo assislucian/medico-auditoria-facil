@@ -13,11 +13,11 @@ interface InfoCardProps {
 }
 
 const variantStyles = {
-  info:    "bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary",
-  success: "bg-success/15 text-success dark:bg-success/40 dark:text-success",
-  warning: "bg-warning/15 text-warning dark:bg-warning/40 dark:text-warning",
-  danger:  "bg-danger/15 text-danger dark:bg-danger/40 dark:text-danger",
-  neutral: "bg-card border-border text-body dark:bg-card-dark dark:border-border-dark dark:text-body-dark",
+  success:  'bg-surface-2 border-l-4 border-success text-success',
+  danger:   'bg-surface-2 border-l-4 border-danger text-danger',
+  info:     'bg-surface-2 border-l-4 border-primary text-primary',
+  warning:  'bg-surface-2 border-l-4 border-warning text-warning',
+  neutral:  'bg-surface-2',
 };
 
 const elevationStyles = {
@@ -44,7 +44,7 @@ export function InfoCard({
     <div
       tabIndex={0}
       className={clsx(
-        "rounded-xl p-2 flex flex-col gap-0.5 min-w-0 transition-all duration-150 outline-none",
+        "rounded-xl p-4 flex flex-col gap-0.5 min-w-0 transition-all duration-150 outline-none border border-surface-3 shadow-md",
         variantStyles[variant],
         elevationStyles[elevation],
         "hover:shadow-md hover:scale-[1.015] focus:shadow-lg focus:scale-[1.015]",
