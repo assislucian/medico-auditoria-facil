@@ -6,20 +6,24 @@ import { toast } from 'sonner';
 export const getProfileData = async (userId: string): Promise<Profile | null> => {
   try {
     console.log('Fetching profile data for user:', userId);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching profile:", error);
+      return null;
+    }
     
-    // Since the database tables haven't been created yet, we'll need to mock this response or 
-    // use alternate methods until tables are properly set up
+    if (!data) {
+      console.log('No profile found for user:', userId);
+      return null;
+    }
     
-    // Simulate a profile fetch
-    const mockProfile: Profile = {
-      id: userId,
-      name: 'Test User',
-      email: 'test@example.com',
-      crm: '12345',
-      created_at: new Date().toISOString()
-    };
-    
-    return mockProfile;
+    console.log('Profile data retrieved successfully');
+    return data as Profile;
   } catch (error) {
     console.error("Exception in getProfileData:", error);
     return null;

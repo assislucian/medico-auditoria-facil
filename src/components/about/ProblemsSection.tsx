@@ -1,62 +1,33 @@
 
-import { motion } from "framer-motion";
+import { ShieldCheck, Users, BadgeCheck } from "lucide-react";
 import { ProblemCard } from "./problems/ProblemCard";
-import { CircleDashed, FileX, Clock, DollarSign } from "lucide-react";
 
 export function ProblemsSection() {
-  const problemCards = [
+  const problems = [
     {
-      icon: <FileX className="h-10 w-10 text-red-500" />,
-      title: "Glosas Indevidas",
-      description:
-        "Operadoras e seguradoras frequentemente glosam procedimentos de forma injustificada, causando prejuízos significativos aos profissionais de saúde."
+      icon: ShieldCheck,
+      title: "Complexidade nas Glosas",
+      description: "Dificuldade em identificar e contestar glosas médicas, resultando em perdas financeiras significativas."
     },
     {
-      icon: <CircleDashed className="h-10 w-10 text-amber-500" />,
-      title: "Processos Manuais",
-      description:
-        "A auditoria manual de honorários é trabalhosa, sujeita a erros e consome um tempo precioso que poderia ser dedicado ao atendimento dos pacientes."
+      icon: Users,
+      title: "Tempo Desperdiçado",
+      description: "Horas valiosas gastas em processos administrativos que poderiam ser dedicadas ao atendimento de pacientes."
     },
     {
-      icon: <Clock className="h-10 w-10 text-blue-500" />,
-      title: "Demora no Reprocessamento",
-      description:
-        "O processo de contestação e reprocessamento de glosas é lento e burocrático, gerando atrasos no recebimento de valores já realizados."
-    },
-    {
-      icon: <DollarSign className="h-10 w-10 text-green-500" />,
-      title: "Prejuízo Financeiro",
-      description:
-        "A combinação desses fatores resulta em uma perda financeira significativa para médicos, hospitais e clínicas em todo o Brasil."
+      icon: BadgeCheck,
+      title: "Falta de Padronização",
+      description: "Inconsistências na interpretação e aplicação das tabelas de referência CBHPM entre diferentes convênios."
     }
   ];
 
   return (
-    <section className="py-20 px-6 bg-muted/30">
-      <div className="container mx-auto max-w-6xl">
-        <motion.div 
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-4xl font-bold mb-4">Os Desafios da Auditoria Médica</h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Os profissionais de saúde enfrentam diversos obstáculos na gestão financeira 
-            dos honorários médicos. Entenda os principais problemas que o MedCheck resolve:
-          </p>
-        </motion.div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {problemCards.map((card, index) => (
-            <ProblemCard 
-              key={index}
-              icon={card.icon}
-              title={card.title}
-              description={card.description}
-              index={index}
-            />
+    <section className="py-16">
+      <div className="container max-w-6xl mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">Problemas que Resolvemos</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {problems.map((problem, index) => (
+            <ProblemCard key={index} {...problem} />
           ))}
         </div>
       </div>

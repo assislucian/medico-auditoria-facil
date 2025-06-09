@@ -1,62 +1,33 @@
 
-import { motion } from "framer-motion";
+import { Check, Award, Star } from "lucide-react";
 import { SolutionCard } from "./solutions/SolutionCard";
-import { FileSearch, BarChart3, FileCheck, Zap } from "lucide-react";
 
 export function SolutionsSection() {
-  const solutionCards = [
+  const solutions = [
     {
-      icon: <FileSearch className="h-10 w-10 text-primary" />,
+      icon: Check,
       title: "Auditoria Automatizada",
-      description:
-        "Nosso sistema analisa automaticamente guias e demonstrativos, identificando divergências entre o que foi cobrado e o que foi efetivamente pago."
+      description: "Sistema inteligente que analisa automaticamente seus recebimentos e identifica divergências."
     },
     {
-      icon: <BarChart3 className="h-10 w-10 text-primary" />,
-      title: "Análise Detalhada",
-      description:
-        "Geramos relatórios completos com todas as inconsistências encontradas, valores glosados e oportunidades de recuperação financeira."
+      icon: Award,
+      title: "Gestão Completa",
+      description: "Plataforma integrada para gerenciar todo o ciclo de faturamento médico."
     },
     {
-      icon: <FileCheck className="h-10 w-10 text-primary" />,
-      title: "Contestação Facilitada",
-      description:
-        "Oferecemos modelos e ferramentas para agilizar o processo de contestação de glosas junto às operadoras de saúde."
-    },
-    {
-      icon: <Zap className="h-10 w-10 text-primary" />,
-      title: "Resultados Rápidos",
-      description:
-        "Nossa tecnologia permite detectar oportunidades de recuperação em minutos, ao invés de dias ou semanas de trabalho manual."
+      icon: Star,
+      title: "Suporte Especializado",
+      description: "Equipe dedicada para auxiliar em todas as etapas do processo."
     }
   ];
 
   return (
-    <section className="py-24 px-6 bg-background">
-      <div className="container mx-auto max-w-6xl">
-        <motion.div 
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-4xl font-bold mb-4">Nossas Soluções</h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            O MedCheck oferece um conjunto de soluções integradas para transformar
-            a gestão financeira de honorários médicos e maximizar seus resultados:
-          </p>
-        </motion.div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {solutionCards.map((card, index) => (
-            <SolutionCard 
-              key={index}
-              icon={card.icon}
-              title={card.title}
-              description={card.description}
-              index={index}
-            />
+    <section className="py-16 bg-gradient-to-b from-background to-secondary/20">
+      <div className="container max-w-6xl mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">Nossas Soluções</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {solutions.map((solution, index) => (
+            <SolutionCard key={index} {...solution} />
           ))}
         </div>
       </div>

@@ -26,15 +26,6 @@ export function DataGrid({
   pageSize = 10,
   className = "",
 }: DataGridProps) {
-  // Make sure rows is always an array, even if undefined is passed
-  const safeRows = Array.isArray(rows) ? rows : [];
-  
-  // Função para obter o valor de uma célula com segurança
-  const getCellValue = (row: any, field: string) => {
-    if (!row) return null;
-    return row[field] !== undefined ? row[field] : null;
-  };
-  
   return (
     <div className={className}>
       <Table>
@@ -54,26 +45,22 @@ export function DataGrid({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {safeRows.slice(0, pageSize).map((row, rowIndex) => (
-            <TableRow key={row?.id || rowIndex}>
-              {columns.map((column) => {
-                const cellValue = getCellValue(row, column.field);
-                
-                return (
-                  <TableCell key={`${row?.id || rowIndex}-${column.field}`}>
-                    {column.renderCell ? (
-                      column.renderCell({ value: cellValue, row })
-                    ) : column.valueFormatter ? (
-                      column.valueFormatter({ value: cellValue })
-                    ) : (
-                      cellValue !== null && cellValue !== undefined ? cellValue : ''
-                    )}
-                  </TableCell>
-                );
-              })}
+          {rows.slice(0, pageSize).map((row, rowIndex) => (
+            <TableRow key={row.id || rowIndex}>
+              {columns.map((column) => (
+                <TableCell key={`${row.id}-${column.field}`}>
+                  {column.renderCell ? (
+                    column.renderCell({ value: row[column.field], row })
+                  ) : column.valueFormatter ? (
+                    column.valueFormatter({ value: row[column.field] })
+                  ) : (
+                    row[column.field]
+                  )}
+                </TableCell>
+              ))}
             </TableRow>
           ))}
-          {safeRows.length === 0 && (
+          {rows.length === 0 && (
             <TableRow>
               <TableCell colSpan={columns.length} className="text-center py-4">
                 Nenhum registro encontrado
@@ -87,18 +74,18 @@ export function DataGrid({
         <Button
           variant="outline"
           size="sm"
-          disabled={safeRows.length <= pageSize}
+          disabled={true}
         >
-          <ChevronLeft className="h-4 w-4 mr-1" />
+          <ChevronLeft className="h-4 w-4" />
           Anterior
         </Button>
         <Button
           variant="outline"
           size="sm"
-          disabled={safeRows.length <= pageSize}
+          disabled={true}
         >
           Próximo
-          <ChevronRight className="h-4 w-4 ml-1" />
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
     </div>

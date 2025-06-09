@@ -1,93 +1,102 @@
 
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  LineChart, 
-  FileText, 
-  FileBarChart, 
-  FileQuestion, 
-  History,
+  LayoutDashboard,
+  FileText,
+  FileBarChart,
+  Settings,
   HelpCircle,
-  Bell,
-  User
+  History,
+  BookOpen,
+  FileX
 } from "lucide-react";
-import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 export function MainNavigation() {
   const location = useLocation();
-  const navigate = useNavigate();
-  
   const navItems = [
     {
       name: "Dashboard",
       href: "/dashboard",
-      icon: LineChart,
+      icon: LayoutDashboard,
+      description: "Visão geral"
     },
     {
       name: "Guias",
       href: "/guides",
       icon: FileText,
+      description: "Guias médicas"
     },
     {
       name: "Demonstrativos",
       href: "/demonstratives",
       icon: FileBarChart,
+      description: "Demonstrativos de pagamento"
     },
     {
       name: "Não Pagos",
       href: "/unpaid-procedures",
-      icon: FileQuestion,
+      icon: FileX,
+      description: "Procedimentos não pagos e glosas"
     },
     {
       name: "Histórico",
       href: "/history",
       icon: History,
+      description: "Histórico de análises"
+    },
+    {
+      name: "Tabelas",
+      href: "/reference-tables",
+      icon: BookOpen,
+      description: "Tabelas de referência"
+    },
+    {
+      name: "Configurações",
+      href: "/settings",
+      icon: Settings,
+      description: "Ajustes da conta"
     },
     {
       name: "Suporte",
-      href: "/support",
+      href: "/help",
       icon: HelpCircle,
-    },
-    {
-      name: "Notificações",
-      href: "/notifications",
-      icon: Bell,
-    },
-    {
-      name: "Perfil",
-      href: "/profile",
-      icon: User,
+      description: "Central de ajuda"
     }
   ];
-
-  const handleNavigate = (href: string) => {
-    navigate(href);
-  };
 
   return (
     <div className="px-3 py-2">
       <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
-        Menu Principal
+        Principal
       </h2>
       <div className="space-y-1">
-        <TooltipProvider>
-          {navItems.map((item) => (
-            <Tooltip key={item.href}>
+        {navItems.map((item) => (
+          <TooltipProvider key={item.href}>
+            <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant={location.pathname === item.href ? "secondary" : "ghost"}
                   size="sm"
                   className="w-full justify-start"
-                  onClick={() => handleNavigate(item.href)}
+                  asChild
                 >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.name}
+                  <Link to={item.href}>
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.name}
+                  </Link>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">{item.name}</TooltipContent>
+              <TooltipContent side="right">{item.description}</TooltipContent>
             </Tooltip>
-          ))}
-        </TooltipProvider>
+          </TooltipProvider>
+        ))}
       </div>
     </div>
   );

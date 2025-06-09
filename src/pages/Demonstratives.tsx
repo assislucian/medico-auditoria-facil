@@ -1,3 +1,4 @@
+
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DataGrid } from "@/components/ui/data-grid";
@@ -22,6 +23,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 
+// Enhanced mock data to better reflect real demonstratives shown in the PDF
 const mockDemonstratives = [
   { 
     id: "d1", 
@@ -67,6 +69,7 @@ const mockDemonstratives = [
   }
 ];
 
+// Mock detailed procedures that would be shown in a demonstrative's details
 const mockDetailedProcedures = [
   {
     id: "p1",
@@ -201,6 +204,7 @@ const proceduresColumns = [
   }
 ];
 
+// Component for the detailed view dialog
 const DemonstrativeDetailDialog = ({ demonstrative }) => {
   return (
     <Dialog>
@@ -357,6 +361,7 @@ const DemonstrativesPage = () => {
     await handleFileChangeByType(type, fileList);
   };
 
+  // Summary statistics for the dashboard view
   const summaryStats = {
     totalProcessado: demonstratives.reduce((sum, d) => sum + d.totalLiberado, 0),
     totalGlosa: demonstratives.reduce((sum, d) => sum + d.totalGlosa, 0),
@@ -364,9 +369,18 @@ const DemonstrativesPage = () => {
   };
 
   return (
-    <AuthenticatedLayout title="Demonstrativos">
+    <AuthenticatedLayout 
+      title="Demonstrativos" 
+      description="Visualize e gerencie seus demonstrativos de pagamento"
+    >
       <div className="space-y-6">
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold">Demonstrativos</h2>
+            <p className="text-muted-foreground">
+              Acompanhe seus demonstrativos de pagamento
+            </p>
+          </div>
           <div className="flex space-x-2">
             <Button 
               variant="outline" 
@@ -393,6 +407,7 @@ const DemonstrativesPage = () => {
           </div>
         </div>
 
+        {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-6">

@@ -7,7 +7,7 @@ import { Bell, Mail, MessageSquare } from "lucide-react";
 
 interface NotificationsTabProps {
   loading: boolean;
-  onSubmit?: (data: any) => Promise<boolean | void>;
+  onSubmit?: (data: any) => Promise<void>;
 }
 
 export const NotificationsTab = ({ loading, onSubmit }: NotificationsTabProps) => {

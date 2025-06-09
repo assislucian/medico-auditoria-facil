@@ -1,36 +1,23 @@
 
+import { LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { motion } from "framer-motion";
-import { ReactNode } from "react";
 
-export interface ProblemCardProps {
+interface ProblemCardProps {
+  icon: LucideIcon;
   title: string;
   description: string;
-  icon: ReactNode;
-  index: number;
 }
 
-export function ProblemCard({ title, description, icon, index }: ProblemCardProps) {
+export function ProblemCard({ icon: Icon, title, description }: ProblemCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      viewport={{ once: true }}
-    >
-      <Card className="h-full border-none shadow-sm">
-        <CardContent className="pt-6">
-          <div className="flex items-start">
-            <div className="mr-4 p-3 rounded-full bg-muted">
-              {icon}
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-2">{title}</h3>
-              <p className="text-muted-foreground">{description}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+    <Card className="border-2 hover:border-primary/50 transition-colors">
+      <CardContent className="p-6">
+        <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+          <Icon className="w-6 h-6 text-primary" />
+        </div>
+        <h3 className="font-semibold mb-2">{title}</h3>
+        <p className="text-muted-foreground">{description}</p>
+      </CardContent>
+    </Card>
   );
 }

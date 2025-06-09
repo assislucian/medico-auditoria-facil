@@ -1,101 +1,108 @@
+
+import { Helmet } from 'react-helmet-async';
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { DataGrid } from "@/components/ui/data-grid";
-import { Button } from "@/components/ui/button";
-import { Bell, CheckCircle, XCircle } from "lucide-react";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-
-// Mock data for notifications
-const mockNotifications = [
-  {
-    id: "n1",
-    type: "success",
-    message: "Seu demonstrativo de Agosto foi processado com sucesso!",
-    date: "2024-09-15T14:30:00",
-    read: false,
-  },
-  {
-    id: "n2",
-    type: "warning",
-    message: "Atenção: Há uma glosa pendente no demonstrativo de Julho.",
-    date: "2024-09-10T09:00:00",
-    read: true,
-  },
-  {
-    id: "n3",
-    type: "info",
-    message: "Novo guia adicionado: Como contestar glosas.",
-    date: "2024-09-05T16:45:00",
-    read: true,
-  },
-];
-
-const notificationColumns = [
-  {
-    field: "message",
-    headerName: "Mensagem",
-    flex: 1,
-    renderCell: ({ row }) => (
-      <div className="flex items-center">
-        {row.type === "success" && <CheckCircle className="w-4 h-4 mr-2 text-green-500" />}
-        {row.type === "warning" && <XCircle className="w-4 h-4 mr-2 text-amber-500" />}
-        {row.type === "info" && <Bell className="w-4 h-4 mr-2 text-blue-500" />}
-        <span>{row.message}</span>
-      </div>
-    ),
-  },
-  {
-    field: "date",
-    headerName: "Data",
-    width: 150,
-    valueFormatter: ({ value }) => {
-      const date = new Date(value);
-      return date.toLocaleDateString("pt-BR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    },
-  },
-  {
-    field: "read",
-    headerName: "Status",
-    width: 120,
-    renderCell: ({ value }) => (
-      <Badge variant={value ? "secondary" : "default"}>{value ? "Lida" : "Não Lida"}</Badge>
-    ),
-  },
-];
+import { NotificationsList } from '@/components/notifications/NotificationsList';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { CheckCheck, Trash2 } from 'lucide-react';
+import { useNotifications } from '@/contexts/NotificationContext';
+import { 
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from '@/components/ui/tabs';
 
 const NotificationsPage = () => {
-  const [notifications] = useState<any[]>(mockNotifications);
+  const { notifications, unreadCount, markAllAsRead, clearNotifications } = useNotifications();
+  const unreadNotifications = notifications.filter(n => !n.read);
+  const readNotifications = notifications.filter(n => n.read);
 
   return (
-    <AuthenticatedLayout title="Notificações">
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <Bell className="w-5 h-5 text-primary mb-2" />
-              <h3 className="font-medium">Suas Notificações</h3>
+    <>
+      <Helmet>
+        <title>Notificações | MedCheck</title>
+      </Helmet>
+      <AuthenticatedLayout title="Notificações">
+        <div className="container mx-auto py-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+            <div>
+              <h1 className="text-2xl font-bold">Notificações</h1>
+              <p className="text-muted-foreground mt-1">
+                Gerencie suas notificações e atualizações do sistema
+              </p>
             </div>
-          </CardHeader>
-          <CardContent>
-            <DataGrid
-              rows={notifications}
-              columns={notificationColumns}
-              pageSize={5}
-              rowsPerPageOptions={[5, 10, 20]}
-              disableSelectionOnClick
-              className="min-h-[400px]"
-            />
-          </CardContent>
-        </Card>
-      </div>
-    </AuthenticatedLayout>
+            <div className="flex items-center gap-2 self-end">
+              {unreadCount > 0 && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2"
+                  onClick={() => markAllAsRead()}
+                >
+                  <CheckCheck className="h-4 w-4" />
+                  Marcar todas como lidas
+                </Button>
+              )}
+              {notifications.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2 border-destructive/30 hover:border-destructive/50 hover:bg-destructive/10 text-destructive"
+                  onClick={() => clearNotifications()}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Limpar tudo
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <Tabs defaultValue="all" className="w-full">
+            <div className="border-b mb-6">
+              <TabsList className="mb-[-1px]">
+                <TabsTrigger value="all">
+                  Todas
+                  {notifications.length > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {notifications.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="unread">
+                  Não lidas
+                  {unreadNotifications.length > 0 && (
+                    <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground">
+                      {unreadNotifications.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="read">
+                  Lidas
+                  {readNotifications.length > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {readNotifications.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="all">
+              <NotificationsList notifications={notifications} />
+            </TabsContent>
+            
+            <TabsContent value="unread">
+              <NotificationsList notifications={unreadNotifications} />
+            </TabsContent>
+            
+            <TabsContent value="read">
+              <NotificationsList notifications={readNotifications} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </AuthenticatedLayout>
+    </>
   );
 };
 

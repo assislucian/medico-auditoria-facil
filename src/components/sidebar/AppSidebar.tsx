@@ -5,11 +5,12 @@ import {
   FileBarChart, 
   FileX,
   History,
-  HelpCircle,
+  BookOpen,
+  Settings,
   Bell,
+  HelpCircle,
   User,
-  Play,
-  LogOut
+  Play
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -27,22 +28,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { toast } from "sonner";
 
 export function AppSidebar() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      toast.success("Logout realizado com sucesso");
-      navigate("/login");
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      toast.error("Erro ao fazer logout");
-    }
-  };
+  const { user } = useAuth();
 
   const mainMenuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -50,6 +39,8 @@ export function AppSidebar() {
     { icon: FileBarChart, label: "Demonstrativos", href: "/demonstratives" },
     { icon: FileX, label: "Não Pagos", href: "/unpaid-procedures" },
     { icon: History, label: "Histórico", href: "/history" },
+    { icon: BookOpen, label: "Tabelas", href: "/reference-tables" },
+    { icon: Settings, label: "Configurações", href: "/settings" },
     { icon: HelpCircle, label: "Suporte", href: "/support" },
   ];
 
@@ -133,18 +124,7 @@ export function AppSidebar() {
               tooltip="Tour"
             >
               <Play className="h-4 w-4" />
-              <span>Ver Tour</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={handleSignOut}
-              variant="outline"
-              className="mt-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              tooltip="Sair"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Sair</span>
+              <span>Ver Tour Novamente</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -1,13 +1,18 @@
-
 import { useAuth } from "@/contexts/AuthContext";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SupportLayout } from "@/components/support/SupportLayout";
 import { TicketList } from '@/components/support/TicketList';
 import { TicketDetail } from '@/components/support/TicketDetail';
 import { NewTicketForm } from '@/components/support/NewTicketForm';
 import { useTickets } from '@/hooks/useTickets';
+import { TicketCategory, TicketPriority } from '@/components/support/types';
+import { TicketData } from '../utils/supabase/supabaseHelpers';
 
+/**
+ * Support Page
+ * 
+ * Main page for the support system, allowing users to view their tickets,
+ * see ticket details, send messages, and create new tickets.
+ */
 const Support = () => {
   const { user } = useAuth();
   
@@ -24,14 +29,25 @@ const Support = () => {
     sendMessage,
   } = useTickets(user?.id);
 
+  /**
+   * Handles switching to the new ticket tab
+   */
   const navigateToNewTicket = () => {
     setActiveTab('new-ticket');
   };
 
-  const handleCreateTicket = async (data: any) => {
+  /**
+   * Wrapper for createTicket that ensures it returns void
+   * to match the NewTicketForm component's expected prop type
+   */
+  const handleCreateTicket = async (data: TicketData) => {
     await createTicket(data);
+    // Return void to satisfy the Promise<void> return type
   };
 
+  /**
+   * Content for the tickets tab showing list and details
+   */
   const TicketsContent = (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-1">
@@ -55,42 +71,23 @@ const Support = () => {
     </div>
   );
 
+  /**
+   * Content for the new ticket tab
+   */
   const NewTicketContent = (
-    <Card>
-      <CardHeader>
-        <h3 className="text-lg font-medium">Criar Novo Ticket</h3>
-        <p className="text-sm text-muted-foreground">
-          Descreva seu problema ou dúvida em detalhes para que possamos ajudar você melhor.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <NewTicketForm
-          onSubmit={handleCreateTicket}
-          submitting={submitting}
-        />
-      </CardContent>
-    </Card>
+    <NewTicketForm
+      onSubmit={handleCreateTicket}
+      submitting={submitting}
+    />
   );
 
   return (
-    <MainLayout title="Suporte Técnico">
-      <div className="space-y-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full">
-            <TabsTrigger value="my-tickets" className="flex-1">Meus Tickets</TabsTrigger>
-            <TabsTrigger value="new-ticket" className="flex-1">Novo Ticket</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="my-tickets">
-            {TicketsContent}
-          </TabsContent>
-          
-          <TabsContent value="new-ticket">
-            {NewTicketContent}
-          </TabsContent>
-        </Tabs>
-      </div>
-    </MainLayout>
+    <SupportLayout
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      ticketsContent={TicketsContent}
+      newTicketContent={NewTicketContent}
+    />
   );
 };
 

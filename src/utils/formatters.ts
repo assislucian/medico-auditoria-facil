@@ -8,25 +8,8 @@
  * @param value Number to format
  * @returns Formatted string
  */
-export const formatCurrency = (value: number | undefined | null): string => {
-  if (value === undefined || value === null) {
-    return 'R$ 0,00';
-  }
-  
-  try {
-    // Ensure the value is a number
-    const numValue = typeof value === 'number' ? value : Number(value);
-    
-    // Check if it's a valid number
-    if (isNaN(numValue)) {
-      return 'R$ 0,00';
-    }
-    
-    return numValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  } catch (error) {
-    console.error('Erro ao formatar valor:', error);
-    return 'R$ 0,00';
-  }
+export const formatCurrency = (value: number): string => {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
 /**
