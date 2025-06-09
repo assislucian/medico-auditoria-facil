@@ -2,14 +2,14 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  LayoutDashboard,
-  FileText,
+  LayoutDashboard, 
+  FileUp, 
+  History, 
+  BarChart2, 
+  CreditCard,
   FileBarChart,
-  Settings,
-  HelpCircle,
-  History,
-  BookOpen,
-  FileX
+  FileText,
+  AlertCircle
 } from "lucide-react";
 import { 
   Tooltip, 
@@ -25,50 +25,47 @@ export function MainNavigation() {
       name: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
-      description: "Visão geral"
     },
     {
       name: "Guias",
       href: "/guides",
       icon: FileText,
-      description: "Guias médicas"
     },
     {
       name: "Demonstrativos",
       href: "/demonstratives",
-      icon: FileBarChart,
-      description: "Demonstrativos de pagamento"
+      icon: FileUp,
     },
     {
-      name: "Não Pagos",
-      href: "/unpaid-procedures",
-      icon: FileX,
-      description: "Procedimentos não pagos e glosas"
+      name: "Comparativo",
+      href: "/compare",
+      icon: FileBarChart,
+    },
+    {
+      name: "Glosas",
+      href: "/glosas",
+      icon: AlertCircle,
+    },
+    {
+      name: "Upload",
+      href: "/uploads",
+      icon: FileUp,
     },
     {
       name: "Histórico",
       href: "/history",
       icon: History,
-      description: "Histórico de análises"
     },
     {
-      name: "Tabelas",
-      href: "/reference-tables",
-      icon: BookOpen,
-      description: "Tabelas de referência"
+      name: "Relatórios",
+      href: "/reports",
+      icon: BarChart2,
     },
     {
-      name: "Configurações",
-      href: "/settings",
-      icon: Settings,
-      description: "Ajustes da conta"
+      name: "Planos",
+      href: "/pricing",
+      icon: CreditCard,
     },
-    {
-      name: "Suporte",
-      href: "/help",
-      icon: HelpCircle,
-      description: "Central de ajuda"
-    }
   ];
 
   return (
@@ -93,7 +90,7 @@ export function MainNavigation() {
                   </Link>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">{item.description}</TooltipContent>
+              <TooltipContent side="right">{item.name}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         ))}

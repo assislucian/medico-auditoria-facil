@@ -1,0 +1,132 @@
+
+import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useProfile } from "@/hooks/use-profile";
+
+export const ProfileSettings = () => {
+  const { loading, updateProfile } = useProfile();
+  const [formData, setFormData] = useState({
+    name: "Dr. Ana Silva",
+    email: "dr.anasilva@exemplo.med.br",
+    telefone: "(11) 98765-4321",
+    crm: "123456/SP",
+    especialidade: "Ortopedia",
+    hospital: "Hospital São Paulo",
+    bio: "Especialista em cirurgia ortopédica"
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateProfile(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Informações de Perfil</CardTitle>
+          <CardDescription>
+            Gerencie suas informações pessoais e profissionais
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome Completo</Label>
+              <Input 
+                id="name" 
+                name="name" 
+                value={formData.name} 
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                name="email" 
+                type="email"
+                value={formData.email} 
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="telefone">Telefone</Label>
+              <Input 
+                id="telefone" 
+                name="telefone"
+                value={formData.telefone} 
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="crm">CRM</Label>
+              <Input 
+                id="crm" 
+                name="crm"
+                value={formData.crm} 
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="especialidade">Especialidade</Label>
+              <Input 
+                id="especialidade" 
+                name="especialidade"
+                value={formData.especialidade} 
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hospital">Hospital</Label>
+              <Input 
+                id="hospital" 
+                name="hospital"
+                value={formData.hospital} 
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="bio">Biografia</Label>
+              <Input 
+                id="bio" 
+                name="bio"
+                value={formData.bio} 
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="mt-6 flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">Tema:</span>
+              <ThemeToggle />
+            </div>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Salvando..." : "Salvar Alterações"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </form>
+  );
+};
