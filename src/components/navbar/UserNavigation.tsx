@@ -1,30 +1,33 @@
 
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { Link, useLocation } from 'react-router-dom';
 
 export const UserNavigation = () => {
+  const location = useLocation();
+  const pathname = location.pathname;
+  
+  const getNavItemClass = (path: string) => {
+    const baseClass = "px-3 py-2 text-sm font-medium transition-colors";
+    return pathname === path 
+      ? baseClass + " text-foreground border-b-2 border-primary" 
+      : baseClass + " text-foreground/70 hover:text-foreground";
+  };
+  
   return (
     <>
-      <Link to="/dashboard" className="text-foreground/80 hover:text-foreground px-3 py-2 text-sm font-medium transition-colors">
+      <Link to="/dashboard" className={getNavItemClass("/dashboard")}>
         Dashboard
       </Link>
-      <Link to="/guides" className="text-foreground/80 hover:text-foreground px-3 py-2 text-sm font-medium transition-colors">
+      <Link to="/guides" className={getNavItemClass("/guides")}>
         Guias
       </Link>
-      <Link to="/demonstratives" className="text-foreground/80 hover:text-foreground px-3 py-2 text-sm font-medium transition-colors">
+      <Link to="/demonstratives" className={getNavItemClass("/demonstratives")}>
         Demonstrativos
       </Link>
-      <Link to="/compare" className="text-foreground/80 hover:text-foreground px-3 py-2 text-sm font-medium transition-colors">
-        Comparativo
+      <Link to="/unpaid-procedures" className={getNavItemClass("/unpaid-procedures")}>
+        Não Pagos
       </Link>
-      <Link to="/glosas" className="text-foreground/80 hover:text-foreground px-3 py-2 text-sm font-medium transition-colors">
-        Glosas
-      </Link>
-      <Link to="/uploads" className="text-foreground/80 hover:text-foreground px-3 py-2 text-sm font-medium transition-colors">
-        Uploads
-      </Link>
-      <Link to="/reports" className="text-foreground/80 hover:text-foreground px-3 py-2 text-sm font-medium transition-colors">
-        Relatórios
+      <Link to="/history" className={getNavItemClass("/history")}>
+        Histórico
       </Link>
     </>
   );

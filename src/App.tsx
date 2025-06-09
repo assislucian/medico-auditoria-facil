@@ -5,8 +5,6 @@ import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
 import DashboardPage from "./pages/Dashboard";
 import ProfilePage from "./pages/Profile";
-import NewAuditPage from "./pages/NewAudit";
-import AnalysisPage from "./pages/Analysis";
 import CompareContracheque from "./pages/CompareContracheque";
 import HistoryPage from "./pages/History";
 import ReferenceTablesPage from "./pages/ReferenceTables";
@@ -22,7 +20,7 @@ import SupportPage from "./pages/Support";
 import AuthCallback from "./pages/AuthCallback";
 import GuidesPage from "./pages/Guides";
 import DemonstrativesPage from "./pages/Demonstratives";
-import GlosasPage from "./pages/Glosas";
+import UnpaidProceduresPage from "./pages/UnpaidProcedures";
 
 function App() {
   return (
@@ -39,11 +37,9 @@ function App() {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/guides" element={<GuidesPage />} />
                 <Route path="/demonstratives" element={<DemonstrativesPage />} />
+                <Route path="/unpaid-procedures" element={<UnpaidProceduresPage />} />
                 <Route path="/compare" element={<CompareContracheque />} />
-                <Route path="/glosas" element={<GlosasPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/uploads" element={<NewAuditPage />} />
-                <Route path="/analysis/:id" element={<AnalysisPage />} />
                 <Route path="/history" element={<HistoryPage />} />
                 <Route path="/reference-tables" element={<ReferenceTablesPage />} />
                 <Route path="/help" element={<HelpPage />} />
