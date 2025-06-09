@@ -1,11 +1,10 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FileText, FilePlus, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/utils/format";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 interface ResourceDialogProps {
@@ -22,6 +21,36 @@ interface ResourceDialogProps {
 export function ResourceDialog({ procedure }: ResourceDialogProps) {
   const { user, userProfile } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [glosaDescricao, setGlosaDescricao] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Tenta extrair código da glosa do motivo ou procedimento
+    const codigoMatch = (procedure.motivoNaoPagamento || '').match(/\b\d{4}\b/);
+    const codigo = codigoMatch ? codigoMatch[0] : null;
+    if (!codigo) {
+      setGlosaDescricao(null);
+      return;
+    }
+    // Cache simples em memória
+    const cacheKey = `glosa_${codigo}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      setGlosaDescricao(cached);
+      return;
+    }
+    // Busca na knowledge base
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/glosas?codigo=${codigo}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setGlosaDescricao(data[0].descricao);
+          sessionStorage.setItem(cacheKey, data[0].descricao);
+        } else {
+          setGlosaDescricao(null);
+        }
+      })
+      .catch(() => setGlosaDescricao(null));
+  }, [procedure.motivoNaoPagamento, procedure.procedimento]);
   
   const handleGenerateResource = async () => {
     setIsGenerating(true);
@@ -91,6 +120,11 @@ export function ResourceDialog({ procedure }: ResourceDialogProps) {
                 <Badge variant="destructive" className="mt-1">
                   {procedure.motivoNaoPagamento}
                 </Badge>
+                {glosaDescricao && (
+                  <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-amber-900 text-xs">
+                    <strong>Explicação oficial:</strong> {glosaDescricao}
+                  </div>
+                )}
               </div>
               <div className="mt-2">
                 <p className="text-sm text-muted-foreground">Valor Apresentado</p>
