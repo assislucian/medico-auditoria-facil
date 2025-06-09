@@ -24,9 +24,17 @@ export function ResourceDialog({ procedure }: ResourceDialogProps) {
   const [glosaDescricao, setGlosaDescricao] = useState<string | null>(null);
   
   useEffect(() => {
-    // Tenta extrair código da glosa do motivo ou procedimento
-    const codigoMatch = (procedure.motivoNaoPagamento || '').match(/\b\d{4}\b/);
-    const codigo = codigoMatch ? codigoMatch[0] : null;
+    // Tenta extrair código da glosa do campo dedicado ou do motivo
+    let codigo: string | null = null;
+    // 1. Se vier campo dedicado (backend novo)
+    if ((procedure as any).codigo_glosa) {
+      codigo = String((procedure as any).codigo_glosa);
+    } else {
+      // 2. Tenta extrair do texto do motivo
+      const motivo = procedure.motivoNaoPagamento || '';
+      const match = motivo.match(/\b(\d{4})\b/);
+      if (match) codigo = match[1];
+    }
     if (!codigo) {
       setGlosaDescricao(null);
       return;
@@ -50,7 +58,7 @@ export function ResourceDialog({ procedure }: ResourceDialogProps) {
         }
       })
       .catch(() => setGlosaDescricao(null));
-  }, [procedure.motivoNaoPagamento, procedure.procedimento]);
+  }, [procedure]);
   
   const handleGenerateResource = async () => {
     setIsGenerating(true);
