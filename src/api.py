@@ -239,6 +239,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Importa e registra o router de glosas (Knowledge Base) ---
+from backend.knowledge_base.glosas_api import router as glosas_router
+app.include_router(glosas_router, prefix="/api/v1")
+
 # --- Logging estruturado ---
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
