@@ -1,5 +1,5 @@
 
-import { formatCurrency } from "@/utils/formatters";
+import { formatCurrency } from "@/utils/format";
 import { Procedure } from "@/types/medical";
 
 interface ColumnParams {
@@ -47,7 +47,7 @@ export const proceduresColumns = [
                      'text-red-600';
       return (
         <div className={className}>
-          {value.toFixed(1)}%
+          {value ? value.toFixed(1) : '0.0'}%
         </div>
       );
     }

@@ -1,5 +1,5 @@
 
-import { formatCurrency } from "@/utils/formatters";
+import { formatCurrency } from "@/utils/format";
 import { PaymentStatement } from "@/types/medical";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
@@ -80,7 +80,7 @@ export const paymentStatementsColumns = [
           <Tooltip>
             <TooltipTrigger>
               <div className={className}>
-                {value > 0 ? '+' : ''}{value.toFixed(1)}%
+                {value ? (value > 0 ? '+' : '') + value.toFixed(1) : '0.0'}%
               </div>
             </TooltipTrigger>
             <TooltipContent>

@@ -2,6 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { DataGrid } from "@/components/ui/data-grid";
 import { useState } from "react";
+import { formatCurrency } from "@/utils/format";
 
 const GlosasTab = () => {
   const [glosas] = useState<any[]>([
@@ -26,7 +27,7 @@ const GlosasTab = () => {
       motivo: "Divergência de valores",
       valorGlosa: 85.50
     }
-  ]);  // Added some sample data to avoid errors
+  ]);
 
   const columns = [
     { field: 'codigo', headerName: 'Código', width: 120 },
@@ -37,15 +38,7 @@ const GlosasTab = () => {
       headerName: 'Valor Glosa', 
       width: 130,
       type: 'number',
-      valueFormatter: (params: any) => {
-        if (params.value === undefined || params.value === null) {
-          return 'R$ 0,00';
-        }
-        return new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        }).format(params.value);
-      }
+      valueFormatter: (params: any) => formatCurrency(params.value)
     }
   ];
 
