@@ -1,7 +1,7 @@
 
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import { Helmet } from "react-helmet-async";
-import { ProfileDashboard } from "@/components/profile/ProfileDashboard";
+import { ProfileContainer } from "@/components/profile/ProfileContainer";
 
 const Profile = () => {
   return (
@@ -10,7 +10,7 @@ const Profile = () => {
         <title>Perfil | MedCheck</title>
         <meta name="description" content="Gerencie seu perfil médico e configurações" />
       </Helmet>
-      <ProfileDashboard />
+      <ProfileContainer />
     </AuthenticatedLayout>
   );
 };

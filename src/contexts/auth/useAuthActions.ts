@@ -34,32 +34,34 @@ export const useAuthActions = (userId: string | undefined) => {
     return await supabase.auth.signOut();
   };
 
-  // Get user profile data - mocked for now until database tables are available
+  // Get user profile data
   const getProfile = async (): Promise<UserProfile | null> => {
     if (!userId) return null;
 
-    // Mock profile data until database tables are properly set up
-    const mockProfile: UserProfile = {
-      id: userId,
-      name: 'Test User',
-      email: 'user@example.com',
-      crm: '12345',
-      created_at: new Date().toISOString(),
-      trial_status: 'active',
-      trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-    };
-    
-    return mockProfile;
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+
+    return data as UserProfile;
   };
 
-  // Update user profile data - mocked for now until database tables are available
+  // Update user profile data
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!userId) {
       throw new Error('User not authenticated');
     }
-    
-    // Mock successful update
-    return { data: { ...updates }, error: null };
+
+    return await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId);
   };
 
   // Reset password

@@ -2,10 +2,10 @@
 /**
  * AuthContext.ts
  * 
- * Re-exports the context of authentication from auth/index.tsx
- * to maintain compatibility with the existing import structure.
+ * Re-exporta o contexto de autenticação de auth/AuthContext.tsx
+ * para manter compatibilidade com a estrutura de importação existente.
  */
 
 // This is a re-export file to maintain backward compatibility with existing imports
-export { AuthProvider, useAuth } from './auth';
+export { AuthProvider, useAuth } from './auth/AuthContext';
 export type { AuthContextProps } from './auth/types';
