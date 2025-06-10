@@ -94,6 +94,17 @@ export class PDFParser implements Parser {
         const liberado = this.cleanCurrency(rowCols[columnMap['liberado']]);
         const roleLabel = rowCols[columnMap['papel']];
         const role = this.determineRole(roleLabel);
+        // Busca linha de glosa associada (até 2 linhas à frente)
+        let codigoGlosa: string | null = null;
+        let motivoGlosa: string | null = null;
+        for (let j = 1; j <= 2 && i + j < lines.length; j++) {
+          const glosaMatch = lines[i + j].match(/^Glosa\s+(\d{4})\s+(.+)$/i);
+          if (glosaMatch) {
+            codigoGlosa = glosaMatch[1];
+            motivoGlosa = glosaMatch[2];
+            break;
+          }
+        }
         records.push({
           guia: rowCols[columnMap['guia']],
           date: headerInfo.date,
@@ -104,7 +115,8 @@ export class PDFParser implements Parser {
           quantity: parseInt(rowCols[columnMap['quantidade']] || '1', 10),
           presentedValue: this.cleanCurrency(rowCols[columnMap['apresentado']]),
           approvedValue: liberado,
-          // difference: 0 // calcular depois
+          codigo_glosa: codigoGlosa,
+          motivo_glosa: motivoGlosa
         });
       } catch (err) {
         // skip malformed rows

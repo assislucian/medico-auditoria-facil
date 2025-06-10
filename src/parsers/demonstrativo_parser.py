@@ -6,6 +6,7 @@ class DemonstrativoParser:
     def __init__(self, file_path: str):
         self.file_path = file_path
         self.payments: List[Dict] = []
+        self.glosas_detalhadas = {}  # Novo: dicionário auxiliar para motivos de glosa detalhados
         self._parse_pdf()
     
     def _extract_honorarios_section(self, text: str) -> str:
@@ -55,16 +56,19 @@ class DemonstrativoParser:
                     if honorarios_text:
                         honorarios_lines.extend(honorarios_text.splitlines())
 
-                for line in honorarios_lines:
+                i = 0
+                while i < len(honorarios_lines):
+                    line = honorarios_lines[i]
                     # Pula cabeçalho e totais
                     if line.strip().startswith("[PM]") or "Lote Conta Guia" in line or "Total Procedimentos" in line or "T otal Procedimentos" in line:
                         print(f"[DEBUG] Linha de cabeçalho/total ignorada: {line}")
+                        i += 1
                         continue
                     parts = re.split(r'\s+', line.strip())
-                    # Procura o índice do campo de acomodação (ENF/APT/INT/UTI)
-                    acom_idx = next((i for i, p in enumerate(parts) if p in ["ENF", "APT", "INT", "UTI"]), None)
+                    acom_idx = next((j for j, p in enumerate(parts) if p in ["ENF", "APT", "INT", "UTI"]), None)
                     if acom_idx is None or acom_idx < 6 or len(parts) < acom_idx + 7:
                         print(f"[DEBUG] Linha ignorada (não encontrou campo Acom. ou poucos campos): {line}")
+                        i += 1
                         continue
                     try:
                         lote = parts[0]
@@ -81,6 +85,16 @@ class DemonstrativoParser:
                         approved_value = float(parts[-3].replace('.', '').replace(',', '.'))
                         pro_rata = float(parts[-2].replace('.', '').replace(',', '.'))
                         glosa = float(parts[-1].replace('.', '').replace(',', '.'))
+                        # Busca motivo/código de glosa nas próximas linhas, se houver glosa
+                        codigo_glosa = None
+                        motivo_glosa = None
+                        if glosa > 0 and i+1 < len(honorarios_lines):
+                            next_line = honorarios_lines[i+1].strip()
+                            match = re.match(r"Glosa (\d{4}) (.+)", next_line)
+                            if match:
+                                codigo_glosa = match.group(1)
+                                motivo_glosa = match.group(2)
+                                i += 1  # pula a linha de glosa
                         self.payments.append({
                             'period': period,
                             'doctor': {
@@ -103,10 +117,56 @@ class DemonstrativoParser:
                                 'approved_value': approved_value,
                                 'pro_rata': pro_rata,
                                 'glosa': glosa
-                            }
+                            },
+                            'codigo_glosa': codigo_glosa,
+                            'motivo_glosa': motivo_glosa
                         })
                     except Exception as e:
                         print(f"[DEBUG] Falha ao processar linha: {line} -> {e}")
+                    i += 1
+
+                # --- NOVA LÓGICA: Parsing da seção de glosa detalhada ---
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if not page_text:
+                        continue
+                    if "DESCRIÇÃO DETALHADA DE GLOSA" in page_text:
+                        lines = page_text.splitlines()
+                        in_glosa_section = False
+                        last_proc = None
+                        for line in lines:
+                            if "DESCRIÇÃO DETALHADA DE GLOSA" in line:
+                                in_glosa_section = True
+                                continue
+                            if not in_glosa_section:
+                                continue
+                            # Pula cabeçalho
+                            if line.strip().startswith("Conta Guia Data Nome") or not line.strip():
+                                continue
+                            # Procedimento glosado
+                            proc_match = re.match(r"(\d+) (\d+) (\d{2}/\d{2}/\d{4}) (.+) (\d{8}) (.+)", line)
+                            if proc_match:
+                                last_proc = {
+                                    'conta': proc_match.group(1),
+                                    'guia': proc_match.group(2),
+                                    'data': proc_match.group(3),
+                                    'nome': proc_match.group(4).strip(),
+                                    'codigo': proc_match.group(5),
+                                    'descricao': proc_match.group(6).strip()
+                                }
+                                continue
+                            # Linha de glosa
+                            glosa_match = re.match(r"Glosa (\d{4}) (.+)", line)
+                            if glosa_match and last_proc:
+                                codigo_glosa = glosa_match.group(1)
+                                motivo_glosa = glosa_match.group(2)
+                                # Salva no dicionário auxiliar
+                                key = (last_proc['guia'], last_proc['codigo'], last_proc['data'])
+                                self.glosas_detalhadas[key] = {
+                                    'codigo_glosa': codigo_glosa,
+                                    'motivo_glosa': motivo_glosa
+                                }
+                                last_proc = None
         except Exception as e:
             raise Exception(f"Error parsing payment statement: {str(e)}")
     
@@ -158,4 +218,8 @@ class DemonstrativoParser:
                 if honorarios_text:
                     honorarios_lines.extend(honorarios_text.splitlines())
         for i, line in enumerate(honorarios_lines):
-            print(f"{i+1:02d}: {line}") 
+            print(f"{i+1:02d}: {line}")
+    
+    def get_glosa_detalhada(self, guia, codigo, data):
+        """Retorna o motivo/código detalhado da glosa para um procedimento (guia, codigo, data)."""
+        return self.glosas_detalhadas.get((guia, codigo, data), None) 

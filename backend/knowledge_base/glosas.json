@@ -52,5 +52,4 @@
   {"grupo": "Guia", "codigo": "1315", "descricao": "Guia sem data do ato cirúrgico"},
   {"grupo": "Guia", "codigo": "1316", "descricao": "Guia com local de atendimento preenchido incorretamente"},
   {"grupo": "Guia", "codigo": "1317", "descricao": "Guia sem data do atendimento"}
-  // ... continue com os demais códigos conforme necessário ...
 ] 

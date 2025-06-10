@@ -1663,9 +1663,17 @@ def get_demonstrativo_detalhes(demo_id: int, user: dict = Depends(get_current_us
                     cbhpm_valor = proc.get("surgeon_value")
                 elif papel_key == "primeiro_auxiliar":
                     cbhpm_valor = proc.get("first_assistant_value")
-                elif papel_key == "anestesista":
+                elif papel_key == "anesthesiologist":
                     cbhpm_valor = proc.get("anesthesiologist_value")
-            # Se papel não identificado, cbhpm_valor permanece None
+            # Busca motivo/código detalhado se não vier direto do item
+            codigo_glosa = item.get("codigo_glosa")
+            motivo_glosa = item.get("motivo_glosa")
+            if (not codigo_glosa or not motivo_glosa) and hasattr(parser, 'get_glosa_detalhada'):
+                key = (item.get("guia"), item.get("code"), item.get("date"))
+                detalhada = parser.get_glosa_detalhada(*key)
+                if detalhada:
+                    codigo_glosa = detalhada.get("codigo_glosa")
+                    motivo_glosa = detalhada.get("motivo_glosa")
             detalhes.append({
                 "guia": item.get("guia"),
                 "data": item.get("date"),
@@ -1679,6 +1687,10 @@ def get_demonstrativo_detalhes(demo_id: int, user: dict = Depends(get_current_us
                 "apresentado": item.get("financial", {}).get("presented_value"),
                 "glosa": item.get("financial", {}).get("glosa"),
                 "pro_rata": item.get("financial", {}).get("pro_rata"),
+                "codigo_glosa": codigo_glosa,
+                "motivo_glosa": motivo_glosa,
+                "beneficiario": item.get("patient") or item.get("beneficiario"),
+                "hospital": item.get("prestador") or item.get("hospital")
             })
         return detalhes
     finally:
