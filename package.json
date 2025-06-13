@@ -19,5 +19,8 @@
   },
   "lint-staged": {
     "*.{ts,tsx,html}": "grep -qE \"bg-(white|black|gray-(50|100|900))\" && (echo '🚫 Evite cores fixas; use tokens surface-*'; exit 1) || true"
+  },
+  "engines": {
+    "node": ">=18 <24"
   }
 }
