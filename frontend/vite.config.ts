@@ -20,8 +20,7 @@ export default defineConfig(({ mode }) => ({
   ssr: { noExternal: ["jspdf", "jspdf-autotable"] },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "jspdf-autotable": "jspdf-autotable/dist/jspdf.plugin.autotable"
+      "@": path.resolve(__dirname, "./src")
     },
   },
 }));
