@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json ./
-RUN yarn install
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -14,7 +14,7 @@ COPY . .
 RUN yarn prisma generate
 
 # Build TypeScript
-RUN yarn build
+RUN npm run build
 
 # Production stage
 FROM node:20-alpine
@@ -41,4 +41,4 @@ USER node
 EXPOSE 3000
 
 # Start the application
-CMD ["yarn", "start"] 
+CMD ["npm", "start"] 

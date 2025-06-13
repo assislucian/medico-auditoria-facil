@@ -9,13 +9,13 @@
 ```bash
 # Instale as dependências
 cd frontend
-npm install  # ou yarn install
+npm install
 
 # Crie o arquivo de variáveis de ambiente
 cp .env.example .env
 
 # Rode o app em modo dev
-npm run dev  # ou yarn dev
+npm run dev
 ```
 Acesse: http://localhost:5173
 
@@ -28,13 +28,13 @@ VITE_API_URL=http://localhost:8000
 
 ## 🏗️ Build e Deploy
 ```bash
-npm run build  # ou yarn build
+npm run build
 ```
 Os arquivos finais estarão em `frontend/dist/`.
 
 ## 🧪 Testes
 ```bash
-npm test  # ou yarn test
+npm test
 ```
 
 ## 🤖 Premissas e Segurança

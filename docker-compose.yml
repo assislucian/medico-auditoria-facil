@@ -16,7 +16,7 @@ services:
       - PORT=3000
     depends_on:
       - db
-    command: yarn dev
+    command: npm run dev
 
   db:
     image: postgres:15-alpine
