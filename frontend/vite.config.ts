@@ -14,9 +14,14 @@ export default defineConfig(({ mode }) => ({
     // mode === 'development' &&
     // componentTagger(),
   ].filter(Boolean),
+
+  // 🆕 Diretivas para evitar erro de resolução
+  optimizeDeps: { include: ["jspdf", "jspdf-autotable"] },
+  ssr: { noExternal: ["jspdf", "jspdf-autotable"] },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "jspdf-autotable": "jspdf-autotable/dist/jspdf.plugin.autotable"
     },
   },
 }));
