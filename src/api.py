@@ -28,7 +28,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from sqlalchemy import (Column, DateTime, ForeignKey, Integer, String,
-                        create_engine, desc)
+                        create_engine, desc, func)
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from src.services.parse import parse_demonstrativo, parse_guide_pdf
@@ -1695,6 +1695,79 @@ def get_demonstrativo_detalhes(demo_id: int, user: dict = Depends(get_current_us
         return detalhes
     finally:
         db.close()
+
+
+# --- Endpoint para obter resumo do dashboard ---
+@app.get("/api/v1/dashboard")
+def dashboard_summary(user: dict = Depends(get_current_user)):
+    db = SessionLocal()
+    crm = user.get("crm")
+    if not crm:
+        raise HTTPException(status_code=401, detail="Usuário não autenticado")
+    # Últimos 30 dias
+    data_limite = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+    # Totais
+    total_recebido = 0.0
+    total_glosado = 0.0
+    total_procedimentos = 0
+    auditoria_pendente = 0
+    # Procedimentos
+    procedures = []
+    glosas = []
+    # Buscar demonstrativos do usuário
+    demos = db.query(Demonstrativo).filter(Demonstrativo.crm == crm, Demonstrativo.upload_time >= data_limite).all()
+    for demo in demos:
+        try:
+            valor_recebido = float(str(demo.liberado).replace("R$", "").replace(",", ".").strip())
+        except Exception:
+            valor_recebido = 0.0
+        try:
+            valor_glosado = float(str(demo.glosa).replace("R$", "").replace(",", ".").strip())
+        except Exception:
+            valor_glosado = 0.0
+        total_recebido += valor_recebido
+        total_glosado += valor_glosado
+        try:
+            total_procedimentos += int(demo.total_procedimentos)
+        except Exception:
+            pass
+    # Auditorias pendentes: demonstrativos sem liberação
+    auditoria_pendente = db.query(Demonstrativo).filter(Demonstrativo.crm == crm, Demonstrativo.liberado == "R$ 0,00").count()
+    # Procedimentos detalhados (últimos 30 dias)
+    guias = db.query(Guia).filter(Guia.crm == crm, Guia.data >= data_limite).all()
+    for guia in guias:
+        procedures.append({
+            "id": guia.id,
+            "codigo": guia.codigo,
+            "descricao": guia.descricao,
+            "funcao": guia.papel,
+            "pago": guia.status == "Pago",
+            "valorPago": None,  # Pode ser enriquecido se necessário
+            "valorTabela2015": None,
+            "diferenca": None,
+            "guia": guia.numero_guia,
+            "beneficiario": guia.paciente,
+        })
+    # Glosas (mock: pegar guias não pagas ou status glosado)
+    for guia in guias:
+        if guia.status and "glosa" in guia.status.lower():
+            glosas.append({
+                "id": guia.id,
+                "codigo": guia.codigo,
+                "descricao": guia.descricao,
+                "motivo": guia.status,
+                "valorGlosa": None
+            })
+    return {
+        "totals": {
+            "totalRecebido": round(total_recebido, 2),
+            "totalGlosado": round(total_glosado, 2),
+            "totalProcedimentos": total_procedimentos,
+            "auditoriaPendente": auditoria_pendente
+        },
+        "procedures": procedures,
+        "glosas": glosas
+    }
 
 
 # --- Observações ---

@@ -82,7 +82,7 @@ export function DataGrid({
           {safeRows.slice(0, pageSize).map((row, rowIndex) => [
             <TableRow
               key={row?.id || rowIndex}
-              className=""
+              className={Number(row.glosa) > 0 ? 'bg-red-200/80' : ''}
             >
               {columns.map((column) => {
                 const cellValue = getCellValue(row, column.field);

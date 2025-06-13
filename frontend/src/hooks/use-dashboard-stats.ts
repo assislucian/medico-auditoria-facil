@@ -6,7 +6,12 @@ export function useDashboardStats() {
     queryFn: async () => {
       const res = await fetch('/api/v1/dashboard');
       if (!res.ok) throw new Error('Erro ao buscar dados do dashboard');
-      return res.json();
+      const data = await res.json();
+      return {
+        totals: data.totals,
+        procedures: data.procedures,
+        glosas: data.glosas
+      };
     }
   });
 }

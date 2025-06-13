@@ -39,7 +39,7 @@ export function GuidesTable({
   const someSelected = selectedRows.length > 0 && selectedRows.length < rows.length;
 
   return (
-    <Card className="max-w-7xl mx-auto p-6 w-full">
+    <Card className="w-full p-6">
       <ScrollArea className="max-h-[70vh] overflow-x-auto scrollbar-gutter-stable">
         <table className="w-full min-w-[1024px] table-auto text-sm">
           <thead>

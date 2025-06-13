@@ -1,33 +1,13 @@
-
 import { Card } from "@/components/ui/card";
 import { DataGrid } from "@/components/ui/data-grid";
 import { useState } from "react";
 
-const GlosasTab = () => {
-  const [glosas] = useState<any[]>([
-    { 
-      id: "gl1", 
-      codigo: "G001",
-      descricao: "Consulta médica em consultório",
-      motivo: "Falta de documentação",
-      valorGlosa: 150.00
-    },
-    { 
-      id: "gl2", 
-      codigo: "G002",
-      descricao: "Procedimento cirúrgico",
-      motivo: "Procedimento não autorizado",
-      valorGlosa: 1250.00
-    },
-    { 
-      id: "gl3", 
-      codigo: "G003",
-      descricao: "Exame laboratorial",
-      motivo: "Divergência de valores",
-      valorGlosa: 85.50
-    }
-  ]);  // Added some sample data to avoid errors
+interface GlosasTabProps {
+  glosas?: any[];
+}
 
+const GlosasTab = ({ glosas }: GlosasTabProps) => {
+  const data = glosas && glosas.length > 0 ? glosas : [];
   const columns = [
     { field: 'codigo', headerName: 'Código', width: 120 },
     { field: 'descricao', headerName: 'Descrição', flex: 1 },
@@ -48,17 +28,17 @@ const GlosasTab = () => {
       }
     }
   ];
-
   return (
     <Card>
       <DataGrid
-        rows={glosas}
+        rows={data}
         columns={columns}
         pageSize={10}
         rowsPerPageOptions={[10, 25, 50]}
         disableSelectionOnClick
         className="min-h-[500px]"
       />
+      {data.length === 0 && <div className="text-center text-muted-foreground py-8">Nenhuma glosa encontrada nos últimos 30 dias.</div>}
     </Card>
   );
 };

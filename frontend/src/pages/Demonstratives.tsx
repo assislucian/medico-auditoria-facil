@@ -38,6 +38,7 @@ import { UserMenu } from "../components/navbar/UserMenu";
 import InfoCard from "../components/ui/InfoCard";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
 import { useNavigate } from 'react-router-dom';
+import classNames from "classnames";
 
 const mockDetailedProcedures = [
   {
@@ -146,13 +147,43 @@ function parseBRLToNumber(val) {
   return Number(cleaned) || 0;
 }
 
+const papelBadgeVariant = (papel) => {
+  const norm = String(papel || '').toLowerCase();
+  if (norm.includes('cirurg')) return 'participacao';
+  if (norm.includes('1º') || norm.includes('primeiro')) return 'success';
+  if (norm.includes('2º') || norm.includes('segundo')) return 'warning';
+  if (norm.includes('anest')) return 'secondary';
+  if (!papel) return 'outline';
+  return 'outline';
+};
+
+const papelBadgeText = (papel) => {
+  const norm = String(papel || '').toLowerCase();
+  if (norm.includes('cirurg')) return 'Cir.';
+  if (norm.includes('1º') || norm.includes('primeiro')) return '1º Aux.';
+  if (norm.includes('2º') || norm.includes('segundo')) return '2º Aux.';
+  if (norm.includes('anest')) return 'Anest.';
+  if (!papel) return 'Pendente';
+  return 'Outro';
+};
+
 const proceduresColumns = [
-  { field: 'guia', headerName: 'Guia', width: 100 },
-  { field: 'data', headerName: 'Data', width: 100 },
-  { field: 'paciente', headerName: 'Paciente', width: 150 },
-  { field: 'codigo', headerName: 'Código', width: 100 },
-  { field: 'descricao', headerName: 'Descrição', flex: 1 },
-  { field: 'quantidade', headerName: 'Qtd', width: 60 },
+  { field: 'guia', headerName: 'Guia', width: 100, align: 'center', headerAlign: 'center' },
+  { field: 'data', headerName: 'Data', width: 100, align: 'center', headerAlign: 'center' },
+  { field: 'paciente', headerName: 'Paciente', width: 150, align: 'center', headerAlign: 'center' },
+  { field: 'codigo', headerName: 'Código', width: 100, align: 'center', headerAlign: 'center' },
+  { field: 'descricao', headerName: 'Descrição', flex: 1, align: 'left', headerAlign: 'left' },
+  { 
+    field: 'participacao', 
+    headerName: 'Papel', 
+    width: 100,
+    align: 'center',
+    headerAlign: 'center',
+    renderCell: ({ value }) => (
+      <Badge variant={papelBadgeVariant(value)} className="min-w-[70px] justify-center text-xs font-semibold">{papelBadgeText(value)}</Badge>
+    )
+  },
+  { field: 'quantidade', headerName: 'Qtd', width: 60, align: 'center', headerAlign: 'center' },
   { 
     field: 'apresentado', 
     headerName: 'Apresentado', 
@@ -164,16 +195,6 @@ const proceduresColumns = [
     headerName: 'Liberado', 
     width: 120,
     valueFormatter: (params: any) => formatCurrency(params.value) 
-  },
-  { 
-    field: 'glosa', 
-    headerName: 'Glosa', 
-    width: 120,
-    renderCell: ({ value }) => (
-      <Badge variant={value > 0 ? 'danger' : 'neutral'} className="whitespace-nowrap px-3 py-1">
-        {formatCurrency(value)}
-      </Badge>
-    )
   },
   {
     field: 'cbhpm',
@@ -200,7 +221,7 @@ const proceduresColumns = [
         Icon = <ArrowUpRight className="inline w-4 h-4 ml-1 text-success" />;
       }
       return (
-        <Badge variant={variant} className="whitespace-nowrap px-3 py-1 font-semibold flex items-center gap-1">
+        <Badge variant={variant} className="min-w-[90px] justify-center text-xs font-semibold flex items-center gap-1 text-center px-3 py-1">
           {formatCurrency(value)}
           {Icon}
         </Badge>
@@ -219,43 +240,12 @@ const proceduresColumns = [
       if (value < 0) variant = 'warning';
       if (value > 0) variant = 'success';
       return (
-        <Badge variant={variant} className="whitespace-nowrap px-3 py-1 font-semibold">
+        <Badge variant={variant} className="min-w-[70px] justify-center text-xs font-semibold text-center px-3 py-1">
           {value !== null && value !== undefined ? `${value.toFixed(2)}%` : '--'}
         </Badge>
       );
     }
   },
-  {
-    field: 'acao',
-    headerName: 'Ação',
-    minWidth: 80,
-    flex: 0,
-    sortable: false,
-    filterable: false,
-    renderCell: (params) => {
-      const participacao = String(params.row.participacao || '').trim().toLowerCase();
-      if (participacao !== 'upload guia') return null;
-      const codigo = encodeURIComponent(params.row.codigo || '');
-      const paciente = encodeURIComponent(params.row.paciente || '');
-      const navigate = useNavigate();
-      return (
-        <Button
-          size="sm"
-          variant="outline"
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            navigate(`/guides?codigo=${codigo}&paciente=${paciente}`);
-          }}
-          title="Clique para enviar a guia TISS referente a este procedimento. Você será redirecionado para a tela de upload de guias."
-        >
-          <Upload className="h-4 w-4 mr-1" />
-          Enviar Guia
-        </Button>
-      );
-    }
-  }
 ];
 
 const DemonstrativeDetailDialog = ({ demonstrative }) => {
@@ -557,6 +547,7 @@ const DemonstrativeDetailDialog = ({ demonstrative }) => {
                     className="min-h-[200px] text-[0.92rem]"
                     autoHeight={false}
                     renderExpandedRow={undefined}
+                    rowClassName={row => (Number(row.glosa) > 0 ? 'bg-red-100/60' : '')}
                   />
                 )}
               </div>

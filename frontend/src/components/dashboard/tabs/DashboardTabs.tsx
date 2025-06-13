@@ -6,9 +6,10 @@ import { Procedure } from "@/types/medical";
 
 interface DashboardTabsProps {
   procedures?: Procedure[];
+  glosas?: any[];
 }
 
-export function DashboardTabs({ procedures }: DashboardTabsProps) {
+export function DashboardTabs({ procedures, glosas }: DashboardTabsProps) {
   return (
     <Tabs defaultValue="procedimentos">
       <TabsList>
@@ -22,11 +23,11 @@ export function DashboardTabs({ procedures }: DashboardTabsProps) {
       </TabsContent>
       
       <TabsContent value="pagamentos">
-        <PaymentsTab />
+        <PaymentsTab procedures={procedures} />
       </TabsContent>
       
       <TabsContent value="glosas">
-        <GlosasTab />
+        <GlosasTab glosas={glosas} />
       </TabsContent>
     </Tabs>
   );

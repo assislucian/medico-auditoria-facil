@@ -22,7 +22,21 @@ const DashboardPage = () => {
     totalProcedimentos: 284,
     auditoriaPendente: 8
   };
-  const procedures: Procedure[] = stats?.procedures || [];
+  // Mapeamento seguro dos procedimentos vindos do backend
+  const procedures: Procedure[] = (stats?.procedures || []).map((p: any) => ({
+    id: String(p.id),
+    codigo: p.codigo,
+    procedimento: p.procedimento || p.descricao || '',
+    papel: p.papel || p.funcao || '',
+    valorCBHPM: p.valorCBHPM !== undefined ? p.valorCBHPM : (p.valorTabela2015 !== undefined ? p.valorTabela2015 : 0),
+    valorPago: p.valorPago !== undefined ? p.valorPago : 0,
+    diferenca: p.diferenca !== undefined ? p.diferenca : 0,
+    pago: p.pago !== undefined ? p.pago : false,
+    guia: p.guia || '',
+    beneficiario: p.beneficiario || '',
+    doctors: p.doctors || []
+  }));
+  const glosas: any[] = stats?.glosas || [];
   return (
     <AuthenticatedLayout 
       title="Dashboard" 
@@ -46,36 +60,39 @@ const DashboardPage = () => {
       ) : isError ? (
         <div className="text-center text-red-500">Erro ao carregar dados do dashboard.</div>
       ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <InfoCard
-            icon={<ArrowUpRight className="h-6 w-6" />}
-            title={<span className="text-xs font-semibold">Total Recebido</span>}
-            value={<span className="text-2xl md:text-3xl font-bold">{formatCurrency(totals.totalRecebido)}</span>}
-            description={<span className="text-xs">Recebido nos últimos 30 dias</span>}
-            variant="success"
-          />
-          <InfoCard
-            icon={<AlertCircle className="h-6 w-6" />}
-            title={<span className="text-xs font-semibold">Total Glosado</span>}
-            value={<span className="text-2xl md:text-3xl font-bold">{formatCurrency(totals.totalGlosado)}</span>}
-            description={<span className="text-xs">Glosado nos últimos 30 dias</span>}
-            variant="danger"
-          />
-          <InfoCard
-            icon={<FileText className="h-6 w-6" />}
-            title={<span className="text-xs font-semibold">Procedimentos</span>}
-            value={<span className="text-2xl md:text-3xl font-bold">{totals.totalProcedimentos}</span>}
-            description={<span className="text-xs">Analisados nos últimos 30 dias</span>}
-            variant="info"
-          />
-          <InfoCard
-            icon={<ClipboardList className="h-6 w-6" />}
-            title={<span className="text-xs font-semibold">Auditorias Pendentes</span>}
-            value={<span className="text-2xl md:text-3xl font-bold">{totals.auditoriaPendente}</span>}
-            description={<span className="text-xs">Uploads aguardando sua revisão</span>}
-            variant="warning"
-          />
-        </div>
+        <>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+            <InfoCard
+              icon={<ArrowUpRight className="h-6 w-6" />}
+              title={<span className="text-xs font-semibold">Total Recebido</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{formatCurrency(totals.totalRecebido)}</span>}
+              description={<span className="text-xs">Recebido nos últimos 30 dias</span>}
+              variant="success"
+            />
+            <InfoCard
+              icon={<AlertCircle className="h-6 w-6" />}
+              title={<span className="text-xs font-semibold">Total Glosado</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{formatCurrency(totals.totalGlosado)}</span>}
+              description={<span className="text-xs">Glosado nos últimos 30 dias</span>}
+              variant="danger"
+            />
+            <InfoCard
+              icon={<FileText className="h-6 w-6" />}
+              title={<span className="text-xs font-semibold">Procedimentos</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{totals.totalProcedimentos}</span>}
+              description={<span className="text-xs">Analisados nos últimos 30 dias</span>}
+              variant="info"
+            />
+            <InfoCard
+              icon={<ClipboardList className="h-6 w-6" />}
+              title={<span className="text-xs font-semibold">Auditorias Pendentes</span>}
+              value={<span className="text-2xl md:text-3xl font-bold">{totals.auditoriaPendente}</span>}
+              description={<span className="text-xs">Uploads aguardando sua revisão</span>}
+              variant="warning"
+            />
+          </div>
+          <DashboardAlert valorRecuperado={totals.totalRecebido - totals.totalGlosado} />
+        </>
       )}
       <InfoCard
         icon={<TrendingUp className="h-6 w-6" />}
@@ -85,7 +102,7 @@ const DashboardPage = () => {
         className="w-full mb-6"
       />
       <div className="grid gap-6">
-        <DashboardTabs procedures={procedures} />
+        <DashboardTabs procedures={procedures} glosas={glosas} />
       </div>
     </AuthenticatedLayout>
   );

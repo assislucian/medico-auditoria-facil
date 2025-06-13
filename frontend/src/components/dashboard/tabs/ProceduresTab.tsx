@@ -6,69 +6,12 @@ import { Button } from "@/components/ui/button";
 import { FileText, Filter, BarChart2, Download } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Dados mock de exemplo para a demonstração
-const mockProcedures: Procedure[] = [
-  {
-    id: "proc1",
-    codigo: "30602246",
-    procedimento: "Reconstrução Mamária Com Retalhos Cutâneos Regionais",
-    papel: "Cirurgião",
-    valorCBHPM: 1521.32,
-    valorPago: 457.64,
-    diferenca: -1063.68,
-    pago: true,
-    guia: "10467538",
-    beneficiario: "00620040000604690",
-    doctors: [
-      {
-        code: "8425",
-        name: "FERNANDA MABEL BATISTA",
-        role: "Cirurgião",
-        startTime: "2024-08-19T14:09:00",
-        endTime: "2024-08-19T15:24:00",
-        status: "Fechada"
-      },
-      {
-        code: "6091",
-        name: "MOISES DE OLIVEIRA",
-        role: "Primeiro Auxiliar",
-        startTime: "2024-08-19T14:15:00",
-        endTime: "2024-08-19T15:17:00",
-        status: "Fechada"
-      }
-    ]
-  },
-  {
-    id: "proc2",
-    codigo: "30912040",
-    procedimento: "Vitrectomia posterior",
-    papel: "Cirurgião",
-    valorCBHPM: 1892.44,
-    valorPago: 1650.00,
-    diferenca: -242.44,
-    pago: true,
-    guia: "10467539",
-    beneficiario: "00620040000604691",
-    doctors: [
-      {
-        code: "8425",
-        name: "FERNANDA MABEL BATISTA",
-        role: "Cirurgião",
-        startTime: "2024-08-20T10:00:00",
-        endTime: "2024-08-20T11:30:00",
-        status: "Fechada"
-      }
-    ]
-  }
-];
-
 interface ProceduresTabProps {
   procedures?: Procedure[];
 }
 
 const ProceduresTab = ({ procedures }: ProceduresTabProps) => {
-  const [localProcedures] = useState<Procedure[]>(mockProcedures);
-  const data = procedures && procedures.length > 0 ? procedures : localProcedures;
+  const data = procedures && procedures.length > 0 ? procedures : [];
   
   return (
     <div className="space-y-6">
@@ -108,6 +51,7 @@ const ProceduresTab = ({ procedures }: ProceduresTabProps) => {
             </CardHeader>
             <CardContent>
               <ProceduresGrid procedures={data} />
+              {data.length === 0 && <div className="text-center text-muted-foreground py-8">Nenhum procedimento encontrado nos últimos 30 dias.</div>}
             </CardContent>
           </Card>
         </TabsContent>

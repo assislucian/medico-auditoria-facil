@@ -610,17 +610,9 @@ const GuidesPage = () => {
           </TabsList>
 
           <TabsContent value="list">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-bold md:text-xl flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary" />
-                  Guias Médicas
-                </CardTitle>
-                <CardDescription>
-                  Liste e gerencie as suas guias processadas
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+            <Card className="w-full shadow-none border-none bg-transparent">
+              <CardHeader className="hidden" />
+              <CardContent className="p-0">
                 {loading ? (
                   <LoaderTable />
                 ) : (
@@ -634,7 +626,7 @@ const GuidesPage = () => {
                     expandedRow={expandedRow}
                     renderExpandedRow={(row) => (
                       <div className="w-full max-w-full overflow-hidden px-2 py-2">
-                        <div className="overflow-x-auto w-full" style={{ maxWidth: 'calc(100vw - 220px)' }}>
+                        <div className="overflow-x-auto w-full">
                           <table className="w-full text-sm min-w-[600px]">
                             <thead>
                               <tr>
